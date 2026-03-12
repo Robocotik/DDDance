@@ -1,14 +1,14 @@
 import js from '@eslint/js';
 import stylisticPlugin from '@stylistic/eslint-plugin';
-import { defineConfig } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import compatPlugin from 'eslint-plugin-compat';
 import importPlugin from 'eslint-plugin-import';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import sonarjs from 'eslint-plugin-sonarjs';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
 
 const Rules = {
 	curly: 'error',
@@ -44,11 +44,7 @@ const Rules = {
 	'sonarjs/function-return-type': 'off',
 };
 
-const Ignores = [
-	'node_modules/',
-	'**/build/**',
-	'dist/**'
-];
+const Ignores = ['node_modules/', '**/build/**', 'dist/**'];
 
 export default defineConfig([
 	{
@@ -85,11 +81,10 @@ export default defineConfig([
 			...tseslint.configs.recommended,
 			eslintConfigPrettier,
 			sonarjs.configs.recommended,
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-      
+			js.configs.recommended,
+			tseslint.configs.recommended,
+			reactHooks.configs.flat.recommended,
+			reactRefresh.configs.vite,
 		],
 		languageOptions: {
 			parser: tseslint.parser,
