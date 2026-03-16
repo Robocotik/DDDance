@@ -4,11 +4,11 @@ import styles from './Footer.module.scss';
 
 const Footer: React.FC = () => {
 	return (
-		<div id="footer" className={styles.footer}>
-			<Paragraph className={styles.content}>
+		<footer id="footer" className={styles.footer}>
+			<Paragraph level="2" className={styles.text}>
 				© Davai Davai Deploy, 2026
 			</Paragraph>
-		</div>
+		</footer>
 	);
 };
 
