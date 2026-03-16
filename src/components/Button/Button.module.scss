@@ -1,10 +1,15 @@
 .btn {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
 	background: var(--color-gradient);
 	border: none;
 	border-radius: 30px;
 	color: var(--color-text);
 	padding: 8px 30px;
 	font-size: var(--font-size-22);
+	box-shadow: 0 4.1875px 8.375px rgb(16 19 49 / 15%);
 }
 
 @media (max-width: 768px) {

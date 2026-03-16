@@ -1,0 +1,22 @@
+.title {
+	color: var(--color-text);
+	opacity: 0.8;
+}
+
+.level1 {
+	font-size: var(--font-size-22);
+}
+
+.level2 {
+	font-size: var(--font-size-20);
+}
+
+@media (max-width: 768px) {
+	.level1 {
+		font-size: var(--font-size-16);
+	}
+
+	.level2 {
+		font-size: var(--font-size-14);
+	}
+}
