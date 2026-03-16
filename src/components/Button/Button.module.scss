@@ -1,0 +1,14 @@
+.btn {
+	background: var(--color-gradient);
+	border: none;
+	border-radius: 30px;
+	color: var(--color-text);
+	padding: 8px 30px;
+	font-size: var(--font-size-22);
+}
+
+@media (max-width: 768px) {
+	.btn {
+		font-size: var(--font-size-16);
+	}
+}
