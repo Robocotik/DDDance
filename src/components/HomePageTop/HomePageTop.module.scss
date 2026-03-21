@@ -1,0 +1,130 @@
+.container {
+	width: 100vw;
+	height: 100vh;
+	padding-left: 100px;
+	padding-right: 45px;
+	margin-bottom: 40px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	position: relative;
+}
+
+.information {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	position: relative;
+	z-index: 2;
+	max-width: 450px;
+	gap: 30px;
+	margin-top: 22vh;
+}
+
+.title {
+	text-align: left;
+}
+
+.text {
+	text-align: left;
+}
+
+.btn {
+	margin-top: 25px;
+	padding-block: 20px;
+	padding-left: 60px;
+	padding-right: 60px;
+	width: fit-content;
+}
+
+.rects {
+	width: 70%;
+	height: calc(100% - 60px);
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	flex: 5;
+	position: absolute;
+	right: 45px;
+	top: 40px;
+	z-index: 1;
+}
+
+.right {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	gap: 10px;
+	flex: 1;
+	justify-content: right;
+}
+
+.left {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	height: 100%;
+	flex: 3.3;
+	justify-content: flex-end;
+}
+
+.row1 {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	flex: 0.9;
+	justify-content: right;
+}
+
+.row2 {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	flex: 2;
+	justify-content: right;
+	width: 88%;
+	align-self: flex-end;
+}
+
+.rect1 {
+	height: 100%;
+	background-color: var(--color-homepage-1);
+	flex: 1.5;
+}
+
+.rect2 {
+	height: 100%;
+	background-color: var(--color-homepage-2);
+	flex: 1;
+}
+
+.rect3 {
+	height: 63%;
+	background-color: var(--color-homepage-3);
+	flex: 1;
+}
+
+.video {
+	background-color: var(--color-accent);
+	flex: 3;
+}
+
+.rect4 {
+	height: 100%;
+	width: 35%;
+	background-color: var(--color-homepage-4);
+	flex: 1;
+	align-self: flex-end;
+}
+
+.rect5 {
+	height: 30%;
+	width: 100%;
+	background-color: var(--color-homepage-5);
+}
+
+.rect6 {
+	height: 50%;
+	width: 100%;
+	background-color: var(--color-accent);
+}
