@@ -1,0 +1,31 @@
+:root {
+	--color-bg: #0f103f;
+	--color-text: #efeeea;
+	--color-dark: #080922;
+	--color-accent: #942263;
+	--color-header: #1c1c654d;
+	--color-spots: #1e2e71;
+	--color-menu-bg: #2f2f8a;
+	--color-forms: #ebfaff4d;
+
+	--color-homepage-4: #641848;
+	--color-homepage-5: #ae225d;
+	--color-homepage-2: #631c65;
+	--color-homepage-1: #4d1c65;
+	--color-homepage-3: #3a3499;
+
+	--color-gradient: linear-gradient(to left, #94228e, #2957a3);
+
+	--font-weight-regular: 400;
+
+	--font-size-80: clamp(3rem, 5vw, 4rem);
+	--font-size-40: clamp(2rem, 3vw, 2.5rem);
+	--font-size-30: clamp(1.6rem, 2.2vw, 1.875rem);
+	--font-size-22: clamp(1.2rem, 1.6vw, 1.2rem);
+	--font-size-20: clamp(1.1rem, 1.46vw, 1.25rem);
+	--font-size-16: clamp(0.9375rem, 1.15vw, 1rem);
+	--font-size-14: clamp(0.875rem, 1.05vw, 0.875rem);
+
+	--font-title: 'NauryzRedKeds', arial, sans-serif;
+	--font-main: 'Comfortaa Variable', arial, sans-serif;
+}

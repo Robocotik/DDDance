@@ -17,10 +17,13 @@
     "preview": "npm run build && vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/comfortaa": "^5.2.8",
     "@reduxjs/toolkit": "^2.11.2",
+    "clsx": "^2.1.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-redux": "^9.2.0",
+    "react-responsive": "^10.0.1",
     "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
