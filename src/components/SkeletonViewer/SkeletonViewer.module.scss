@@ -92,3 +92,136 @@
 	width: 100%;
 	height: 100%;
 }
+
+
+.section {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0f;
+  color: #e2e2f0;
+  font-family: monospace;
+}
+
+.title {
+  text-align: center;
+  margin: 16px 0 8px;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  color: #7c6af7;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b6b8a;
+  margin-bottom: 12px;
+}
+
+.status {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #7c6af7;
+  background: rgba(124, 106, 247, 0.1);
+  padding: 4px 12px;
+  border-radius: 16px;
+  display: inline-block;
+  margin: 0 auto 12px;
+}
+
+.currentSegment {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6af7c8;
+  margin-bottom: 8px;
+}
+
+.controls {
+  padding: 12px 20px;
+  background: #12121a;
+  border-top: 1px solid #1e1e2e;
+  border-bottom: 1px solid #1e1e2e;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.fileButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  button {
+    background: #1e1e2e;
+    border: none;
+    color: #e2e2f0;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #2a2a3a;
+    }
+
+    &.active {
+      background: #7c6af7;
+      color: white;
+    }
+  }
+}
+
+.playbackControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+
+  button {
+    background: #1e1e2e;
+    border: none;
+    color: #e2e2f0;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.75rem;
+
+    &:hover {
+      background: #2a2a3a;
+    }
+  }
+}
+
+.sliderGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: #6b6b8a;
+
+  input {
+    width: 120px;
+    accent-color: #7c6af7;
+    cursor: pointer;
+  }
+}
+
+.frame {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvasHost {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
