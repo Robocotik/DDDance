@@ -46,7 +46,7 @@ const SkeletonViewer: React.FC = () => {
 	const frameIdxRef = useRef(0);
 
 	const [status, setStatus] = useState('Загрузка...');
-	const [currentFile, setCurrentFile] = useState('skeleton.json');
+	const [currentFile, setCurrentFile] = useState();
 	const [smoothingFactor, setSmoothingFactor] = useState(0.3);
 	const [playing, setPlaying] = useState(true);
 	const [speed, setSpeed] = useState(1.0);
@@ -305,10 +305,6 @@ const SkeletonViewer: React.FC = () => {
 			<div className={styles.controls}>
 				<div className={styles.fileButtons}>
 					{[
-						'skeleton.json',
-						'b_result.json',
-						'b_result_2.json',
-						'000.json',
 					].map((f) => (
 						<button
 							key={f}
