@@ -4,6 +4,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SegmentBar } from './SegmentBar';
 import styles from './SkeletonViewer.module.scss';
 
+import { useSelector } from 'react-redux';
+import { selectVideoResult } from '../../redux/features/video/selectors';
+
+
 type Joint = {
 	x: number;
 	y: number;
@@ -42,17 +46,29 @@ type SkeletonData = {
 };
 
 const SkeletonViewer: React.FC = () => {
+    const TEST_MODE = true;
+    
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const frameIdxRef = useRef(0);
 
 	const [status, setStatus] = useState('Загрузка...');
-	const [currentFile, setCurrentFile] = useState();
-	const [smoothingFactor, setSmoothingFactor] = useState(0.3);
+	const [currentFile, setCurrentFile] = useState<string | null>("/skeleton.json");
 	const [playing, setPlaying] = useState(true);
 	const [speed, setSpeed] = useState(1.0);
 	const [currentFrame, setCurrentFrame] = useState(0);
 	const [totalFrames, setTotalFrames] = useState(0);
 	const [segmentsData, setSegmentsData] = useState<Segment[]>([]);
+
+	const result = useSelector(selectVideoResult);
+
+	useEffect(() => {
+		if (result?.result_key) {
+			const fileUrl = "https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/" + result.result_key;
+			
+			setCurrentFile(fileUrl);
+			setStatus(`Загрузка ${fileUrl}...`);
+		}
+	}, [result]);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -66,8 +82,6 @@ const SkeletonViewer: React.FC = () => {
 		let totalFramesCount = 0;
 		let framesData: Frame[] = [];
 		let connections: [number, number][] = [];
-
-		let smoothedPositions: THREE.Vector3[][] = [];
 
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(0x0a0a0f);
@@ -165,44 +179,35 @@ const SkeletonViewer: React.FC = () => {
 		};
 
 		const convertJoints = (frame: Frame): THREE.Vector3[] => {
-			const leftHip = frame.joints[23];
-			const rightHip = frame.joints[24];
-			const center = {
-				x: (leftHip.x + rightHip.x) / 2,
-				y: (leftHip.y + rightHip.y) / 2,
-				z: (leftHip.z + rightHip.z) / 2,
-			};
-			const scale = 1.5;
-			return frame.joints.map(
-				(joint) =>
-					new THREE.Vector3(
-						(joint.x - center.x) * scale,
-						-(joint.y - center.y) * scale,
-						(joint.z - center.z) * scale,
-					),
-			);
-		};
+            const leftHip = frame.joints[23];
+            const rightHip = frame.joints[24];
+            const center = {
+                x: (leftHip.x + rightHip.x) / 2,
+                y: (leftHip.y + rightHip.y) / 2,
+                z: (leftHip.z + rightHip.z) / 2,
+            };
+            
+            const scaleXY = 1.5;
+            const scaleZ = 0.5;
+            
+            return frame.joints.map((joint) =>
+                new THREE.Vector3(
+                    (joint.x - center.x) * scaleXY,
+                    -(joint.y - center.y) * scaleXY,
+                    (joint.z - center.z) * scaleZ
+                )
+            );
+        };
 
-		const smoothJoints = (
-			raw: THREE.Vector3[],
-			prev: THREE.Vector3[] | null,
-			alpha: number,
-		): THREE.Vector3[] => {
-			if (!prev || prev.length !== raw.length) return raw.map((p) => p.clone());
-			return raw.map(
-				(p, i) =>
-					new THREE.Vector3(
-						alpha * p.x + (1 - alpha) * prev[i].x,
-						alpha * p.y + (1 - alpha) * prev[i].y,
-						alpha * p.z + (1 - alpha) * prev[i].z,
-					),
-			);
-		};
-
-		const loadData = async () => {
-			setStatus(`Загрузка ${currentFile}...`);
+		const loadData = async (fileUrl: string) => {
+			setStatus(`Загрузка ${fileUrl}...`);
 			try {
-				const response = await fetch(`/${currentFile}`);
+                const url = fileUrl.startsWith('http') 
+                    ? fileUrl.trim() 
+                    : `/${fileUrl.replace(/^\/+/, '')}`;
+                
+				console.log('Загрузка данных по URL:', url);
+				const response = await fetch(url);
 				if (!response.ok) throw new Error(`HTTP ${response.status}`);
 				const data: SkeletonData = await response.json();
 
@@ -232,12 +237,8 @@ const SkeletonViewer: React.FC = () => {
 			if (!framesData.length) return;
 
 			const frame = framesData[Math.min(frameIndex, framesData.length - 1)];
-			const rawPositions = convertJoints(frame);
-			const prev = smoothedPositions[frameIndex] || null;
-			const smoothed = smoothJoints(rawPositions, prev, smoothingFactor);
-			smoothedPositions[frameIndex] = smoothed;
-
-			createSkeleton(smoothed);
+			const positions = convertJoints(frame);
+			createSkeleton(positions);
 			setCurrentFrame(frameIndex);
 		};
 
@@ -256,7 +257,6 @@ const SkeletonViewer: React.FC = () => {
 				frameIdxRef.current = Math.floor(currentFrameIdx);
 				updateFrame(Math.floor(currentFrameIdx));
 			} else if (!playing && framesData.length) {
-				// Синхронизируем с внешним управлением (слайдер, клик по сегменту)
 				if (frameIdxRef.current !== Math.floor(currentFrameIdx)) {
 					currentFrameIdx = frameIdxRef.current;
 					updateFrame(Math.floor(currentFrameIdx));
@@ -269,10 +269,14 @@ const SkeletonViewer: React.FC = () => {
 		};
 
 		const init = async () => {
-			await loadData();
-			if (framesData.length) updateFrame(0);
-			lastTime = 0;
-			animationId = requestAnimationFrame(animate);
+			if (currentFile) {
+                await loadData(currentFile);
+                if (framesData.length) updateFrame(0);
+            } else {
+                setStatus("Нет файла для загрузки");
+            }
+            lastTime = 0;
+            animationId = requestAnimationFrame(animate);
 		};
 
 		init();
@@ -290,9 +294,16 @@ const SkeletonViewer: React.FC = () => {
 			resizeObserver.disconnect();
 			controls.dispose();
 			renderer.dispose();
-			container.removeChild(renderer.domElement);
+			if (container && renderer.domElement) {
+				container.removeChild(renderer.domElement);
+			}
 		};
-	}, [currentFile, smoothingFactor, playing, speed]);
+	}, [currentFile, playing, speed]);
+	
+	if (!result && !TEST_MODE) {
+        return <></>;
+    }
+
 
 	return (
 		<section className={styles.section}>
@@ -302,20 +313,8 @@ const SkeletonViewer: React.FC = () => {
 			</p>
 			<div className={styles.status}>{status}</div>
 
-			<div className={styles.controls}>
-				<div className={styles.fileButtons}>
-					{[
-					].map((f) => (
-						<button
-							key={f}
-							className={currentFile === f ? styles.active : ''}
-							onClick={() => setCurrentFile(f)}
-						>
-							{f}
-						</button>
-					))}
-				</div>
 
+			<div className={styles.controls}>
 				<div className={styles.playbackControls}>
 					<button onClick={() => setPlaying(!playing)}>
 						{playing ? '⏸ Пауза' : '▶ Воспроизвести'}
@@ -337,7 +336,7 @@ const SkeletonViewer: React.FC = () => {
 						<input
 							type="range"
 							min={0}
-							max={totalFrames - 1}
+							max={totalFrames - 1 || 0}
 							value={currentFrame}
 							onChange={(e) => {
 								const idx = parseInt(e.target.value);
@@ -357,18 +356,6 @@ const SkeletonViewer: React.FC = () => {
 							step={0.1}
 							value={speed}
 							onChange={(e) => setSpeed(parseFloat(e.target.value))}
-						/>
-					</div>
-
-					<div className={styles.sliderGroup}>
-						<span>Сглаживание: {smoothingFactor.toFixed(2)}</span>
-						<input
-							type="range"
-							min={0}
-							max={1}
-							step={0.01}
-							value={smoothingFactor}
-							onChange={(e) => setSmoothingFactor(parseFloat(e.target.value))}
 						/>
 					</div>
 				</div>

@@ -1,12 +1,11 @@
 import React from 'react';
 import HomePageTop from '../../components/HomePageTop/HomePageTop';
 
-import InTrends from '../../components/InTrends/InTrends';
 import SkeletonViewer from '../../components/SkeletonViewer/SkeletonViewer';
-import { trendingVideos } from '../../mocks/films';
+import MixamoViewer from '../../components/SkeletonViewer/MixamoViewer';
 
-import styles from './HomePage.module.scss';
 import VideoUploader from '../../components/VideoUploader/VideoUploader';
+import styles from './HomePage.module.scss';
 
 const HomePage: React.FC = () => {
 	return (
@@ -14,9 +13,8 @@ const HomePage: React.FC = () => {
 			<HomePageTop />
 
 			<VideoUploader />
-			<SkeletonViewer />
-			
-
+			 <SkeletonViewer />
+			<MixamoViewer />
 		</div>
 	);
 };
