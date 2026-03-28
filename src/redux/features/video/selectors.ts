@@ -1,5 +1,12 @@
 import type { RootState } from '../../store';
+import type { UploadVideoResult } from './actions';
 
-export const selectVideoStatus = (state: RootState) => state.video.status;
-export const selectVideoResult = (state: RootState) => state.video.result;
-export const selectVideoError = (state: RootState) => state.video.error;
+export const selectVideo = (
+	state: RootState,
+): UploadVideoResult | null => state.video.video;
+
+export const selectVideoError = (state: RootState): string | null =>
+	state.video.videoError;
+
+export const selectVideoLoading = (state: RootState): boolean =>
+	state.video.videoLoading;

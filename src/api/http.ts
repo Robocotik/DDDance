@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 const http = axios.create({
-	baseURL: 'https://your-backend.com', // замените на ваш бэкенд
+	baseURL: 'http://localhost:5458/api',
 	headers: {
 		'Content-Type': 'application/json',
 	},
 });
 
-// Перехватчик ошибок (опционально)
 http.interceptors.response.use(
 	(response) => response,
 	(error) => {

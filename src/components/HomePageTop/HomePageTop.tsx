@@ -28,8 +28,8 @@ const DesktopHomePageTopView = () => {
 					Зажги
 				</Title>
 				<Paragraph opacity="80" className={styles.text}>
-					Загрузи ссылку на видео — DDDance разобьёт танец на понятные шаги и
-					покажет, как повторить каждое движение.
+					Загрузи видео — DDDance разобьёт танец на понятные шаги и
+					покажет, как повторить каждое движение
 				</Paragraph>
 				<Button className={styles.btn}>Попробовать</Button>
 			</div>

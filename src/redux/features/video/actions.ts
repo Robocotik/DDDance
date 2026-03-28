@@ -1,6 +1,5 @@
-import axios from 'axios';
-import type { Dispatch } from 'redux';
-import VideoActionTypes from './actionTypes';
+import http from '../../../api/http';
+import actionTypes from './actionTypes';
 
 export interface UploadVideoResult {
 	result_key: string;
@@ -9,60 +8,72 @@ export interface UploadVideoResult {
 	duration_sec: number;
 }
 
-interface VideoUploadLoadingAction {
-	type: typeof VideoActionTypes.VIDEO_UPLOAD_LOADING;
-}
+const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка';
 
-interface VideoUploadLoadedAction {
-	type: typeof VideoActionTypes.VIDEO_UPLOAD_LOADED;
-	payload: UploadVideoResult;
-}
-
-interface VideoUploadErrorAction {
-	type: typeof VideoActionTypes.VIDEO_UPLOAD_ERROR;
-	payload: string;
-}
-
-interface ClearVideoAction {
-	type: typeof VideoActionTypes.CLEAR_VIDEO;
-}
-
-export type VideoAction =
-	| VideoUploadLoadingAction
-	| VideoUploadLoadedAction
-	| VideoUploadErrorAction
-	| ClearVideoAction;
-
-export const uploadVideo =
-	(file: File) => async (dispatch: Dispatch<VideoAction>) => {
-		dispatch({ type: VideoActionTypes.VIDEO_UPLOAD_LOADING });
-
-		try {
-			const formData = new FormData();
-			formData.append('dance', file);
-
-			console.log('GO TO BACK');
-
-			const response = await axios.post<UploadVideoResult>(
-				'http://localhost:5458/api/users/load',
-				formData,
-				{
-					headers: { 'Content-Type': 'multipart/form-data' },
-				},
-			);
-
-			dispatch({
-				type: VideoActionTypes.VIDEO_UPLOAD_LOADED,
-				payload: response.data,
-			});
-		} catch (err: any) {
-			dispatch({
-				type: VideoActionTypes.VIDEO_UPLOAD_ERROR,
-				payload: err.message || 'Something went wrong',
-			});
-		}
-	};
-
-export const clearVideo = (): ClearVideoAction => ({
-	type: VideoActionTypes.CLEAR_VIDEO,
+/**
+ * Action: очистка данных видео.
+ */
+const clearVideoAction = () => ({
+	type: actionTypes.CLEAR_VIDEO,
 });
+
+/**
+ * Action: начало загрузки видео.
+ */
+const setVideoLoadingAction = () => ({
+	type: actionTypes.VIDEO_UPLOAD_LOADING,
+});
+
+/**
+ * Action: успешная загрузка видео.
+ */
+const returnVideoLoadedAction = (data: UploadVideoResult) => ({
+	type: actionTypes.VIDEO_UPLOAD_LOADED,
+	payload: {
+		video: data,
+	},
+});
+
+/**
+ * Action: ошибка при загрузке видео.
+ */
+const returnVideoErrorAction = (error: string) => ({
+	type: actionTypes.VIDEO_UPLOAD_ERROR,
+	payload: {
+		error,
+	},
+});
+
+/**
+ * Thunk: асинхронная загрузка видео на сервер.
+ */
+const uploadVideoAction = (file: File) => async (dispatch: any) => {
+	dispatch(setVideoLoadingAction());
+
+	try {
+		const formData = new FormData();
+		formData.append('dance', file);
+
+		const response = await http.post<UploadVideoResult>(
+			'/users/load',
+			formData,
+			{
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			},
+		);
+
+		dispatch(returnVideoLoadedAction(response.data));
+	} catch (error: any) {
+		const errorMessage =
+			error?.message || (typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+
+		dispatch(returnVideoErrorAction(errorMessage));
+	}
+};
+
+export default {
+	uploadVideoAction,
+	clearVideoAction,
+};

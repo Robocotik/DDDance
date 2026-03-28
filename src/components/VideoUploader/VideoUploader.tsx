@@ -1,67 +1,76 @@
 import type { ChangeEvent } from 'react';
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { uploadVideo } from '../../redux/features/video/actions';
-import {
-	selectVideoError,
-	selectVideoResult,
-	selectVideoStatus,
-} from '../../redux/features/video/selectors';
+import React, { useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import actions from '../../redux/features/video/actions';
+import Title from '../../components/Title/Title';
 import styles from './VideoUploader.module.scss';
+import Button from '../Button/Button';
+import Paragraph from '../Paragraph/Paragraph';
 
 const VideoUploader: React.FC = () => {
 	const dispatch = useDispatch();
-	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const navigate = useNavigate();
+	const inputRef = useRef<HTMLInputElement | null>(null);
 
-	const status = useSelector(selectVideoStatus);
-	const result = useSelector(selectVideoResult);
-	const error = useSelector(selectVideoError);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
-		if (file) {
-			setSelectedFile(file);
-			console.log('Выбранный файл:', file.name);
-			dispatch(uploadVideo(file));
+		setSelectedFile(file);
+	};
+
+	const handleOpenFilePicker = () => {
+		inputRef.current?.click();
+	};
+
+	const handleStartAnalysis = async () => {
+		if (!selectedFile) {
+			return;
 		}
+
+		dispatch(actions.uploadVideoAction(selectedFile) as any);
+		navigate('/lesson');
 	};
 
 	return (
 		<div className={styles.container}>
-			<h2 className={styles.title}>Загрузите ваше видео</h2>
+			<Title className={styles.title}>Сделай первый шаг к своему танцу</Title>
 
-			<label className={styles.uploadButton}>
-				Выбрать файл
+			<div className={styles.buttonsBlock}>
+				<Button
+					type="button"
+					className={styles.uploadButton}
+					onClick={handleOpenFilePicker}
+					title={selectedFile ? selectedFile.name : 'Загрузить файл'}
+				>
+					<span className={styles.buttonText}>
+						{selectedFile ? selectedFile.name : 'Загрузить файл'}
+					</span>
+				</Button>
+
 				<input
+					ref={inputRef}
 					type="file"
 					accept="video/mp4,video/avi,video/mov,video/mkv"
 					onChange={handleFileChange}
 					style={{ display: 'none' }}
 				/>
-			</label>
 
-			<p className={styles.subtitle}>Допустимые форматы: MP4, MOV</p>
+				<Button
+					type="button"
+					className={styles.startButton}
+					onClick={handleStartAnalysis}
+					disabled={!selectedFile}
+				>
+					<span className={styles.buttonText}>Начать разбор</span>
+				</Button>
+			</div>
 
-			{selectedFile && (
-				<p className={styles.selectedFile}>
-					Выбранный файл: {selectedFile.name}
-				</p>
-			)}
-
-			{status === 'loading' && (
-				<p className={styles.loading}>Загрузка видео...</p>
-			)}
-			{status === 'error' && <p className={styles.error}>Ошибка: {error}</p>}
-
-			{status === 'loaded' && result && (
-				<div className={styles.result}>
-					<p>Видео загружено успешно!</p>
-					<p>Длительность: {result.duration_sec.toFixed(2)} сек</p>
-					<p>Кадров: {result.num_frames}</p>
-					<p>Сегментов: {result.num_segments}</p>
-					<p>Файл результата: {result.result_key}</p>
-				</div>
-			)}
+			<Paragraph opacity="80" className={styles.subtitle}>
+				Форматы: MP4, MOV <br />
+				Вес файла: не более N МБ
+			</Paragraph>
 		</div>
 	);
 };

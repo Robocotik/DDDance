@@ -1,41 +1,64 @@
+import type { AnyAction, Reducer } from 'redux';
 import VideoActionTypes from './actionTypes';
-import type { UploadVideoResult, VideoAction } from './actions';
+import type { UploadVideoResult } from './actions';
 
 export interface VideoState {
-	status: 'idle' | 'loading' | 'loaded' | 'error';
-	result?: UploadVideoResult;
-	error?: string;
+	videoLoading: boolean;
+	video: UploadVideoResult | null;
+	videoError: string | null;
 }
 
+/**
+ * Начальное состояние редьюсера видео.
+ */
 const initialState: VideoState = {
-	status: 'idle',
-	result: undefined,
-	error: undefined,
+	videoLoading: false,
+	video: null,
+	videoError: null,
 };
 
-export const videoReducer = (
+/**
+ * Редьюсер для управления состоянием загрузки видео.
+ */
+const videoReducer: Reducer<VideoState, AnyAction> = (
 	state = initialState,
-	action: VideoAction,
+	action,
 ): VideoState => {
-	switch (action.type) {
+	if (typeof action === 'function') {
+		return state;
+	}
+
+	const { type, payload } = action;
+
+	switch (type) {
 		case VideoActionTypes.VIDEO_UPLOAD_LOADING:
-			return { ...state, status: 'loading', error: undefined };
+			return {
+				...state,
+				videoLoading: true,
+				videoError: null,
+			};
 
 		case VideoActionTypes.VIDEO_UPLOAD_LOADED:
 			return {
 				...state,
-				status: 'loaded',
-				result: action.payload,
-				error: undefined,
+				videoLoading: false,
+				video: payload.video,
+				videoError: null,
 			};
 
 		case VideoActionTypes.VIDEO_UPLOAD_ERROR:
-			return { ...state, status: 'error', error: action.payload };
+			return {
+				...state,
+				videoLoading: false,
+				videoError: payload.error,
+			};
 
 		case VideoActionTypes.CLEAR_VIDEO:
-			return { ...initialState };
+			return initialState;
 
 		default:
 			return state;
 	}
 };
+
+export default videoReducer;
