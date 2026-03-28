@@ -178,43 +178,58 @@ loader.load('/dddance.glb', (gltf) => {
     setCurrentAnimation(index);
   };
 
-  return (
-    <div style={{ padding: '16px 0' }}>
-      <div style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>
-        {status}
-      </div>
-      
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+return (
+  <div
+    style={{
+      minHeight: '100vh',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      boxSizing: 'border-box',
+    }}
+  >
+    <div style={{ width: '50%' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 8,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
         <button onClick={() => setPlaying(!playing)}>
           {playing ? '⏸ Пауза' : '▶ Play'}
         </button>
-        
+
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
           Масштаб: {(modelScale * 100).toFixed(0)}%
-          <input 
-            type="range" 
-            min={0.1} 
-            max={2} 
-            step={0.05} 
+          <input
+            type="range"
+            min={0.1}
+            max={2}
+            step={0.05}
             value={modelScale}
-            onChange={e => handleScaleChange(parseFloat(e.target.value))} 
+            onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
             style={{ width: 100 }}
           />
         </label>
-        
+
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
           Скорость: {timeScale.toFixed(1)}x
-          <input 
-            type="range" 
-            min={0.1} 
-            max={3} 
-            step={0.1} 
+          <input
+            type="range"
+            min={0.1}
+            max={3}
+            step={0.1}
             value={timeScale}
-            onChange={e => handleTimeScaleChange(parseFloat(e.target.value))} 
+            onChange={(e) => handleTimeScaleChange(parseFloat(e.target.value))}
             style={{ width: 100 }}
           />
         </label>
-        
+
         {animations.map((name, i) => (
           <button
             key={i}
@@ -226,7 +241,7 @@ loader.load('/dddance.glb', (gltf) => {
               padding: '8px 16px',
               borderRadius: 4,
               cursor: 'pointer',
-              fontSize: 12
+              fontSize: 12,
             }}
           >
             {name}
@@ -234,18 +249,19 @@ loader.load('/dddance.glb', (gltf) => {
         ))}
       </div>
 
-      <div 
-        ref={containerRef} 
-        style={{ 
-          width: '100%', 
-          height: 520, 
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: 520,
           borderRadius: 8,
           background: '#0a0a0f',
-          border: '1px solid #333'
-        }} 
+          border: '1px solid #333',
+        }}
       />
     </div>
-  );
+  </div>
+);
 };
 
 export default MixamoViewer;
