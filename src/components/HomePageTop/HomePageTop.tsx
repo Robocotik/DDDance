@@ -1,10 +1,10 @@
 import React from 'react';
 import { useMediaQuery } from 'react-responsive';
+import { S3_ADDRESS } from '../../consts/urls';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
 import Title from '../Title/Title';
 import styles from './HomePageTop.module.scss';
-import { S3_ADDRESS } from '../../consts/urls';
 
 const handleScrollToUploader = () => {
 	const element = document.getElementById('video-uploader');
@@ -39,36 +39,47 @@ const DesktopHomePageTopView = () => {
 					<br />
 					Зажги
 				</Title>
+
 				<Paragraph opacity="80" className={styles.text}>
 					Загрузи видео — DDDance разобьёт танец на понятные шаги и покажет, как
 					повторить каждое движение
 				</Paragraph>
-				<Button className={styles.btn} onClick={handleScrollToUploader}>Попробовать</Button>
+
+				<Button className={styles.btn} onClick={handleScrollToUploader}>
+					Попробовать
+				</Button>
 			</div>
+
 			<div className={styles.rects}>
 				<div className={styles.left}>
 					<span className={styles.row1}>
 						<div className={styles.rect1}></div>
 						<div className={styles.rect2}></div>
 					</span>
-				<div className={styles.row2}>
-				<div className={styles.rect3}></div>
-					<div className={styles.videoWrapper}>
-						<video
-	className={styles.video}
-	src={`${S3_ADDRESS}/assets/homepage_dance.mp4`}
-	autoPlay
-	loop
-	muted
-	playsInline
-	disablePictureInPicture
-	disableRemotePlayback
-	onContextMenu={(e) => e.preventDefault()}
-/>
+
+					<div className={styles.row2}>
+						<div className={styles.rect3}></div>
+
+						<div className={styles.videoWrapper}>
+							<video
+								className={styles.video}
+								src={`${S3_ADDRESS}/assets/homepage_dance.mp4`}
+								autoPlay
+								loop
+								muted
+								playsInline
+								disablePictureInPicture
+								disableRemotePlayback
+								controls={false}
+								preload="auto"
+								onContextMenu={(e) => e.preventDefault()}
+							/>
+						</div>
 					</div>
-				</div>
+
 					<div className={styles.rect4}></div>
 				</div>
+
 				<div className={styles.right}>
 					<div className={styles.rect5}></div>
 					<div className={styles.rect6}></div>
@@ -78,6 +89,47 @@ const DesktopHomePageTopView = () => {
 	);
 };
 
-const MobileHomePageTopView = () => <div className="mobile-layout"></div>;
+const MobileHomePageTopView = () => {
+	return (
+		<section className={styles.mobileContainer}>
+			<div className={styles.mobileVideoWrapper}>
+				<video
+					className={styles.mobileVideo}
+					src={`${S3_ADDRESS}/assets/homepage_dance.mp4`}
+					autoPlay
+					loop
+					muted
+					playsInline
+					disablePictureInPicture
+					disableRemotePlayback
+					controls={false}
+					preload="auto"
+					onContextMenu={(e) => e.preventDefault()}
+				/>
+			</div>
+
+			<div className={styles.mobileBlurPanel}></div>
+
+			<div className={styles.mobileContent}>
+				<Title level="1" className={styles.mobileTitle}>
+					Повтори
+					<br />
+					Прокачай
+					<br />
+					Зажги
+				</Title>
+
+				<Paragraph opacity="80" className={styles.mobileText}>
+					Загрузи ссылку на видео — DDDance разобьёт танец на понятные шаги и
+					покажет, как повторить каждое движение.
+				</Paragraph>
+
+				<Button className={styles.mobileBtn} onClick={handleScrollToUploader}>
+					Попробовать
+				</Button>
+			</div>
+		</section>
+	);
+};
 
 export default HomePageTop;
