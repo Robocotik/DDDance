@@ -10,11 +10,7 @@ const Header: React.FC = () => {
 
 	return (
 		<header id="header" className={styles.header}>
-			<Title
-				level="2"
-				className={styles.logo}
-				onClick={() => navigate('/')}
-			>
+			<Title level="2" className={styles.logo} onClick={() => navigate('/')}>
 				DDDance
 			</Title>
 

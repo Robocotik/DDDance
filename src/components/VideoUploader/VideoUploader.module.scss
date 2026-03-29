@@ -6,6 +6,8 @@
 	flex-direction: column;
 	gap: 70px;
 	margin-bottom: 10rem;
+	padding: 0 16px;
+	box-sizing: border-box;
 }
 
 .buttonsBlock {
@@ -50,4 +52,39 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+	.container {
+		padding: 0 24px;
+		gap: 40px;
+		margin-bottom: 80px;
+	}
+
+	.title {
+		text-align: center;
+		width: 100%;
+	}
+
+	.buttonsBlock {
+		width: 100%;
+		min-width: 0;
+		max-width: 70%;
+		gap: 16px;
+	}
+
+	.uploadButton,
+	.startButton {
+		width: 100%;
+		min-height: 44px;
+		padding: 13px 20px;
+		border-radius: 999px;
+	}
+
+	.subtitle {
+		margin-top: 0;
+		font-size: 14px;
+		line-height: 18px;
+		max-width: 280px;
+	}
 }

@@ -3,3 +3,9 @@
 	flex-direction: column;
 	gap: 7rem;
 }
+
+@media (max-width: 768px) {
+	.page {
+		gap: 5rem;
+	}
+}
