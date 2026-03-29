@@ -33,13 +33,13 @@ const LessonPage: React.FC = () => {
 		);
 	}
 
-	if (videoError) {
-		return (
-			<div className={styles.page}>
-				<p className={styles.error}>Ошибка: {videoError}</p>
-			</div>
-		);
-	}
+	// if (videoError) {
+	// 	return (
+	// 		<div className={styles.page}>
+	// 			<p className={styles.error}>Ошибка: {videoError}</p>
+	// 		</div>
+	// 	);
+	// }
 
 	return (
 		<div className={styles.page}>
