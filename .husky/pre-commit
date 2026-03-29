@@ -1,1 +1,9 @@
-npx lint-staged
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+	. "$HOME/.nvm/nvm.sh"
+	nvm use 24 >/dev/null 2>&1 || true
+fi
+
+npm run lint-staged

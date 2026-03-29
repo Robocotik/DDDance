@@ -13,6 +13,7 @@
 	position: relative;
 	overflow: hidden;
 	transition: transform 0.3s ease;
+	outline: none;
 
 	&:hover {
 		transform: translateY(-1px);
