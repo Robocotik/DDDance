@@ -34,7 +34,7 @@ const VideoUploader: React.FC = () => {
 	};
 
 	return (
-		<div className={styles.container}>
+		<div id="video-uploader" className={styles.container}>
 			<Title className={styles.title}>Сделай первый шаг к своему танцу</Title>
 
 			<div className={styles.buttonsBlock}>
