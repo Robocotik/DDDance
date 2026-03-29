@@ -5,20 +5,20 @@ import HomePage from './pages/HomePage/HomePage';
 import LessonPage from './pages/LessonPage/LessonPage';
 
 function App() {
-  return (
-    <div id='app'>
-      <Header />
+	return (
+		<div id="app">
+			<Header />
 
-      <main id='main'>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/lesson" element={<LessonPage />} />
-        </Routes>
-      </main>
+			<main id="main">
+				<Routes>
+					<Route path="/" element={<HomePage />} />
+					<Route path="/lesson" element={<LessonPage />} />
+				</Routes>
+			</main>
 
-      <Footer />
-    </div>
-  );
+			<Footer />
+		</div>
+	);
 }
 
 export default App;

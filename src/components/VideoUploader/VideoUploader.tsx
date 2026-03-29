@@ -2,11 +2,11 @@ import type { ChangeEvent } from 'react';
 import React, { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import actions from '../../redux/features/video/actions';
 import Title from '../../components/Title/Title';
-import styles from './VideoUploader.module.scss';
+import actions from '../../redux/features/video/actions';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
+import styles from './VideoUploader.module.scss';
 
 const VideoUploader: React.FC = () => {
 	const dispatch = useDispatch();

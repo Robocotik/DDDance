@@ -67,7 +67,8 @@ const uploadVideoAction = (file: File) => async (dispatch: any) => {
 		dispatch(returnVideoLoadedAction(response.data));
 	} catch (error: any) {
 		const errorMessage =
-			error?.message || (typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+			error?.message ||
+			(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
 
 		dispatch(returnVideoErrorAction(errorMessage));
 	}

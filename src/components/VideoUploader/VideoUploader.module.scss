@@ -28,8 +28,14 @@
 }
 
 .uploadButton {
-	background: radial-gradient(92.54% 888.76% at 54.5% 32.84%, #2957A3 0%, #080922 0.01%);
-	box-shadow: 0px -4px 4px rgba(148, 34, 99, 0.25), 0px 4px 8px #942263;
+	background: radial-gradient(
+		92.54% 888.76% at 54.5% 32.84%,
+		#2957a3 0%,
+		#080922 0.01%
+	);
+	box-shadow:
+		0 -4px 4px rgb(148 34 99 / 25%),
+		0 4px 8px #942263;
 }
 
 .subtitle {

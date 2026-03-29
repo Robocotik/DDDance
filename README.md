@@ -14,4 +14,6 @@
 
 [Репозиторий бэкенда](https://github.com/Elizaveta-Makeeva/2026_1_DavaiDavaiDeploy_Backend)
 
+[Репозиторий ML](https://github.com/Babuleh78/DDDanceML)
+
 [Деплой](https://dddance.ru)

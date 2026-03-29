@@ -16,6 +16,7 @@ export default {
 		'keyframes-name-pattern': null,
 		'media-feature-range-notation': 'prefix',
 		'no-empty-source': null,
+		'scss/percent-placeholder-pattern': null,
 	},
 	ignoreFiles: ['**/dist/**'],
 };

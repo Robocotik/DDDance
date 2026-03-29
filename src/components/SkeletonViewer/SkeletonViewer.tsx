@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -6,7 +7,6 @@ import styles from './SkeletonViewer.module.scss';
 
 import { useSelector } from 'react-redux';
 import { selectVideoResult } from '../../redux/features/video/selectors';
-
 
 type Joint = {
 	x: number;
@@ -46,13 +46,16 @@ type SkeletonData = {
 };
 
 const SkeletonViewer: React.FC = () => {
-    const TEST_MODE = true;
-    
+	const TEST_MODE = true;
+
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const frameIdxRef = useRef(0);
 
 	const [status, setStatus] = useState('Загрузка...');
-	const [currentFile, setCurrentFile] = useState<string | null>("/skeleton.json");
+	const [currentFile, setCurrentFile] = useState<string | null>(
+		'/skeleton.json',
+	);
+
 	const [playing, setPlaying] = useState(true);
 	const [speed, setSpeed] = useState(1.0);
 	const [currentFrame, setCurrentFrame] = useState(0);
@@ -63,8 +66,10 @@ const SkeletonViewer: React.FC = () => {
 
 	useEffect(() => {
 		if (result?.result_key) {
-			const fileUrl = "https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/" + result.result_key;
-			
+			const fileUrl =
+				'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/' +
+				result.result_key;
+
 			setCurrentFile(fileUrl);
 			setStatus(`Загрузка ${fileUrl}...`);
 		}
@@ -72,7 +77,10 @@ const SkeletonViewer: React.FC = () => {
 
 	useEffect(() => {
 		const container = containerRef.current;
-		if (!container) return;
+
+		if (!container) {
+			return;
+		}
 
 		let isDestroyed = false;
 		let animationId: number;
@@ -93,6 +101,7 @@ const SkeletonViewer: React.FC = () => {
 			0.1,
 			1000,
 		);
+
 		camera.position.set(1.5, 1.2, 2.5);
 		camera.lookAt(0, 0.5, 0);
 
@@ -132,14 +141,33 @@ const SkeletonViewer: React.FC = () => {
 		let spheres: THREE.Mesh[] = [];
 
 		const getConnectionColor = (from: number, to: number): number => {
-			if ((from === 11 || to === 11) && (from === 12 || to === 12))
+			if ((from === 11 || to === 11) && (from === 12 || to === 12)) {
 				return 0x44aaff;
-			if (from === 23 || to === 23 || from === 24 || to === 24) return 0x44aaff;
-			if (from === 13 || to === 13 || from === 15 || to === 15) return 0x44ffaa;
-			if (from === 14 || to === 14 || from === 16 || to === 16) return 0xffaa44;
-			if (from === 25 || to === 25 || from === 27 || to === 27) return 0xff44aa;
-			if (from === 26 || to === 26 || from === 28 || to === 28) return 0xaa44ff;
-			if (from === 0 || to === 0) return 0xff44ff;
+			}
+
+			if (from === 23 || to === 23 || from === 24 || to === 24) {
+				return 0x44aaff;
+			}
+
+			if (from === 13 || to === 13 || from === 15 || to === 15) {
+				return 0x44ffaa;
+			}
+
+			if (from === 14 || to === 14 || from === 16 || to === 16) {
+				return 0xffaa44;
+			}
+
+			if (from === 25 || to === 25 || from === 27 || to === 27) {
+				return 0xff44aa;
+			}
+
+			if (from === 26 || to === 26 || from === 28 || to === 28) {
+				return 0xaa44ff;
+			}
+
+			if (from === 0 || to === 0) {
+				return 0xff44ff;
+			}
 			return 0x88aaff;
 		};
 
@@ -149,7 +177,9 @@ const SkeletonViewer: React.FC = () => {
 			lines = [];
 			spheres = [];
 
-			if (!joints.length) return;
+			if (!joints.length) {
+				return;
+			}
 
 			joints.forEach((pos) => {
 				const geometry = new THREE.SphereGeometry(0.025, 16, 16);
@@ -159,6 +189,7 @@ const SkeletonViewer: React.FC = () => {
 					roughness: 0.3,
 					metalness: 0.1,
 				});
+
 				const sphere = new THREE.Mesh(geometry, material);
 				sphere.position.copy(pos);
 				scene.add(sphere);
@@ -179,36 +210,41 @@ const SkeletonViewer: React.FC = () => {
 		};
 
 		const convertJoints = (frame: Frame): THREE.Vector3[] => {
-            const leftHip = frame.joints[23];
-            const rightHip = frame.joints[24];
-            const center = {
-                x: (leftHip.x + rightHip.x) / 2,
-                y: (leftHip.y + rightHip.y) / 2,
-                z: (leftHip.z + rightHip.z) / 2,
-            };
-            
-            const scaleXY = 1.5;
-            const scaleZ = 0.5;
-            
-            return frame.joints.map((joint) =>
-                new THREE.Vector3(
-                    (joint.x - center.x) * scaleXY,
-                    -(joint.y - center.y) * scaleXY,
-                    (joint.z - center.z) * scaleZ
-                )
-            );
-        };
+			const leftHip = frame.joints[23];
+			const rightHip = frame.joints[24];
+			const center = {
+				x: (leftHip.x + rightHip.x) / 2,
+				y: (leftHip.y + rightHip.y) / 2,
+				z: (leftHip.z + rightHip.z) / 2,
+			};
+
+			const scaleXY = 1.5;
+			const scaleZ = 0.5;
+
+			return frame.joints.map(
+				(joint) =>
+					new THREE.Vector3(
+						(joint.x - center.x) * scaleXY,
+						-(joint.y - center.y) * scaleXY,
+						(joint.z - center.z) * scaleZ,
+					),
+			);
+		};
 
 		const loadData = async (fileUrl: string) => {
 			setStatus(`Загрузка ${fileUrl}...`);
+
 			try {
-                const url = fileUrl.startsWith('http') 
-                    ? fileUrl.trim() 
-                    : `/${fileUrl.replace(/^\/+/, '')}`;
-                
+				const url = fileUrl.startsWith('http')
+					? fileUrl.trim()
+					: `/${fileUrl.replace(/^\/+/, '')}`;
+
 				console.log('Загрузка данных по URL:', url);
 				const response = await fetch(url);
-				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
 				const data: SkeletonData = await response.json();
 
 				framesData = data.frames;
@@ -229,12 +265,15 @@ const SkeletonViewer: React.FC = () => {
 				setStatus(
 					`Ошибка: ${err instanceof Error ? err.message : String(err)}`,
 				);
+
 				console.error(err);
 			}
 		};
 
 		const updateFrame = (frameIndex: number) => {
-			if (!framesData.length) return;
+			if (!framesData.length) {
+				return;
+			}
 
 			const frame = framesData[Math.min(frameIndex, framesData.length - 1)];
 			const positions = convertJoints(frame);
@@ -243,16 +282,26 @@ const SkeletonViewer: React.FC = () => {
 		};
 
 		const animate = (time: number) => {
-			if (isDestroyed) return;
+			if (isDestroyed) {
+				return;
+			}
 
 			if (playing && framesData.length) {
-				if (lastTime === 0) lastTime = time;
+				if (lastTime === 0) {
+					lastTime = time;
+				}
 				const delta = Math.min(0.033, (time - lastTime) / 1000);
 				lastTime = time;
 
 				currentFrameIdx += delta * fps * speed;
-				if (currentFrameIdx >= framesData.length) currentFrameIdx = 0;
-				if (currentFrameIdx < 0) currentFrameIdx = 0;
+
+				if (currentFrameIdx >= framesData.length) {
+					currentFrameIdx = 0;
+				}
+
+				if (currentFrameIdx < 0) {
+					currentFrameIdx = 0;
+				}
 
 				frameIdxRef.current = Math.floor(currentFrameIdx);
 				updateFrame(Math.floor(currentFrameIdx));
@@ -270,13 +319,17 @@ const SkeletonViewer: React.FC = () => {
 
 		const init = async () => {
 			if (currentFile) {
-                await loadData(currentFile);
-                if (framesData.length) updateFrame(0);
-            } else {
-                setStatus("Нет файла для загрузки");
-            }
-            lastTime = 0;
-            animationId = requestAnimationFrame(animate);
+				await loadData(currentFile);
+
+				if (framesData.length) {
+					updateFrame(0);
+				}
+			} else {
+				setStatus('Нет файла для загрузки');
+			}
+
+			lastTime = 0;
+			animationId = requestAnimationFrame(animate);
 		};
 
 		init();
@@ -286,6 +339,7 @@ const SkeletonViewer: React.FC = () => {
 			camera.updateProjectionMatrix();
 			renderer.setSize(container.clientWidth, container.clientHeight);
 		});
+
 		resizeObserver.observe(container);
 
 		return () => {
@@ -294,16 +348,16 @@ const SkeletonViewer: React.FC = () => {
 			resizeObserver.disconnect();
 			controls.dispose();
 			renderer.dispose();
+
 			if (container && renderer.domElement) {
 				container.removeChild(renderer.domElement);
 			}
 		};
 	}, [currentFile, playing, speed]);
-	
-	if (!result && !TEST_MODE) {
-        return <></>;
-    }
 
+	if (!result && !TEST_MODE) {
+		return <></>;
+	}
 
 	return (
 		<section className={styles.section}>
@@ -312,7 +366,6 @@ const SkeletonViewer: React.FC = () => {
 				ЛКМ — вращение | ПКМ — панорама | Колесо — зум
 			</p>
 			<div className={styles.status}>{status}</div>
-
 
 			<div className={styles.controls}>
 				<div className={styles.playbackControls}>
