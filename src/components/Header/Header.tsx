@@ -15,10 +15,17 @@ const Header: React.FC = () => {
 			</Title>
 
 			<span className={styles.right}>
-				<Paragraph level="2" opacity="100" className={styles.register}>
+				<Paragraph
+					onClick={() => navigate('/register')}
+					level="2"
+					opacity="100"
+					className={styles.register}
+				>
 					Зарегистрироваться
 				</Paragraph>
-				<Button size="m">Войти</Button>
+				<Button onClick={() => navigate('/login')} size="m">
+					Войти
+				</Button>
 			</span>
 		</header>
 	);
