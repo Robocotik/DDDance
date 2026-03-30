@@ -21,6 +21,7 @@ export const Input: FC<InputProps> = (props) => {
 			<input
 				className={clsx(styles.input, className)}
 				type={inputType}
+				placeholder={placeholder}
 				{...rest}
 			/>
 			{withEye && (

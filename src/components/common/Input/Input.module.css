@@ -10,3 +10,8 @@
 	background-color: var(--color-forms);
 	box-shadow: var(--input-drop-shadow);
 }
+
+.input::placeholder {
+	color: var(--color-text);
+	opacity: 1;
+}
