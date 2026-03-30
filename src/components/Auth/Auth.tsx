@@ -23,10 +23,15 @@ export const Auth: FC<AuthProps> = ({
 	const [login, setLogin] = useState('');
 	const [password, setPassword] = useState('');
 	const [repeatPassword, setRepeatPassword] = useState('');
+	const [error, setError] = useState<string | null>(null);
 
 	const handleSubmit = useCallback(
 		(e: React.SubmitEvent<HTMLFormElement>) => {
 			e.preventDefault();
+			if (isRegistration && password !== repeatPassword) {
+				setError('Пароли не совпадают');
+				return;
+			}
 			onSubmit({ login, password });
 		},
 		[onSubmit, login, password],
@@ -64,6 +69,7 @@ export const Auth: FC<AuthProps> = ({
 						onChange={(e) => setRepeatPassword(e.target.value)}
 					/>
 				)}
+				{error && <p className={styles.error}>{error}</p>}
 				<Button className={styles.submitBtn} type="submit">
 					{submitText}
 				</Button>

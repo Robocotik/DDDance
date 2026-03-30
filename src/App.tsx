@@ -4,6 +4,7 @@ import Header from './components/Header/Header';
 import { AuthPage } from './pages/AuthPage/AuthPage';
 import HomePage from './pages/HomePage/HomePage';
 import LessonPage from './pages/LessonPage/LessonPage';
+import { RegisterPage } from './pages/RegisterPage/RegisterPage';
 
 function App() {
 	const { pathname } = useLocation();
@@ -17,7 +18,7 @@ function App() {
 				<Routes>
 					<Route path="/" element={<HomePage />} />
 					<Route path="/login" element={<AuthPage />} />
-					<Route path="/register" element={<AuthPage />} />
+					<Route path="/register" element={<RegisterPage />} />
 					<Route path="/lesson" element={<LessonPage />} />
 				</Routes>
 			</main>

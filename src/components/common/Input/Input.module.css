@@ -15,3 +15,18 @@
 	color: var(--color-text);
 	opacity: 1;
 }
+
+.eye {
+	position: absolute;
+	top: 50%;
+	right: 14px;
+	transform: translateY(-50%);
+	width: 16px;
+	height: 16px;
+	opacity: 0.5;
+	cursor: pointer;
+}
+
+.inputWrapper {
+	position: relative;
+}

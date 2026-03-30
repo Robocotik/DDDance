@@ -17,7 +17,7 @@ export const Input: FC<InputProps> = (props) => {
 	}, [inputType, type]);
 
 	return (
-		<div>
+		<div className={styles.inputWrapper}>
 			<input
 				className={clsx(styles.input, className)}
 				type={inputType}
