@@ -21,10 +21,18 @@
 	top: 50%;
 	right: 14px;
 	transform: translateY(-50%);
-	width: 16px;
-	height: 16px;
+	width: 20px;
+	height: 20px;
 	opacity: 0.5;
 	cursor: pointer;
+	background: transparent;
+	border: none;
+	padding: 0;
+}
+
+.eyeIcon {
+	width: 20px;
+	height: 20px;
 }
 
 .inputWrapper {

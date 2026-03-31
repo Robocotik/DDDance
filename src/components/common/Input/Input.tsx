@@ -1,20 +1,25 @@
+import { EyeOff } from '@/components/icons/EyeOff/EyeOff';
+import { EyeShow } from '@/components/icons/EyeShow/EyeShow';
 import clsx from 'clsx';
 import { type ComponentProps, type FC, useCallback, useState } from 'react';
 import styles from './Input.module.css';
 
 type InputProps = ComponentProps<'input'> & { withEye?: boolean };
 
+const isShownPassword = (inputType: string) => inputType === 'text';
+
 export const Input: FC<InputProps> = (props) => {
 	const { placeholder, type, className, withEye = false, ...rest } = props;
-	const [inputType, setInputType] = useState(type || 'text');
+	const currentType = type || 'text';
+	const [inputType, setInputType] = useState(currentType);
 
 	const eyeClickHandler = useCallback(() => {
 		if (inputType === 'password') {
-			setInputType(type || 'text');
+			setInputType('text');
 		} else {
 			setInputType('password');
 		}
-	}, [inputType, type]);
+	}, [inputType]);
 
 	return (
 		<div className={styles.inputWrapper}>
@@ -26,7 +31,11 @@ export const Input: FC<InputProps> = (props) => {
 			/>
 			{withEye && (
 				<button type="button" className={styles.eye} onClick={eyeClickHandler}>
-					👁️
+					{isShownPassword(inputType) ? (
+						<EyeShow className={styles.eyeIcon} />
+					) : (
+						<EyeOff className={styles.eyeIcon} />
+					)}
 				</button>
 			)}
 		</div>
