@@ -1,0 +1,38 @@
+.page {
+	position: relative;
+	min-height: 100dvh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 24px;
+	overflow: hidden;
+	background-color: var(--color-bg);
+}
+
+.bubblesLayer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.bubble {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	will-change: transform;
+	transition:
+		transform 240ms ease,
+		filter 240ms ease;
+	filter: drop-shadow(0 8px 14px rgb(58 39 133 / 30%));
+	user-select: none;
+}
+
+.raised {
+	transform: translate(-50%, calc(-50% - 12px)) scale(1.03);
+	filter: drop-shadow(0 14px 20px rgb(58 39 133 / 45%));
+}
+
+.authLayer {
+	position: relative;
+	z-index: 2;
+}
