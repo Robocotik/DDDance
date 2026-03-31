@@ -95,7 +95,7 @@ const MobileHomePageTopView = () => {
 			<div className={styles.mobileVideoWrapper}>
 				<video
 					className={styles.mobileVideo}
-					src={`${S3_ADDRESS}/assets/homepage_dance.mp4`}
+					src={`${S3_ADDRESS}assets/homepage_dance.mp4`}
 					autoPlay
 					loop
 					muted

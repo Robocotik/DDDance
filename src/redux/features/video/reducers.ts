@@ -3,18 +3,18 @@ import VideoActionTypes from './actionTypes';
 import type { UploadVideoResult } from './actions';
 
 export interface VideoState {
-	videoLoading: boolean;
-	video: UploadVideoResult | null;
-	videoError: string | null;
+	resultLoading: boolean;
+	result: UploadVideoResult | null;
+	resultError: string | null;
 }
 
 /**
  * Начальное состояние редьюсера видео.
  */
 const initialState: VideoState = {
-	videoLoading: false,
-	video: null,
-	videoError: null,
+	resultLoading: false,
+	result: null,
+	resultError: null,
 };
 
 /**
@@ -34,23 +34,23 @@ const videoReducer: Reducer<VideoState, AnyAction> = (
 		case VideoActionTypes.VIDEO_UPLOAD_LOADING:
 			return {
 				...state,
-				videoLoading: true,
-				videoError: null,
+				resultLoading: true,
+				resultError: null,
 			};
 
 		case VideoActionTypes.VIDEO_UPLOAD_LOADED:
 			return {
 				...state,
-				videoLoading: false,
-				video: payload.video,
-				videoError: null,
+				resultLoading: false,
+				result: payload.result,
+				resultError: null,
 			};
 
 		case VideoActionTypes.VIDEO_UPLOAD_ERROR:
 			return {
 				...state,
-				videoLoading: false,
-				videoError: payload.error,
+				resultLoading: false,
+				resultError: payload.error,
 			};
 
 		case VideoActionTypes.CLEAR_VIDEO:
