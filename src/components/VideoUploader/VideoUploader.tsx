@@ -69,7 +69,7 @@ const VideoUploader: React.FC = () => {
 
 			<Paragraph opacity="80" className={styles.subtitle}>
 				Форматы: MP4, MOV <br />
-				Вес файла: не более N МБ
+				Вес файла: не более 25 МБ
 			</Paragraph>
 		</div>
 	);
