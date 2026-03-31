@@ -145,7 +145,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ result }) => {
 	useEffect(() => {
 		const scene = sceneRef.current;
 
-		if (!scene || !s3Key) {
+		if (!scene) {
 			return;
 		}
 
@@ -245,7 +245,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ result }) => {
 			cancelled = true;
 			clearCurrentModel();
 		};
-	}, [modelUrl, s3Key]);
+	}, [modelUrl]);
 
 	useEffect(() => {
 		if (!modelRef.current) {
