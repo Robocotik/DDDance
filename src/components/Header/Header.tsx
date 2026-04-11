@@ -19,7 +19,12 @@ const Header: React.FC = () => {
 
 			<span className={styles.right}>
 				{user ? (
-					<Paragraph level="2" opacity="100" className={styles.userLogin}>
+					<Paragraph
+						level="2"
+						opacity="100"
+						className={styles.userLogin}
+						onClick={() => navigate(`/profile/${user.id}`)}
+					>
 						{user.login}
 					</Paragraph>
 				) : (
