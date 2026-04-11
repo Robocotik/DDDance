@@ -1,14 +1,22 @@
-import { applyMiddleware, combineReducers, createStore } from 'redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { thunk } from 'redux-thunk';
+import type { UserState } from './features/user/userSlice';
+import userReducer from './features/user/userSlice';
 import type { VideoState } from './features/video/reducers';
 import videoReducer from './features/video/reducers';
 
-const rootReducer = combineReducers({
-	video: videoReducer,
+export const store = configureStore({
+	reducer: {
+		video: videoReducer,
+		user: userReducer,
+	},
+	middleware: (getDefaultMiddleware) =>
+		getDefaultMiddleware({ thunk: false }).concat(thunk),
 });
 
 export interface RootState {
 	video: VideoState;
+	user: UserState;
 }
 
-export const store = createStore(rootReducer, applyMiddleware(thunk));
+export type AppDispatch = typeof store.dispatch;

@@ -27,10 +27,10 @@ const setVideoLoadingAction = () => ({
 /**
  * Action: успешная загрузка видео.
  */
-const returnVideoLoadedAction = (data: UploadVideoResult) => ({
+const returnResultLoadedAction = (data: UploadVideoResult) => ({
 	type: actionTypes.VIDEO_UPLOAD_LOADED,
 	payload: {
-		video: data,
+		result: data,
 	},
 });
 
@@ -64,7 +64,7 @@ const uploadVideoAction = (file: File) => async (dispatch: any) => {
 			},
 		);
 
-		dispatch(returnVideoLoadedAction(response.data));
+		dispatch(returnResultLoadedAction(response.data));
 	} catch (error: any) {
 		const errorMessage =
 			error?.message ||

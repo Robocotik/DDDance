@@ -289,3 +289,14 @@
 		display: block;
 	}
 }
+
+@media (min-width: 1700px) {
+	.information {
+		margin-left: 5rem;
+	}
+
+	.rects {
+		width: 75%;
+		flex: 5;
+	}
+}
