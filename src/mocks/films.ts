@@ -1,3 +1,5 @@
+import type { BaseAuthResponse } from '@/api/auth/register';
+
 export const trendingVideos = [
 	{
 		src: '#',
@@ -48,3 +50,14 @@ export const trendingVideos = [
 		title: 'Фильм 12',
 	},
 ];
+
+export const baseAuthResponseMock: BaseAuthResponse = {
+	avatar: 'https://example.com/avatar.png',
+	created_at: '2026-04-11T10:30:00.000Z',
+	has_2fa: true,
+	id: 'user_123456',
+	is_foreign: false,
+	login: 'test_user',
+	updated_at: '2026-04-11T12:00:00.000Z',
+	version: 1,
+};

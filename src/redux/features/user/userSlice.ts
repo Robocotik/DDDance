@@ -5,12 +5,14 @@ export interface UserState {
 	user: BaseAuthResponse | null;
 	loading: boolean;
 	error: string | null;
+	isAuthChecked: boolean;
 }
 
 const initialState: UserState = {
 	user: null,
 	loading: false,
 	error: null,
+	isAuthChecked: false,
 };
 
 const userSlice = createSlice({
@@ -21,6 +23,7 @@ const userSlice = createSlice({
 			state.user = action.payload;
 			state.error = null;
 			state.loading = false;
+			state.isAuthChecked = true;
 		},
 		setLoading: (state, action: PayloadAction<boolean>) => {
 			state.loading = action.payload;
@@ -28,11 +31,13 @@ const userSlice = createSlice({
 		setError: (state, action: PayloadAction<string>) => {
 			state.error = action.payload;
 			state.loading = false;
+			state.isAuthChecked = true;
 		},
 		clearUser: (state) => {
 			state.user = null;
 			state.error = null;
 			state.loading = false;
+			state.isAuthChecked = true;
 		},
 	},
 });

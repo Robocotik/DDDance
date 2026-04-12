@@ -1,0 +1,38 @@
+.container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	margin-top: 8rem;
+}
+
+.avatarWrapper {
+	position: relative;
+	width: 150px;
+	height: 150px;
+}
+
+.title {
+	margin-bottom: 3rem;
+}
+
+.avatar {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	object-fit: cover;
+	display: block;
+}
+
+.editIcon {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+}
+
+.login {
+	font-size: var(--font-size-30);
+}

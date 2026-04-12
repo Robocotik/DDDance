@@ -35,41 +35,24 @@
 	font-size: var(--font-size-16);
 }
 
-.header {
-	width: 100%;
-	max-width: 100%;
-	padding: 1.1rem 5rem;
-	box-sizing: border-box;
-	position: fixed;
-	left: 0;
-	right: 0;
-	top: 0;
-	z-index: 1000;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1.25rem;
-	background: rgb(28 28 101 / 25%);
-	box-shadow: 0 4px 4px rgb(8 9 34 / 25%);
-	backdrop-filter: blur(15px);
-}
-
-.right {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 40px;
-}
-
-.logo {
-	color: var(--color-accent);
-	font-size: var(--font-size-30);
-	cursor: pointer;
-	user-select: none;
-}
-
+.userLogin,
 .register {
-	font-size: var(--font-size-16);
+	display: inline-block;
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		opacity 0.2s ease;
+	will-change: transform;
+}
+
+.userLogin:hover,
+.register:hover {
+	transform: translateY(-2px);
+}
+
+.userLogin:active,
+.register:active {
+	transform: translateY(0);
 }
 
 @media (max-width: 768px) {
