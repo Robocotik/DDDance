@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../Button/Button';
 import { Input } from '../common/Input/Input';
+import { VkIdAuthButton } from '../VkIdAuthButton/VkIdAuthButton';
 import styles from './Auth.module.css';
 
 type AuthProps = {
@@ -100,6 +101,22 @@ export const Auth: FC<AuthProps> = ({
 		[error],
 	);
 
+	const handleVkAuthenticated = useCallback(
+		(userData: BaseAuthResponse) => {
+			dispatch(setUser(userData));
+			navigate('/');
+		},
+		[dispatch, navigate],
+	);
+
+	const handleVkError = useCallback(
+		(message: string) => {
+			setError(message);
+			dispatch(setUserError(message));
+		},
+		[dispatch],
+	);
+
 	return (
 		<div className={styles.wrapper}>
 			<form className={styles.form} onSubmit={handleSubmit}>
@@ -160,9 +177,11 @@ export const Auth: FC<AuthProps> = ({
 				<Button className={styles.submitBtn} type="submit">
 					{submitText}
 				</Button>
-				<Button className={styles.vkidBtn} type="submit">
-					VKID
-				</Button>
+				<VkIdAuthButton
+					className={styles.vkidBtn}
+					onAuthenticated={handleVkAuthenticated}
+					onError={handleVkError}
+				/>
 				<a href={redirectClick}>{redirectText}</a>
 			</form>
 		</div>
