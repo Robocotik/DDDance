@@ -8,7 +8,7 @@ type UserInfoProps = {
 	user: BaseAuthResponse;
 };
 
-const defaultAvatarURL =
+export const defaultAvatarURL =
 	'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/assets/default_avatar.jpg';
 
 const UserInfo: React.FC<UserInfoProps> = ({ user }) => {

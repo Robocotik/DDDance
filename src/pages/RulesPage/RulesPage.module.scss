@@ -1,0 +1,28 @@
+.page {
+	max-width: 920px;
+	margin: 80px auto;
+	padding: 0 24px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+}
+
+.title {
+	font-family: var(--font-title);
+	font-size: clamp(30px, 4vw, 42px);
+	margin-bottom: 24px;
+	color: #fff;
+}
+
+.text {
+	font-size: 18px;
+	line-height: 1.6;
+	opacity: 0.9;
+}
+
+.backLink {
+	display: inline-block;
+	margin-top: 28px;
+	color: #fff;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
