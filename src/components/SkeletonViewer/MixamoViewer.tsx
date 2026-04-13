@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { S3_ADDRESS } from '../../consts/urls';
-import type { UploadVideoResult } from '../../redux/features/video/actions';
+import type { UploadVideoResult } from '../../redux/features/lesson/actions';
 
 type MixamoViewerProps = {
 	result: UploadVideoResult;

@@ -1,12 +1,14 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import React, { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import tiktokLogo from '../../assets/svg/tiktok-logo.svg';
 import Title from '../../components/Title/Title';
-import actions from '../../redux/features/video/actions';
+import actions from '../../redux/features/lesson/actions';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
 import styles from './VideoUploader.module.scss';
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const VideoUploader: React.FC = () => {
 	const dispatch = useDispatch();
@@ -14,28 +16,74 @@ const VideoUploader: React.FC = () => {
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [videoLink, setVideoLink] = useState('');
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
+
+		if (!file) {
+			return;
+		}
+
+		if (file.size > MAX_FILE_SIZE) {
+			return;
+		}
+
 		setSelectedFile(file);
+	};
+
+	const handleLinkChange = (event: ChangeEvent<HTMLInputElement>) => {
+		setVideoLink(event.target.value);
 	};
 
 	const handleOpenFilePicker = () => {
 		inputRef.current?.click();
 	};
 
-	const handleStartAnalysis = async () => {
-		if (!selectedFile) {
+	const handleStartAnalysis = () => {
+		const trimmedLink = videoLink.trim();
+
+		if (selectedFile) {
+			dispatch(actions.uploadLessonByVideoAction(selectedFile) as any);
+			navigate('/lesson');
 			return;
 		}
 
-		dispatch(actions.uploadVideoAction(selectedFile) as any);
-		navigate('/lesson');
+		if (trimmedLink) {
+			dispatch(actions.uploadLessonByLinkAction(trimmedLink) as any);
+			navigate('/lesson');
+		}
 	};
+
+	const handleSubmitLink = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		handleStartAnalysis();
+	};
+
+	const isStartDisabled = !selectedFile && !videoLink.trim();
 
 	return (
 		<div id="video-uploader" className={styles.container}>
 			<Title className={styles.title}>Сделай первый шаг к своему танцу</Title>
+
+			<div className={styles.workWithRow}>
+				<Paragraph opacity="80" className={styles.subtitle2}>
+					Мы работаем с:
+				</Paragraph>
+				<img src={tiktokLogo} alt="TikTok" className={styles.tiktokLogo} />
+			</div>
+
+			<form className={styles.linkForm} onSubmit={handleSubmitLink}>
+				<input
+					type="text"
+					value={videoLink}
+					onChange={handleLinkChange}
+					placeholder="Ссылка на видео"
+					className={styles.linkInput}
+				/>
+			</form>
+
+			<Title className={styles.title2}>ИЛИ</Title>
 
 			<div className={styles.buttonsBlock}>
 				<Button
@@ -57,20 +105,20 @@ const VideoUploader: React.FC = () => {
 					style={{ display: 'none' }}
 				/>
 
+				<Paragraph opacity="80" className={styles.subtitle}>
+					Форматы: MP4, MOV <br />
+					Вес файла: не более 25 МБ
+				</Paragraph>
+
 				<Button
 					type="button"
 					className={styles.startButton}
 					onClick={handleStartAnalysis}
-					disabled={!selectedFile}
+					disabled={isStartDisabled}
 				>
 					<span className={styles.buttonText}>Начать разбор</span>
 				</Button>
 			</div>
-
-			<Paragraph opacity="80" className={styles.subtitle}>
-				Форматы: MP4, MOV <br />
-				Вес файла: не более 25 МБ
-			</Paragraph>
 		</div>
 	);
 };

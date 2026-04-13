@@ -1,28 +1,45 @@
-import React from 'react';
+import type { AppDispatch } from '@/redux/store';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import trendActions from '../../redux/features/trends/actions';
+import {
+	selectTrends,
+	selectTrendsError,
+	selectTrendsLoading,
+} from '../../redux/features/trends/selectors';
 import Title from '../Title/Title';
 import VerticalVideo from '../VerticalVideo/VerticalVideo';
 import styles from './InTrends.module.scss';
 
-export interface VideoItem {
-	src: string;
-	title?: string;
-}
+const InTrends: React.FC = () => {
+	const dispatch = useDispatch<AppDispatch>();
 
-interface InTrendsProps {
-	videos: VideoItem[];
-}
+	const trends = useSelector(selectTrends);
+	const isLoading = useSelector(selectTrendsLoading);
+	const error = useSelector(selectTrendsError);
 
-const InTrends: React.FC<InTrendsProps> = ({ videos }) => {
-	if (!videos) {
-		return <></>;
+	useEffect(() => {
+		dispatch(trendActions.getTrendVideosAction());
+
+		return () => {
+			dispatch(trendActions.clearTrendsAction());
+		};
+	}, [dispatch]);
+
+	if (isLoading) {
+		return null;
+	}
+
+	if (error || !trends || !trends.videos.length) {
+		return null;
 	}
 
 	return (
 		<div className={styles.container}>
-			<Title className={styles.title}>Сейчас в тренде</Title>
+			<Title className={styles.title}>Возможно вам понравится</Title>
 			<div className={styles.videoContainer}>
-				{videos.map((video, index) => (
-					<VerticalVideo key={`${video.src}-${index}`} video={video} />
+				{trends.videos.map((video) => (
+					<VerticalVideo key={video.id} video={video} />
 				))}
 			</div>
 		</div>
