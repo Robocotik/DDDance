@@ -2,6 +2,7 @@ import { selectUser } from '@/redux/features/user/selectors';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { AvatarMenu } from '../AvatarMenu/AvatarMenu';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
 import Title from '../Title/Title';
@@ -19,14 +20,17 @@ const Header: React.FC = () => {
 
 			<span className={styles.right}>
 				{user ? (
-					<Paragraph
-						level="2"
-						opacity="100"
-						className={styles.userLogin}
-						onClick={() => navigate(`/profile/${user.id}`)}
-					>
-						{user.login}
-					</Paragraph>
+					<>
+						<Paragraph
+							level="2"
+							opacity="100"
+							className={styles.userLogin}
+							onClick={() => navigate(`/profile/${user.id}`)}
+						>
+							{user.login}
+						</Paragraph>
+						<AvatarMenu user={user} />
+					</>
 				) : (
 					<>
 						<Paragraph

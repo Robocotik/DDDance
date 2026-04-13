@@ -7,7 +7,7 @@ import {
 } from '@/redux/features/user/userSlice';
 import { useCallback, useState, type FC } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../Button/Button';
 import { Input } from '../common/Input/Input';
 import styles from './Auth.module.css';
@@ -34,7 +34,13 @@ export const Auth: FC<AuthProps> = ({
 	const [login, setLogin] = useState('');
 	const [password, setPassword] = useState('');
 	const [repeatPassword, setRepeatPassword] = useState('');
+	const [isRulesAccepted, setIsRulesAccepted] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const redirectClick = isRegistration ? '/login' : '/register';
+	const redirectText = isRegistration
+		? 'Уже зарегистрированы?'
+		: 'У меня нет аккаунта';
 
 	const handleSubmit = useCallback(
 		async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -52,6 +58,11 @@ export const Auth: FC<AuthProps> = ({
 				return;
 			}
 
+			if (isRegistration && !isRulesAccepted) {
+				setError('Необходимо согласиться с правилами платформы');
+				return;
+			}
+
 			try {
 				const userData = await onSubmit({ login, password });
 				dispatch(setUser(userData));
@@ -64,7 +75,16 @@ export const Auth: FC<AuthProps> = ({
 				dispatch(setUserError(errorMessage));
 			}
 		},
-		[onSubmit, login, password, repeatPassword, isRegistration, dispatch],
+		[
+			onSubmit,
+			login,
+			password,
+			repeatPassword,
+			isRegistration,
+			isRulesAccepted,
+			navigate,
+			dispatch,
+		],
 	);
 
 	const onChange = useCallback(
@@ -115,10 +135,35 @@ export const Auth: FC<AuthProps> = ({
 					)}
 					{error && <p className={styles.error}>{error}</p>}
 				</div>
+				{isRegistration && (
+					<label className={styles.rulesConsent}>
+						<input
+							type="checkbox"
+							checked={isRulesAccepted}
+							onChange={(event) => {
+								setIsRulesAccepted(event.target.checked);
+								if (error) {
+									setError(null);
+								}
+							}}
+							className={styles.rulesCheckbox}
+						/>
+						<span>
+							Регистрируясь на сайте, вы соглашаетесь с{' '}
+							<Link to="/rules" className={styles.rulesLink}>
+								правилами
+							</Link>
+						</span>
+					</label>
+				)}
 
 				<Button className={styles.submitBtn} type="submit">
 					{submitText}
 				</Button>
+				<Button className={styles.vkidBtn} type="submit">
+					VKID
+				</Button>
+				<a href={redirectClick}>{redirectText}</a>
 			</form>
 		</div>
 	);
