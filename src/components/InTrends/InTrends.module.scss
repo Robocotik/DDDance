@@ -7,19 +7,40 @@
 	overflow: hidden;
 }
 
-.videoContainer {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 20px;
-	width: fit-content;
-
-	& > * {
-		width: 12%;
-		flex: 0 0 auto;
-	}
-}
-
 .title {
 	text-align: center;
+}
+
+.marquee {
+	width: 100%;
+	overflow: hidden;
+}
+
+.track {
+	display: flex;
+	width: max-content;
+	will-change: transform;
+	animation: scroll var(--marquee-duration, 20s) linear infinite;
+}
+
+.group {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	padding-right: 20px;
+	flex-shrink: 0;
+}
+
+.item {
+	flex: 0 0 clamp(140px, 17vw, 220px);
+}
+
+@keyframes scroll {
+	from {
+		transform: translateX(-50%);
+	}
+
+	to {
+		transform: translateX(0);
+	}
 }

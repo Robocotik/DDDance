@@ -1,4 +1,5 @@
 import type { BaseAuthResponse } from '@/api/auth/register';
+import type { TrendVideos } from '@/redux/features/trends/actions';
 
 export const trendingVideos = [
 	{
@@ -60,4 +61,42 @@ export const baseAuthResponseMock: BaseAuthResponse = {
 	login: 'test_user',
 	updated_at: '2026-04-11T12:00:00.000Z',
 	version: 1,
+};
+
+export const trendsMock: TrendVideos = {
+	count: 8,
+	videos: [
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+		{
+			id: '14ede021-44be-4c3e-9bf9-66fc7cf75dfc',
+			url: 'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/results/14ede021-44be-4c3e-9bf9-66fc7cf75dfc/video.mp4',
+		},
+	],
 };

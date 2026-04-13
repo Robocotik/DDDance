@@ -15,7 +15,16 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 	};
 
 	return (
-		<video className={styles.video} src={video.url} onClick={handleClick} />
+		<video
+			className={styles.video}
+			src={video.url}
+			onClick={handleClick}
+			autoPlay
+			muted
+			loop
+			playsInline
+			preload="metadata"
+		/>
 	);
 };
 

@@ -1,4 +1,4 @@
-import http from '../../../api/http';
+import http from '@/api/http';
 import actionTypes from './actionTypes';
 
 export interface VideoItem {
@@ -39,7 +39,7 @@ const getTrendVideosAction = () => async (dispatch: any) => {
 	dispatch(setTrendsLoadingAction());
 
 	try {
-		const response = await http.get<TrendVideos>('/users/main_page/');
+		const response = await http.get<TrendVideos>('/users/main_page');
 
 		dispatch(returnTrendsLoadedAction(response.data));
 	} catch (error: any) {

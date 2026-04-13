@@ -34,13 +34,33 @@ const InTrends: React.FC = () => {
 		return null;
 	}
 
+	const marqueeStyle = {
+		['--marquee-duration' as string]: `${Math.max(
+			trends.videos.length * 4,
+			16,
+		)}s`,
+	};
+
 	return (
 		<div className={styles.container}>
 			<Title className={styles.title}>Возможно вам понравится</Title>
-			<div className={styles.videoContainer}>
-				{trends.videos.map((video) => (
-					<VerticalVideo key={video.id} video={video} />
-				))}
+
+			<div className={styles.marquee} style={marqueeStyle}>
+				<div className={styles.track}>
+					{[0, 1].map((copyIndex) => (
+						<div
+							key={copyIndex}
+							className={styles.group}
+							aria-hidden={copyIndex === 1}
+						>
+							{trends.videos.map((video) => (
+								<div key={`${copyIndex}-${video.id}`} className={styles.item}>
+									<VerticalVideo video={video} />
+								</div>
+							))}
+						</div>
+					))}
+				</div>
 			</div>
 		</div>
 	);

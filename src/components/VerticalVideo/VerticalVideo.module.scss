@@ -1,6 +1,9 @@
 .video {
-	background-color: var(--color-accent);
+	display: block;
+	width: 100%;
 	aspect-ratio: 9 / 16;
-	width: 20%;
 	object-fit: cover;
+	background-color: var(--color-accent);
+	cursor: pointer;
+	flex-shrink: 0;
 }
