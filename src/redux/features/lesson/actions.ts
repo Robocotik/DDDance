@@ -78,7 +78,7 @@ const uploadLessonByIdAction =
 		try {
 			const response = await http.get<ApiResponse>(`/users/dance/${id}`);
 
-			dispatch(returnLessonLoadedAction(response.data.result));
+			dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
 		} catch (error: any) {
 			const errorMessage =
 				error?.message ||
@@ -96,7 +96,7 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 			url,
 		});
 
-		dispatch(returnLessonLoadedAction(response.data.result));
+		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
 	} catch (error: any) {
 		const errorMessage =
 			error?.message ||
