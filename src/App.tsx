@@ -9,17 +9,11 @@ import LessonPage from './pages/LessonPage/LessonPage';
 import { RegisterPage } from './pages/RegisterPage/RegisterPage';
 import RulesPage from './pages/RulesPage/RulesPage';
 import UserPage from './pages/UserPage/UserPage';
-import { checkAuthStatus } from './redux/features/user/actions';
-import type { AppDispatch } from './redux/store';
 
 function App() {
-	const dispatch = useDispatch<AppDispatch>();
 	const { pathname } = useLocation();
 	const isAuthRoute = pathname === '/login' || pathname === '/register';
 
-	useEffect(() => {
-		dispatch(checkAuthStatus());
-	}, [dispatch]);
 
 	return (
 		<div id="app">

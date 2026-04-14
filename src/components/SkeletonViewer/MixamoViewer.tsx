@@ -4,10 +4,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { S3_ADDRESS } from '../../consts/urls';
-import type { UploadVideoResult } from '../../redux/features/lesson/actions';
+import type { UploadLessonResult } from '../../redux/features/lesson/actions';
 
 type MixamoViewerProps = {
-	result: UploadVideoResult;
+	result: UploadLessonResult;
 };
 
 const TARGET_HEIGHT = 1.7;
@@ -32,8 +32,8 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ result }) => {
 	const [currentAnimation, setCurrentAnimation] = useState(0);
 	const [modelScale, setModelScale] = useState(1);
 	const [timeScale, setTimeScale] = useState(1);
-
-	const modelUrl = `${S3_ADDRESS}${result.result_key}`;
+	console.log({result});
+	const modelUrl = `${S3_ADDRESS}${result.full_glb_key}`;
 
 	useEffect(() => {
 		const container = containerRef.current;

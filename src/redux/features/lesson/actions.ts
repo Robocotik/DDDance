@@ -2,12 +2,20 @@ import http from '../../../api/http';
 import actionTypes from './actionTypes';
 
 export interface UploadLessonResult {
-	result_key: string;
-	num_frames?: number;
-	num_segments?: number;
-	duration_sec?: number;
-	lesson_id?: number;
+	dance_id: string;
+	duration_sec: number;
+	full_glb_key: string;
+	glb_keys: string[];
+	num_frames: number;
+	num_segments: number;
+	num_segments_rendered: number;
+	segments_key: string;
+	video_path: string;
 	title?: string;
+}
+
+interface ApiResponse {
+	result: UploadLessonResult;
 }
 
 const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка';
@@ -41,7 +49,7 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 		const formData = new FormData();
 		formData.append('dance', file);
 
-		const response = await http.post<UploadLessonResult>(
+		const response = await http.post<ApiResponse>(
 			'/users/load',
 			formData,
 			{
@@ -51,7 +59,9 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 			},
 		);
 
-		dispatch(returnLessonLoadedAction(response.data));
+		console.log(response.data);
+
+		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
 	} catch (error: any) {
 		const errorMessage =
 			error?.message ||
@@ -66,9 +76,9 @@ const uploadLessonByIdAction =
 		dispatch(setLessonLoadingAction());
 
 		try {
-			const response = await http.get<UploadLessonResult>(`/users/dance/${id}`);
+			const response = await http.get<ApiResponse>(`/users/dance/${id}`);
 
-			dispatch(returnLessonLoadedAction(response.data));
+			dispatch(returnLessonLoadedAction(response.data.result));
 		} catch (error: any) {
 			const errorMessage =
 				error?.message ||
@@ -82,11 +92,11 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 	dispatch(setLessonLoadingAction());
 
 	try {
-		const response = await http.post<UploadLessonResult>('/users/loadByURL', {
+		const response = await http.post<ApiResponse>('/users/loadByURL', {
 			url,
 		});
 
-		dispatch(returnLessonLoadedAction(response.data));
+		dispatch(returnLessonLoadedAction(response.data.result));
 	} catch (error: any) {
 		const errorMessage =
 			error?.message ||
