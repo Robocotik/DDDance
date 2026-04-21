@@ -1,20 +1,29 @@
 import http from '../../../api/http';
 import actionTypes from './actionTypes';
 
+const inFlightLessonById = new Map<string, Promise<void>>();
+
 export interface UploadLessonResult {
-	result_key: string;
-	num_frames?: number;
-	num_segments?: number;
-	duration_sec?: number;
-	lesson_id?: number;
+	dance_id: string;
+	duration_sec: number;
+	full_glb_key: string;
+	glb_keys: string[];
+	num_frames: number;
+	num_segments: number;
+	num_segments_rendered: number;
+	segments_key: string;
+	video_path: string;
 	title?: string;
 }
 
 const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка';
 
-const clearLessonAction = () => ({
-	type: actionTypes.CLEAR_LESSON,
-});
+const clearLessonAction = () => {
+	inFlightLessonById.clear();
+	return {
+		type: actionTypes.CLEAR_LESSON,
+	};
+};
 
 const setLessonLoadingAction = () => ({
 	type: actionTypes.LESSON_UPLOAD_LOADING,
@@ -63,19 +72,34 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 
 const uploadLessonByIdAction =
 	(id: string | number) => async (dispatch: any) => {
-		dispatch(setLessonLoadingAction());
-
-		try {
-			const response = await http.get<UploadLessonResult>(`/users/dance/${id}`);
-
-			dispatch(returnLessonLoadedAction(response.data));
-		} catch (error: any) {
-			const errorMessage =
-				error?.message ||
-				(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
-
-			dispatch(returnLessonErrorAction(errorMessage));
+		const key = String(id);
+		const existing = inFlightLessonById.get(key);
+		if (existing) {
+			return existing;
 		}
+
+		const promise = (async () => {
+			dispatch(setLessonLoadingAction());
+
+			try {
+				const response = await http.get<UploadLessonResult>(
+					`/users/dance/${id}`,
+				);
+
+				dispatch(returnLessonLoadedAction(response.data));
+			} catch (error: any) {
+				const errorMessage =
+					error?.message ||
+					(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+
+				dispatch(returnLessonErrorAction(errorMessage));
+			} finally {
+				inFlightLessonById.delete(key);
+			}
+		})();
+
+		inFlightLessonById.set(key, promise);
+		return promise;
 	};
 
 const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {

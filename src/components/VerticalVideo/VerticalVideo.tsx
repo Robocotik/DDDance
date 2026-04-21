@@ -1,3 +1,4 @@
+import { S3_ADDRESS } from '@/consts/urls';
 import type { VideoItem } from '@/redux/features/trends/actions';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +18,7 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 	return (
 		<video
 			className={styles.video}
-			src={video.url}
+			src={S3_ADDRESS + video.url}
 			onClick={handleClick}
 			autoPlay
 			muted

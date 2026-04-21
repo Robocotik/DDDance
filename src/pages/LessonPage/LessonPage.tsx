@@ -23,14 +23,16 @@ const LessonPage: React.FC = () => {
 	const lessonLoading = useSelector(selectLessonLoading);
 
 	useEffect(() => {
-		if (!lesson && id) {
+		if (id && !lesson) {
 			dispatch(lessonActions.uploadLessonByIdAction(id) as any);
 		}
 
 		return () => {
-			dispatch(lessonActions.clearLessonAction() as any);
+			if (id) {
+				dispatch(lessonActions.clearLessonAction());
+			}
 		};
-	}, [dispatch, id, lesson]);
+	}, [dispatch, id]);
 
 	if (lessonLoading) {
 		return (
@@ -48,16 +50,12 @@ const LessonPage: React.FC = () => {
 		);
 	}
 
-	if (lesson && !id) {
-		return <Navigate to={`/lesson/${lesson.result_key}`} replace />;
+	if (!id) {
+		return <Navigate to={`/lesson/${lesson?.dance_id}`} replace />;
 	}
 
 	if (!lesson) {
-		return (
-			<div className={styles.page}>
-				<p className={styles.error}>Урок не найден</p>
-			</div>
-		);
+		return null;
 	}
 
 	return (
