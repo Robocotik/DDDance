@@ -1,13 +1,18 @@
 import type { ChangeEvent, FormEvent } from 'react';
-import React, { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import tiktokLogo from '../../assets/svg/tiktok-logo.svg';
 import Title from '../../components/Title/Title';
 import actions from '../../redux/features/lesson/actions';
+import {
+	selectLesson,
+	selectLessonLoading,
+} from '../../redux/features/lesson/selectors';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
 import styles from './VideoUploader.module.scss';
+
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const VideoUploader: React.FC = () => {
@@ -15,20 +20,23 @@ const VideoUploader: React.FC = () => {
 	const navigate = useNavigate();
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
+	const lesson = useSelector(selectLesson);
+	const lessonLoading = useSelector(selectLessonLoading);
+
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoLink, setVideoLink] = useState('');
+	const [isStarted, setIsStarted] = useState(false);
+
+	useEffect(() => {
+		if (isStarted && lessonLoading) {
+			navigate('/lesson');
+		}
+	}, [isStarted, lessonLoading, navigate]);
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
-
-		if (!file) {
-			return;
-		}
-
-		if (file.size > MAX_FILE_SIZE) {
-			return;
-		}
-
+		if (!file) return;
+		if (file.size > MAX_FILE_SIZE) return;
 		setSelectedFile(file);
 	};
 
@@ -44,14 +52,14 @@ const VideoUploader: React.FC = () => {
 		const trimmedLink = videoLink.trim();
 
 		if (selectedFile) {
+			setIsStarted(true);
 			dispatch(actions.uploadLessonByVideoAction(selectedFile) as any);
-			navigate('/lesson');
 			return;
 		}
 
 		if (trimmedLink) {
+			setIsStarted(true);
 			dispatch(actions.uploadLessonByLinkAction(trimmedLink) as any);
-			navigate('/lesson');
 		}
 	};
 

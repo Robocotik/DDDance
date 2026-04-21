@@ -24,6 +24,8 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 
 	const { type, payload } = action;
 
+	console.log({type});
+
 	switch (type) {
 		case LessonActionTypes.LESSON_UPLOAD_LOADING:
 			return {

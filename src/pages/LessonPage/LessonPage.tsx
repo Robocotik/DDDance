@@ -7,64 +7,62 @@ import MixamoViewer from '../../components/SkeletonViewer/MixamoViewer';
 
 import lessonActions from '../../redux/features/lesson/actions';
 import {
-	selectLesson,
-	selectLessonError,
-	selectLessonLoading,
+ selectLesson,
+ selectLessonError,
+ selectLessonLoading,
 } from '../../redux/features/lesson/selectors';
 
 import styles from './LessonPage.module.scss';
 
 const LessonPage: React.FC = () => {
-	const dispatch = useDispatch();
-	const { id } = useParams<{ id: string }>();
+ const dispatch = useDispatch();
+ const { id } = useParams<{ id: string }>();
 
-	const lesson = useSelector(selectLesson);
-	const lessonError = useSelector(selectLessonError);
-	const lessonLoading = useSelector(selectLessonLoading);
+ const lesson = useSelector(selectLesson);
+ const lessonError = useSelector(selectLessonError);
+ const lessonLoading = useSelector(selectLessonLoading);
 
-	useEffect(() => {
-		if (!lesson && id) {
-			dispatch(lessonActions.uploadLessonByIdAction(id) as any);
-		}
+ useEffect(() => {
+  if (id && !lesson) {
+   dispatch(lessonActions.uploadLessonByIdAction(id) as any);
+  }
 
-		return () => {
-			dispatch(lessonActions.clearLessonAction() as any);
-		};
-	}, [dispatch, id, lesson]);
+  return (() => {
+   if (id){
+    dispatch(lessonActions.clearLessonAction())
+   }
+  })
+ }, [dispatch, id]);
 
-	if (lessonLoading) {
-		return (
-			<div className={styles.page}>
-				<Loading />
-			</div>
-		);
-	}
+ if (lessonLoading) {
+  return (
+   <div className={styles.page}>
+    <Loading />
+   </div>
+  );
+ }
 
-	if (lessonError) {
-		return (
-			<div className={styles.page}>
-				<p className={styles.error}>Ошибка: {lessonError}</p>
-			</div>
-		);
-	}
+ if (lessonError) {
+  return (
+   <div className={styles.page}>
+    <p className={styles.error}>Ошибка: {lessonError}</p>
+   </div>
+  );
+ }
 
-	if (lesson && !id) {
-		return <Navigate to={`/lesson/${lesson.result_key}`} replace />;
-	}
+ if (!id) {
+  return <Navigate to={`/lesson/${lesson?.dance_id}`} replace />;
+ }
 
-	if (!lesson) {
-		return (
-			<div className={styles.page}>
-				<p className={styles.error}>Урок не найден</p>
-			</div>
-		);
-	}
+ if (!lesson){
+	return null;
+ }
 
-	return (
-		<div className={styles.page}>
-			<MixamoViewer result={lesson} />
-		</div>
-	);
+ return (
+  <div className={styles.page}>
+   <MixamoViewer result={lesson} />
+  </div>
+ );
 };
 
 export default LessonPage;
