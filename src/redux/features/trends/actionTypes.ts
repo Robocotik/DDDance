@@ -1,0 +1,13 @@
+const TRENDS_LOADING = 'TRENDS_LOADING';
+const TRENDS_LOADED = 'TRENDS_LOADED';
+const TRENDS_ERROR = 'TRENDS_ERROR';
+const CLEAR_TRENDS = 'CLEAR_TRENDS';
+
+const TrendActionTypes = {
+	TRENDS_LOADING,
+	TRENDS_LOADED,
+	TRENDS_ERROR,
+	CLEAR_TRENDS,
+} as const;
+
+export default TrendActionTypes;

@@ -1,18 +1,44 @@
 .container {
+	--buttons-width: 20%;
+	--buttons-min-width: 260px;
+	--buttons-max-width: 320px;
+
 	width: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	gap: 70px;
+	gap: 35px;
 	margin-bottom: 10rem;
+	margin-top: 20px;
 	padding: 0 16px;
 	box-sizing: border-box;
+	position: relative;
+	isolation: isolate;
+}
+
+.container::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 40%;
+	transform: translate(-50%, -50%);
+	width: clamp(320px, 80vw, 1100px);
+	height: clamp(180px, 50vw, 700px);
+	background: radial-gradient(
+		ellipse at center,
+		var(--color-spots) 0%,
+		transparent 70%
+	);
+	pointer-events: none;
+	z-index: -1;
+	filter: blur(12px);
 }
 
 .buttonsBlock {
-	min-width: 17%;
-	max-width: 20%;
+	width: var(--buttons-width);
+	min-width: var(--buttons-min-width);
+	max-width: var(--buttons-max-width);
 	display: flex;
 	flex-direction: column;
 	gap: 50px;
@@ -40,10 +66,46 @@
 		0 4px 8px #942263;
 }
 
+.linkForm {
+	width: calc(var(--buttons-max-width) * 2);
+	max-width: 640px;
+	min-width: 520px;
+	min-height: 48px;
+	padding: 12px 30px;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: radial-gradient(
+		92.54% 888.76% at 54.5% 32.84%,
+		#2957a3 0%,
+		#080922 0.01%
+	);
+}
+
+.linkInput {
+	width: 100%;
+	border: none;
+	outline: none;
+	background: transparent;
+	font: inherit;
+	color: #fff;
+	padding: 0;
+}
+
+.linkInput::placeholder {
+	color: rgb(255 255 255 / 80%);
+}
+
 .subtitle {
 	text-align: center;
-	margin-top: -50px;
+	margin-top: -20px;
 	font-size: var(--font-size-16);
+}
+
+.title2 {
+	margin-bottom: -12px;
 }
 
 .buttonText {
@@ -54,16 +116,37 @@
 	white-space: nowrap;
 }
 
+.workWithRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: -15px;
+}
+
+.tiktokLogo {
+	width: 30px;
+	height: 30px;
+	flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
 	.container {
 		padding: 0 24px;
-		gap: 40px;
+		gap: 24px;
 		margin-bottom: 80px;
 	}
 
 	.title {
 		text-align: center;
 		width: 100%;
+	}
+
+	.linkForm {
+		width: 100%;
+		min-width: 0;
+		max-width: 100%;
+		min-height: 44px;
+		padding: 13px 20px;
 	}
 
 	.buttonsBlock {

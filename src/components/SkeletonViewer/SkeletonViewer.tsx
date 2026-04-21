@@ -6,7 +6,7 @@ import { SegmentBar } from './SegmentBar';
 import styles from './SkeletonViewer.module.scss';
 
 import { useSelector } from 'react-redux';
-import { selectVideoResult } from '../../redux/features/video/selectors';
+import { selectVideoResult } from '../../redux/features/lesson/selectors';
 
 type Joint = {
 	x: number;

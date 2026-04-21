@@ -1,20 +1,40 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Navigate, useParams } from 'react-router-dom';
+
 import Loading from '../../components/Loading/Loading';
 import MixamoViewer from '../../components/SkeletonViewer/MixamoViewer';
+
+import lessonActions from '../../redux/features/lesson/actions';
 import {
-	selectResult,
-	selectResultError,
-	selectResultLoading,
-} from '../../redux/features/video/selectors';
+	selectLesson,
+	selectLessonError,
+	selectLessonLoading,
+} from '../../redux/features/lesson/selectors';
+
 import styles from './LessonPage.module.scss';
 
 const LessonPage: React.FC = () => {
-	const result = useSelector(selectResult);
-	const videoError = useSelector(selectResultError);
-	const videoLoading = useSelector(selectResultLoading);
+	const dispatch = useDispatch();
+	const { id } = useParams<{ id: string }>();
 
-	if (videoLoading) {
+	const lesson = useSelector(selectLesson);
+	const lessonError = useSelector(selectLessonError);
+	const lessonLoading = useSelector(selectLessonLoading);
+
+	useEffect(() => {
+		if (id && !lesson) {
+			dispatch(lessonActions.uploadLessonByIdAction(id) as any);
+		}
+
+		return () => {
+			if (id) {
+				dispatch(lessonActions.clearLessonAction());
+			}
+		};
+	}, [dispatch, id]);
+
+	if (lessonLoading) {
 		return (
 			<div className={styles.page}>
 				<Loading />
@@ -22,17 +42,25 @@ const LessonPage: React.FC = () => {
 		);
 	}
 
-	if (videoError || !result) {
+	if (lessonError) {
 		return (
 			<div className={styles.page}>
-				<p className={styles.error}>Ошибка: {videoError}</p>
+				<p className={styles.error}>Ошибка: {lessonError}</p>
 			</div>
 		);
 	}
 
+	if (!id) {
+		return <Navigate to={`/lesson/${lesson?.dance_id}`} replace />;
+	}
+
+	if (!lesson) {
+		return null;
+	}
+
 	return (
 		<div className={styles.page}>
-			<MixamoViewer result={result} />
+			<MixamoViewer result={lesson} />
 		</div>
 	);
 };

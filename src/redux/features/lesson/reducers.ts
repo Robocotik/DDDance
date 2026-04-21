@@ -1,29 +1,23 @@
 import type { AnyAction, Reducer } from 'redux';
-import VideoActionTypes from './actionTypes';
-import type { UploadVideoResult } from './actions';
+import LessonActionTypes from './actionTypes';
+import type { UploadLessonResult } from './actions';
 
-export interface VideoState {
+export interface LessonState {
 	resultLoading: boolean;
-	result: UploadVideoResult | null;
+	result: UploadLessonResult | null;
 	resultError: string | null;
 }
 
-/**
- * Начальное состояние редьюсера видео.
- */
-const initialState: VideoState = {
+const initialState: LessonState = {
 	resultLoading: false,
 	result: null,
 	resultError: null,
 };
 
-/**
- * Редьюсер для управления состоянием загрузки видео.
- */
-const videoReducer: Reducer<VideoState, AnyAction> = (
+const videoReducer: Reducer<LessonState, AnyAction> = (
 	state = initialState,
 	action,
-): VideoState => {
+): LessonState => {
 	if (typeof action === 'function') {
 		return state;
 	}
@@ -31,14 +25,14 @@ const videoReducer: Reducer<VideoState, AnyAction> = (
 	const { type, payload } = action;
 
 	switch (type) {
-		case VideoActionTypes.VIDEO_UPLOAD_LOADING:
+		case LessonActionTypes.LESSON_UPLOAD_LOADING:
 			return {
 				...state,
 				resultLoading: true,
 				resultError: null,
 			};
 
-		case VideoActionTypes.VIDEO_UPLOAD_LOADED:
+		case LessonActionTypes.LESSON_UPLOAD_LOADED:
 			return {
 				...state,
 				resultLoading: false,
@@ -46,14 +40,14 @@ const videoReducer: Reducer<VideoState, AnyAction> = (
 				resultError: null,
 			};
 
-		case VideoActionTypes.VIDEO_UPLOAD_ERROR:
+		case LessonActionTypes.LESSON_UPLOAD_ERROR:
 			return {
 				...state,
 				resultLoading: false,
 				resultError: payload.error,
 			};
 
-		case VideoActionTypes.CLEAR_VIDEO:
+		case LessonActionTypes.CLEAR_LESSON:
 			return initialState;
 
 		default:
