@@ -3,6 +3,7 @@
 	flex-direction: column;
 	gap: 1rem;
 	height: calc(100vh - 80px);
+	margin-top: 7rem;
 }
 
 .error {
@@ -11,4 +12,21 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+.stepNavigation {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding-top: 12px;
+}
+
+.stepNavigation button {
+	padding: 8px 14px;
+	border: none;
+	border-radius: 8px;
+	background-color: #4a6cf7;
+	color: #fff;
+	cursor: pointer;
 }
