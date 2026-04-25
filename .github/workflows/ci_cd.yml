@@ -142,19 +142,18 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
           script: |
+            set -e
+
             cd /root/front
 
             git fetch
             git reset --hard origin/${{ github.ref_name }}
 
-
-            cd /var/www/dddance/
-            cat > .env <<'EOF'
+            cat > .env.production <<'EOF'
             VITE_VKID_REDIRECT_URL=https://dddance.ru/
             VITE_VKID_APP_ID=54541769
             VITE_BACKEND_BASE_URL=https://dddance.ru/api
             EOF
-
 
             npm ci
 
