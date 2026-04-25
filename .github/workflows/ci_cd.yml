@@ -152,7 +152,7 @@ jobs:
 
             npm run build
 
-            cp -r /root/front/DDDance/build/* /var/www/dddance/
+            cp -r /root/front/build/* /var/www/dddance/
 
             systemctl reload nginx
 
