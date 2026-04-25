@@ -21,6 +21,7 @@ const hasOnlyValidChars = (value: string) => {
 			return false;
 		}
 	}
+
 	return true;
 };
 
@@ -36,6 +37,7 @@ export const validateAuthForm = ({
 			message: 'Длина логина должна быть больше ' + MIN_LENGTH,
 		};
 	}
+
 	if (login.length > MAX_LENGTH) {
 		return {
 			hasError: true,

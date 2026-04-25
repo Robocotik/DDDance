@@ -36,7 +36,9 @@ export const SegmentBar: React.FC<SegmentBarProps> = ({
 	totalFrames,
 	onSegmentClick,
 }) => {
-	if (!segments.length || !totalFrames) return null;
+	if (!segments.length || !totalFrames) {
+		return null;
+	}
 
 	return (
 		<div
@@ -73,6 +75,7 @@ export const SegmentBar: React.FC<SegmentBarProps> = ({
 					const width = ((seg.end_frame - seg.start_frame) / totalFrames) * 100;
 					const isActive =
 						currentFrame >= seg.start_frame && currentFrame <= seg.end_frame;
+
 					return (
 						<div
 							key={seg.index}
@@ -110,6 +113,7 @@ export const SegmentBar: React.FC<SegmentBarProps> = ({
 				{segments.map((seg, i) => {
 					const isActive =
 						currentFrame >= seg.start_frame && currentFrame <= seg.end_frame;
+
 					return (
 						<button
 							key={seg.index}

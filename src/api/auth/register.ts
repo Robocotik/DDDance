@@ -18,9 +18,7 @@ export type RegisterPayload = {
 	password: string;
 };
 
-export type RegisterResponse = BaseAuthResponse;
-
 export const registerUser = async (payload: RegisterPayload) => {
-	const response = await http.post<RegisterResponse>(path, payload);
+	const response = await http.post<BaseAuthResponse>(path, payload);
 	return response.data;
 };

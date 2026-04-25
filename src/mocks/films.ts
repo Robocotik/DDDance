@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-duplicate-string */
+
 import type { BaseAuthResponse } from '@/api/auth/register';
 import type { TrendVideos } from '@/redux/features/trends/actions';
 
