@@ -175,7 +175,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({
 
 					model.updateWorldMatrix(true, true);
 					const box2 = new THREE.Box3().setFromObject(model);
-					model.position.y = -box2.min.y - 0.8;
+					model.position.y = -box2.min.y;
 					scene.add(model);
 					characterRef.current = model;
 
