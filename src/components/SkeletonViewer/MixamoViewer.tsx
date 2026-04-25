@@ -23,6 +23,7 @@ const resolveAssetPath = (
 	if (key.startsWith('http://') || key.startsWith('https://')) {
 		return key;
 	}
+
 	const base = (s3Base || S3_ADDRESS || '').replace(/\/+$/, '');
 	const cleanKey = key.replace(/^\/+/, '');
 	return `${base}/${cleanKey}`;
@@ -218,6 +219,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 							while (root.parent && root.parent !== model) {
 								root = root.parent;
 							}
+
 							foundArmature = root;
 						}
 					});
@@ -249,6 +251,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 					if (cancelled) {
 						return;
 					}
+
 					setCharacterLoadError('Не удалось загрузить модель персонажа');
 					setLoadingCharacter(false);
 				},
@@ -328,6 +331,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 				if (currentActionRef.current) {
 					currentActionRef.current.stop();
 				}
+
 				const action = mixer.clipAction(clip, target);
 				action.reset();
 				action.clampWhenFinished = true;
@@ -348,6 +352,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 				if (cancelled) {
 					return;
 				}
+
 				setLoadingAnimation(false);
 				setError('Не удалось загрузить glb анимацию');
 			},
@@ -362,6 +367,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 		if (!currentActionRef.current) {
 			return;
 		}
+
 		currentActionRef.current.paused = !playing;
 	}, [playing]);
 
