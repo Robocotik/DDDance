@@ -204,6 +204,7 @@ const LessonPage: React.FC = () => {
 
 		const isFullStep = hasFullStep && segmentIndex === lesson.glb_keys.length;
 		let glbPath: string | null = null;
+
 		if (isRegularStep) {
 			glbPath = lesson.glb_keys[segmentIndex];
 		} else if (isFullStep) {
