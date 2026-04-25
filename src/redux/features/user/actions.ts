@@ -10,7 +10,6 @@ export const checkAuthStatus = () => async (dispatch: AppDispatch) => {
 
 	try {
 		const user = await checkAuth();
-		// const user = baseAuthResponseMock;
 		dispatch(setUser(user));
 	} catch (error) {
 		const vkUser = getVkAuthUser();

@@ -45,7 +45,7 @@ const LessonPage: React.FC = () => {
 				dispatch(lessonActions.clearLessonAction());
 			}
 		};
-	}, [dispatch, id]);
+	}, [dispatch, id, lesson]);
 
 	if (lessonLoading) {
 		return (

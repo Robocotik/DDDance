@@ -64,11 +64,17 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 		}
 
 		if (!isValidConfig) {
-			setIsConfigured(false);
+			if (isConfigured) {
+				setIsConfigured(false);
+			}
+
 			return;
 		}
 
-		setIsConfigured(true);
+		if (!isConfigured) {
+			setIsConfigured(true);
+		}
+
 		initVkId(appId, redirectUrl);
 
 		const widget = new VKID.OneTap();
@@ -85,9 +91,7 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 		});
 
 		instance
-			.on(VKID.WidgetEvents.ERROR, () => {
-				return;
-			})
+			.on(VKID.WidgetEvents.ERROR, () => {})
 			.on(
 				VKID.OneTapInternalEvents.LOGIN_SUCCESS,
 				(payload: { code: string; device_id: string }) => {
@@ -101,11 +105,13 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 							const userInfo = await VKID.Auth.userInfo(
 								tokenResult.access_token,
 							);
+
 							const user = userInfo.user;
 							const fullName = [user.first_name, user.last_name]
 								.filter(Boolean)
 								.join(' ')
 								.trim();
+
 							const mappedUser: BaseAuthResponse = {
 								avatar: user.avatar ?? defaultAvatar,
 								created_at: new Date().toISOString(),
@@ -130,7 +136,14 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 			widgetRef.current?.close();
 			widgetRef.current = null;
 		};
-	}, [appId, isValidConfig, onAuthenticated, onError, redirectUrl]);
+	}, [
+		appId,
+		isValidConfig,
+		onAuthenticated,
+		onError,
+		redirectUrl,
+		isConfigured,
+	]);
 
 	return (
 		<div className={className}>

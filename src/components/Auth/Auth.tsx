@@ -72,6 +72,7 @@ export const Auth: FC<AuthProps> = ({
 			} catch (err) {
 				const errorMessage =
 					err instanceof Error ? err.message : 'Ошибка при входе';
+
 				setError(errorMessage);
 				dispatch(setUserError(errorMessage));
 			}
@@ -94,6 +95,7 @@ export const Auth: FC<AuthProps> = ({
 			action: (value: React.SetStateAction<string>) => void,
 		) => {
 			action(e.target.value);
+
 			if (error) {
 				setError(null);
 			}
@@ -159,6 +161,7 @@ export const Auth: FC<AuthProps> = ({
 							checked={isRulesAccepted}
 							onChange={(event) => {
 								setIsRulesAccepted(event.target.checked);
+
 								if (error) {
 									setError(null);
 								}

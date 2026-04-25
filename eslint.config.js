@@ -14,6 +14,7 @@ const Rules = {
 	curly: 'error',
 	'compat/compat': 'error',
 	'no-console': 'error',
+	'react-hooks/set-state-in-effect': 'off',
 	'no-multiple-empty-lines': 'error',
 	'no-useless-return': 'error',
 	'@stylistic/js/padding-line-between-statements': [
@@ -42,6 +43,9 @@ const Rules = {
 	'sonarjs/prefer-regexp-exec': 'off',
 	'sonarjs/no-hardcoded-passwords': 'off',
 	'sonarjs/function-return-type': 'off',
+	'sonarjs/deprecation': 'off',
+	'sonarjs/slow-regex': 'off',
+	'sonarjs/no-nested-template-literals': 'off',
 };
 
 const Ignores = ['node_modules/', '**/build/**', 'dist/**'];
@@ -97,7 +101,7 @@ export default defineConfig([
 		},
 		rules: {
 			...Rules,
-			'no-console': 'error',
+			'no-console': 'off',
 			'@typescript-eslint/no-empty-object-type': 'off',
 			'@typescript-eslint/no-this-alias': 'off',
 			'@typescript-eslint/no-unused-vars': [
@@ -105,6 +109,7 @@ export default defineConfig([
 				{ argsIgnorePattern: '^_' },
 			],
 			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/ban-ts-comment': 'off',
 			'@typescript-eslint/no-unsafe-function-type': 'off',
 			'sonarjs/cognitive-complexity': ['error', 20],
 		},

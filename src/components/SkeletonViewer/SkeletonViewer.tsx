@@ -168,6 +168,7 @@ const SkeletonViewer: React.FC = () => {
 			if (from === 0 || to === 0) {
 				return 0xff44ff;
 			}
+
 			return 0x88aaff;
 		};
 
@@ -245,6 +246,7 @@ const SkeletonViewer: React.FC = () => {
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}`);
 				}
+
 				const data: SkeletonData = await response.json();
 
 				framesData = data.frames;
@@ -290,6 +292,7 @@ const SkeletonViewer: React.FC = () => {
 				if (lastTime === 0) {
 					lastTime = time;
 				}
+
 				const delta = Math.min(0.033, (time - lastTime) / 1000);
 				lastTime = time;
 

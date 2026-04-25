@@ -24,8 +24,6 @@ const trendsReducer: Reducer<TrendsState, AnyAction> = (
 
 	const { type, payload } = action;
 
-	console.log({ type, payload });
-
 	switch (type) {
 		case TrendActionTypes.TRENDS_LOADING:
 			return {

@@ -74,6 +74,7 @@ const uploadLessonByIdAction =
 	(id: string | number) => async (dispatch: any) => {
 		const key = String(id);
 		const existing = inFlightLessonById.get(key);
+
 		if (existing) {
 			return existing;
 		}
