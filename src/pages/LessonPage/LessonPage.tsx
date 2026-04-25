@@ -201,12 +201,14 @@ const LessonPage: React.FC = () => {
 	if (isNumericSegment) {
 		const isRegularStep =
 			segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
+
 		const isFullStep = hasFullStep && segmentIndex === lesson.glb_keys.length;
-		const glbPath = isRegularStep
-			? lesson.glb_keys[segmentIndex]
-			: isFullStep
-				? lesson.full_glb_key
-				: null;
+		let glbPath: string | null = null;
+		if (isRegularStep) {
+			glbPath = lesson.glb_keys[segmentIndex];
+		} else if (isFullStep) {
+			glbPath = lesson.full_glb_key ?? null;
+		}
 
 		if (!glbPath) {
 			return <Navigate to={`/lesson/${id}?segment=finish`} replace />;
