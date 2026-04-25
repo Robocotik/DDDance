@@ -7,6 +7,7 @@ import { S3_ADDRESS } from '../../consts/urls';
 
 type MixamoViewerProps = {
 	glbPath: string | null;
+	timeScale?: number;
 };
 
 const TARGET_HEIGHT = 1.7;
@@ -23,7 +24,10 @@ const resolveAssetPath = (
 	return `${base}/${cleanKey}`;
 };
 
-const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
+const MixamoViewer: React.FC<MixamoViewerProps> = ({
+	glbPath,
+	timeScale = 1,
+}) => {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const sceneRef = useRef<THREE.Scene | null>(null);
 	const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -43,7 +47,6 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 	const rootInitPosRef = useRef<THREE.Vector3 | null>(null);
 
 	const [playing, setPlaying] = useState(false);
-	const [timeScale] = useState(1);
 	const [loadingCharacter, setLoadingCharacter] = useState(true);
 	const [loadingAnimation, setLoadingAnimation] = useState(false);
 	const [characterLoadError, setCharacterLoadError] = useState<string | null>(
@@ -319,11 +322,11 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 		<div
 			style={{
 				position: 'relative',
-				display: 'inline-flex',
+				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'center',
-				width: 420,
-				maxWidth: '100%',
+				width: '100%',
+				height: '100%',
 				background: '#05050a',
 				borderRadius: 8,
 				overflow: 'hidden',
@@ -395,7 +398,7 @@ const MixamoViewer: React.FC<MixamoViewerProps> = ({ glbPath }) => {
 				ref={containerRef}
 				style={{
 					width: '100%',
-					aspectRatio: '4 / 5',
+					height: '100%',
 					background: '#0a0a0f',
 				}}
 			/>
