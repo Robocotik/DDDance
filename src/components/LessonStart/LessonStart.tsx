@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { S3_ADDRESS } from '../../consts/urls';
 import type { UploadLessonResult } from '../../redux/features/lesson/actions';
+import Button from '../Button/Button';
 
 import styles from './LessonStart.module.scss';
 
@@ -29,17 +30,25 @@ const LessonStart: React.FC<LessonStartProps> = ({ lesson }) => {
 	};
 
 	return (
-		<div className={styles.container}>
-			<video
-				className={styles.video}
-				src={resolveVideoPath(lesson.video_path)}
-				controls
-				playsInline
-				preload="metadata"
-			/>
-			<button className={styles.button} onClick={handleStartLesson}>
-				Начать урок
-			</button>
+		<div className={styles.lesson}>
+			<div className={styles.content}>
+				<video
+					className={styles.video}
+					src={resolveVideoPath(lesson.video_path)}
+					autoPlay
+					muted
+					controls
+					playsInline
+					preload="metadata"
+				/>
+				<Button
+					size="s"
+					className={styles.startButton}
+					onClick={handleStartLesson}
+				>
+					Начать урок
+				</Button>
+			</div>
 		</div>
 	);
 };

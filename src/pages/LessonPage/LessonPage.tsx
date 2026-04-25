@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	Navigate,
@@ -7,6 +7,8 @@ import {
 	useSearchParams,
 } from 'react-router-dom';
 
+import arrowIcon from '../../assets/svg/arrow.svg';
+import Button from '../../components/Button/Button';
 import LessonFinish from '../../components/LessonFinish/LessonFinish';
 import LessonStart from '../../components/LessonStart/LessonStart';
 import Loading from '../../components/Loading/Loading';
@@ -31,6 +33,7 @@ const LessonPage: React.FC = () => {
 	const lessonError = useSelector(selectLessonError);
 	const lessonLoading = useSelector(selectLessonLoading);
 	const segment = searchParams.get('segment');
+	const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
 	useEffect(() => {
 		if (id && !lesson) {
@@ -74,11 +77,101 @@ const LessonPage: React.FC = () => {
 
 	const isNumericSegment = /^\d+$/.test(segment);
 	const segmentIndex = isNumericSegment ? Number(segment) : -1;
-	const lastSegmentIndex = lesson.glb_keys.length - 1;
+	const hasFullStep = !!lesson.full_glb_key;
+	const totalSteps = lesson.glb_keys.length + (hasFullStep ? 1 : 0);
 
 	const navigateToSegment = (nextSegment: string) => {
 		navigate(`/lesson/${id}?segment=${nextSegment}`);
 	};
+
+	const renderLessonLayout = (
+		glbPath: string | null,
+		stepLabel: string,
+		currentStepNumber?: number,
+		totalSteps?: number,
+	) => (
+		<div className={styles.page}>
+			<div className={styles.lesson}>
+				<div className={styles.viewerColumn}>
+					<MixamoViewer glbPath={glbPath} timeScale={playbackSpeed} />
+				</div>
+				<div className={styles.controlsColumn}>
+					<div className={styles.stepHeader}>
+						<div className={`${styles.stepButtons} ${styles.stepButtonsLeft}`}>
+							{currentStepNumber && (
+								<button
+									className={styles.stepButton}
+									onClick={() =>
+										navigateToSegment(
+											currentStepNumber > 1
+												? String(currentStepNumber - 2)
+												: 'start',
+										)
+									}
+								>
+									<img
+										src={arrowIcon}
+										alt={
+											currentStepNumber > 1
+												? 'К предыдущим шагам'
+												: 'К началу урока'
+										}
+										className={styles.arrowLeft}
+									/>
+								</button>
+							)}
+						</div>
+						<h2 className={styles.stepTitle}>{stepLabel}</h2>
+						<div className={`${styles.stepButtons} ${styles.stepButtonsRight}`}>
+							{currentStepNumber && totalSteps && (
+								<button
+									className={styles.stepButton}
+									onClick={() =>
+										navigateToSegment(
+											currentStepNumber < totalSteps
+												? String(currentStepNumber)
+												: 'finish',
+										)
+									}
+								>
+									<img
+										src={arrowIcon}
+										alt={
+											currentStepNumber < totalSteps
+												? 'К следующим шагам'
+												: 'К завершению урока'
+										}
+										className={styles.arrowRight}
+									/>
+								</button>
+							)}
+						</div>
+					</div>
+					<div className={styles.speedControl}>
+						<label htmlFor="speed-control">
+							Скорость: {playbackSpeed.toFixed(1)}x
+						</label>
+						<input
+							id="speed-control"
+							type="range"
+							min={0.1}
+							max={3}
+							step={0.1}
+							value={playbackSpeed}
+							onChange={(event) => setPlaybackSpeed(Number(event.target.value))}
+						/>
+					</div>
+					<Button
+						size="s"
+						className={styles.finishButton}
+						onClick={() => navigateToSegment('finish')}
+					>
+						Завершить урок
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
 
 	if (segment === 'start') {
 		return (
@@ -98,34 +191,32 @@ const LessonPage: React.FC = () => {
 
 	if (segment === 'full') {
 		return (
-			<div className={styles.page}>
-				<MixamoViewer glbPath={lesson.full_glb_key ?? null} />
-			</div>
+			<Navigate
+				to={`/lesson/${id}?segment=${lesson.glb_keys.length}`}
+				replace
+			/>
 		);
 	}
 
 	if (isNumericSegment) {
-		const glbPath = lesson.glb_keys[segmentIndex] ?? null;
+		const isRegularStep =
+			segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
+		const isFullStep = hasFullStep && segmentIndex === lesson.glb_keys.length;
+		const glbPath = isRegularStep
+			? lesson.glb_keys[segmentIndex]
+			: isFullStep
+				? lesson.full_glb_key
+				: null;
 
 		if (!glbPath) {
 			return <Navigate to={`/lesson/${id}?segment=finish`} replace />;
 		}
 
-		const prevSegment = segmentIndex === 0 ? 'start' : String(segmentIndex - 1);
-		const nextSegment =
-			segmentIndex >= lastSegmentIndex ? 'finish' : String(segmentIndex + 1);
-
-		return (
-			<div className={styles.page}>
-				<div className={styles.stepNavigation}>
-					<button onClick={() => navigateToSegment(prevSegment)}>Назад</button>
-					<span>
-						Шаг {segmentIndex + 1} из {lesson.glb_keys.length}
-					</span>
-					<button onClick={() => navigateToSegment(nextSegment)}>Вперед</button>
-				</div>
-				<MixamoViewer glbPath={glbPath} />
-			</div>
+		return renderLessonLayout(
+			glbPath,
+			`ШАГ ${segmentIndex + 1}`,
+			segmentIndex + 1,
+			totalSteps,
 		);
 	}
 
