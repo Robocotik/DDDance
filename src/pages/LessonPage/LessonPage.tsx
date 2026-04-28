@@ -35,8 +35,23 @@ const LessonPage: React.FC = () => {
 	const segment = searchParams.get('segment');
 	const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
+	// useEffect(() => {
+	// 	if (id && !lesson) {
+	// 		dispatch(lessonActions.uploadLessonByIdAction(id) as any);
+	// 	}
+
+	// 	return () => {
+	// 		if (id) {
+	// 			dispatch(lessonActions.clearLessonAction());
+	// 		}
+	// 	};
+	// }, [dispatch, id, lesson]);
+
+
+	//МОЙ ПЕРЕПИСАННЫЙ USE EFFECT
+
 	useEffect(() => {
-		if (id && !lesson) {
+		if (id && (!lesson || lesson.dance_id !== id)) {
 			dispatch(lessonActions.uploadLessonByIdAction(id) as any);
 		}
 
@@ -45,7 +60,7 @@ const LessonPage: React.FC = () => {
 				dispatch(lessonActions.clearLessonAction());
 			}
 		};
-	}, [dispatch, id, lesson]);
+	}, [dispatch, id]); // убран lesson из зависимостей
 
 	if (lessonLoading) {
 		return (
