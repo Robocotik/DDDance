@@ -47,7 +47,6 @@ const LessonPage: React.FC = () => {
 	// 	};
 	// }, [dispatch, id, lesson]);
 
-
 	//МОЙ ПЕРЕПИСАННЫЙ USE EFFECT
 
 	useEffect(() => {

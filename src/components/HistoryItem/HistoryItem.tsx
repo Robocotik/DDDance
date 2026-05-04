@@ -1,12 +1,12 @@
 import type { HistoryItem } from '@/api/users/history';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '@/redux/store';
 import {
 	deleteHistoryItemThunk,
 	renameHistoryItem,
 } from '@/redux/features/history/actions';
+import type { AppDispatch } from '@/redux/store';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import styles from './HistoryItem.module.scss';
 
 interface HistoryItemProps {

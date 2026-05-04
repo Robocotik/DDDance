@@ -1,12 +1,12 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '@/redux/store';
 import { fetchHistory } from '@/redux/features/history/actions';
 import {
 	selectHistoryError,
 	selectHistoryItems,
 	selectHistoryLoading,
 } from '@/redux/features/history/selectors';
+import type { AppDispatch } from '@/redux/store';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import HistoryItemCard from '../HistoryItem/HistoryItem';
 import Title from '../Title/Title';
 import styles from './UserHistory.module.scss';
@@ -24,12 +24,8 @@ const UserHistory: React.FC = () => {
 	return (
 		<div className={styles.container}>
 			<Title className={styles.title}>История просмотров</Title>
-			{loading && (
-				<p className={styles.message}>Загрузка...</p>
-			)}
-			{error && (
-				<p className={styles.error}>{error}</p>
-			)}
+			{loading && <p className={styles.message}>Загрузка...</p>}
+			{error && <p className={styles.error}>{error}</p>}
 			{!loading && !error && items.length === 0 && (
 				<p className={styles.message}>История пуста</p>
 			)}

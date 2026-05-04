@@ -2,6 +2,7 @@ import type { BaseAuthResponse } from '@/api/auth/register';
 import * as VKID from '@vkid/sdk';
 import { useEffect, useMemo, useRef, useState, type FC } from 'react';
 import { saveVkAuthUser } from '../../helpers/vkIdSession';
+import http from '@/api/http';
 
 type VkIdAuthButtonProps = {
 	className?: string;
@@ -102,33 +103,36 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 
 					VKID.Auth.exchangeCode(code, deviceId)
 						.then(async (tokenResult) => {
-							const userInfo = await VKID.Auth.userInfo(
-								tokenResult.access_token,
-							);
+						const accessToken = tokenResult.access_token;
 
-							const user = userInfo.user;
-							const fullName = [user.first_name, user.last_name]
-								.filter(Boolean)
-								.join(' ')
-								.trim();
+						try {
+							const response = await http.post('/auth/vk', {
+								access_token: accessToken,
+							});
+							onAuthenticatedRef.current?.(response.data);
+						} catch (signInError: any) {
+							if (signInError?.response?.status === 412) {
+								const userInfo = await VKID.Auth.userInfo(accessToken);
+								const user = userInfo.user;
+								const fullName = [user.first_name, user.last_name]
+									.filter(Boolean)
+									.join(' ')
+									.trim();
+								const login = (user.email ?? user.phone ?? fullName) || `vk_${tokenResult.user_id}`;
 
-							const mappedUser: BaseAuthResponse = {
-								avatar: user.avatar ?? defaultAvatar,
-								created_at: new Date().toISOString(),
-								has_2fa: false,
-								id: user.user_id ?? String(tokenResult.user_id),
-								is_foreign: true,
-								login: (user.email ?? user.phone ?? fullName) || 'VK ID',
-								updated_at: new Date().toISOString(),
-								version: 1,
-							};
-
-							saveVkAuthUser(mappedUser);
-							onAuthenticatedRef.current?.(mappedUser);
-						})
-						.catch(() => {
-							onErrorRef.current?.('Не удалось завершить вход через VK ID');
-						});
+								const response = await http.post('/auth/vk', {
+									access_token: accessToken,
+									login: login,
+								});
+								onAuthenticatedRef.current?.(response.data);
+							} else {
+								throw signInError;
+							}
+						}
+					})
+					.catch(() => {
+						onErrorRef.current?.('Не удалось завершить вход через VK ID');
+					});
 				},
 			);
 

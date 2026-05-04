@@ -1,9 +1,8 @@
-
 import {
-    getAuthToken,
-    getCsrfTokenFromCookies,
-    getJwtFromCookies,
-    setAuthToken,
+	getAuthToken,
+	getCsrfTokenFromCookies,
+	getJwtFromCookies,
+	setAuthToken,
 } from '@/helpers/authToken';
 import axios from 'axios';
 
@@ -15,33 +14,32 @@ const http = axios.create({
 	},
 });
 
-
 http.interceptors.request.use((config) => {
-    const token = getAuthToken() ?? getJwtFromCookies();
-    const csrfToken = getCsrfTokenFromCookies();
+	const token = getAuthToken() ?? getJwtFromCookies();
+	const csrfToken = getCsrfTokenFromCookies();
 
-    if (token) {
-        config.headers.Authorization = token.startsWith('Bearer ')
-            ? token
-            : `Bearer ${token}`;
-    }
+	if (token) {
+		config.headers.Authorization = token.startsWith('Bearer ')
+			? token
+			: `Bearer ${token}`;
+	}
 
-    if (csrfToken) {
-        config.headers['X-Csrf-Token'] = csrfToken;
-    }
+	if (csrfToken) {
+		config.headers['X-Csrf-Token'] = csrfToken;
+	}
 
-    return config;
+	return config;
 });
 
 http.interceptors.response.use(
-    (response) => {
-        const authHeader = response.headers['authorization'];
-        if (typeof authHeader === 'string' && authHeader.length > 0) {
-            setAuthToken(authHeader);
-        }
-        return response;
-    },
-    (error) => Promise.reject(error),
+	(response) => {
+		const authHeader = response.headers['authorization'];
+		if (typeof authHeader === 'string' && authHeader.length > 0) {
+			setAuthToken(authHeader);
+		}
+		return response;
+	},
+	(error) => Promise.reject(error),
 );
 
 export default http;
