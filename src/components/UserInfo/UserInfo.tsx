@@ -2,6 +2,7 @@ import type { BaseAuthResponse } from '@/api/auth/register';
 import React from 'react';
 import Paragraph from '../Paragraph/Paragraph';
 import Title from '../Title/Title';
+import UserHistory from '../UserHistory/UserHistory';
 import styles from './UserInfo.module.scss';
 
 type UserInfoProps = {
@@ -25,6 +26,7 @@ const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
 			<Paragraph level="1" opacity="100" className={styles.login}>
 				{user.login}
 			</Paragraph>
+			<UserHistory />
 		</div>
 	);
 };
