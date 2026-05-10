@@ -35,7 +35,6 @@ const likesSlice = createSlice({
 		removeLike: (state, action: PayloadAction<string>) => {
 			state.items = state.items.filter((i) => i.dance_id !== action.payload);
 		},
-		
 		renameLike: (state, action: PayloadAction<{ danceId: string; newName: string }>) => {
 			const item = state.items.find((i) => i.dance_id === action.payload.danceId);
 			if (item) {

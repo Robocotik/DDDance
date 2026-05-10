@@ -1,6 +1,5 @@
 import { getLikes, toggleLike, updateLikeName } from '../../../api/users/likes';
-import type { AppDispatch } from '../../store';
-
+import type { AppDispatch, RootState } from '../../store';
 import {
 	addLike,
 	removeLike,
@@ -24,29 +23,32 @@ export const toggleLikeThunk =
 	(danceId: string, isLiked: boolean) => async (dispatch: AppDispatch) => {
 		if (isLiked) {
 			dispatch(removeLike(danceId));
-		} else {
-			dispatch(addLike({ dance_id: danceId, created_at: new Date().toISOString(), name: undefined }));
 		}
-
+		
 		try {
 			await toggleLike(danceId);
+			const data = await getLikes();
+			dispatch(setLikesItems(data.likes));
 		} catch {
-			if (isLiked) {
-				dispatch(addLike({ dance_id: danceId, created_at: new Date().toISOString(), name: undefined }));
-			} else {
-				dispatch(removeLike(danceId));
-			}
+			const data = await getLikes();
+			dispatch(setLikesItems(data.likes));
 			dispatch(setLikesError('Не удалось обновить лайк'));
 		}
 	};
 
 export const renameLikeItem =
-	(danceId: string, newName: string) => async (dispatch: AppDispatch) => {
+	(historyId: string, danceId: string, newName: string) => 
+	async (dispatch: AppDispatch, getState: () => RootState) => {
+		const oldName = getState().likes.items.find(i => i.dance_id === danceId)?.name;
+		
 		dispatch(renameLike({ danceId, newName }));
 
 		try {
-			await updateLikeName(danceId, newName);
+			await updateLikeName(historyId, newName);
 		} catch {
+			if (oldName !== undefined) {
+				dispatch(renameLike({ danceId, newName: oldName }));
+			}
 			dispatch(setLikesError('Не удалось сохранить новое название'));
 		}
 	};

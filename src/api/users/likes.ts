@@ -3,9 +3,10 @@ import http from '../http';
 const path = '/users/likes';
 
 export type LikeItem = {
+	history_id: string;
 	dance_id: string;
 	created_at: string;
-    name?: string;
+	name: string;
 };
 
 export type LikesResponse = {
@@ -22,16 +23,6 @@ export const toggleLike = async (danceId: string): Promise<void> => {
 	await http.post(`/users/dance/${danceId}/like`);
 };
 
-export const updateLikeName = async (danceId: string, newName: string): Promise<void> => {
-	const response = await fetch(`/api/users/dance/${danceId}/like`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({ name: newName }),
-	});
-
-	if (!response.ok) {
-		throw new Error('Failed to update like name');
-	}
+export const updateLikeName = async (historyId: string, newName: string): Promise<void> => {
+	await http.put(`/users/history/${historyId}`, { name: newName });
 };

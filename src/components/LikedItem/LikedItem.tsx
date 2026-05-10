@@ -27,7 +27,7 @@ const LikedItemCard: React.FC<LikedItemProps> = ({ item }) => {
 	const handleRenameSubmit = () => {
 		const trimmed = nameValue.trim();
 		if (trimmed && trimmed !== item.name) {
-			dispatch(renameLikeItem(item.dance_id, trimmed));
+			dispatch(renameLikeItem(item.history_id, item.dance_id, trimmed));
 		}
 		setIsEditing(false);
 	};
