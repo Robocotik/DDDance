@@ -90,7 +90,7 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 		});
 
 		instance
-			.on(VKID.WidgetEvents.ERROR, (error) => {
+			.on(VKID.WidgetEvents.ERROR, (error: Error) => {
 				const errorMessage = getAuthErrorMessage(error);
 				onErrorRef.current?.(errorMessage);
 			})

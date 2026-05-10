@@ -23,7 +23,7 @@ const uploadSlice = createSlice({
 	name: 'upload',
 	initialState,
 	reducers: {
-		startUpload: (state, action: PayloadAction<string>) => {
+		startUpload: (_state, action: PayloadAction<string>) => {
 			return {
 				...initialState,
 				isUploading: true,
