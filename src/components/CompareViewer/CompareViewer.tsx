@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -20,10 +19,6 @@ const resolveS3 = (key: string) => {
 	return `${base}/${key.replace(/^\/+/, '')}`;
 };
 
-const extractDanceId = (glbKey: string): string | null => {
-	const match = glbKey.match(/dances\/([^/]+)/);
-	return match ? match[1] : null;
-};
 
 const loadGlb = (
 	animUrl: string,
@@ -79,20 +74,10 @@ const loadGlb = (
 
 const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbKey }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const danceId = extractDanceId(referenceGlbKey);
-
-	const handleBack = () => {
-		if (danceId) {
-			navigate(`/lesson/${danceId}`);
-		} else {
-			navigate(-1);
-		}
-	};
-
+	
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;
