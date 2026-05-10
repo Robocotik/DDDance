@@ -1,7 +1,6 @@
 import { getLikes, toggleLike, updateLikeName } from '../../../api/users/likes';
 import type { AppDispatch, RootState } from '../../store';
 import {
-	addLike,
 	removeLike,
 	setLikesError,
 	setLikesItems,
@@ -24,7 +23,7 @@ export const toggleLikeThunk =
 		if (isLiked) {
 			dispatch(removeLike(danceId));
 		}
-		
+
 		try {
 			await toggleLike(danceId);
 			const data = await getLikes();
