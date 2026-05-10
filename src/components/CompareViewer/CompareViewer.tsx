@@ -235,9 +235,7 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 
 	return (
 		<div className={styles.wrapper}>
-			<button className={styles.backBtn} onClick={handleBack}>
-				← К уроку
-			</button>
+			
 
 			{loading && !error && (
 				<div className={styles.loadingOverlay}>

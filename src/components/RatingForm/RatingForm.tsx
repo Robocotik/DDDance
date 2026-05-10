@@ -17,20 +17,20 @@ interface RatingFormProps {
 }
 
 const CRITERIA = [
-	{ key: 'physical' as const, label: 'Физическая нагрузка', emoji: '💪', low: 'Легко', high: 'Тяжело' },
-	{ key: 'speed' as const, label: 'Скорость', emoji: '⚡', low: 'Медленно', high: 'Быстро' },
-	{ key: 'coordination' as const, label: 'Координация', emoji: '🎯', low: 'Просто', high: 'Сложно' },
-	{ key: 'repeatability' as const, label: 'Повторяемость', emoji: '🔁', low: 'Легко повторить', high: 'Трудно повторить' },
+	{ key: 'physical' as const, label: 'Физическая нагрузка', emoji: '', low: 'Легко', high: 'Тяжело' },
+	{ key: 'speed' as const, label: 'Скорость', emoji: '', low: 'Медленно', high: 'Быстро' },
+	{ key: 'coordination' as const, label: 'Координация', emoji: '', low: 'Просто', high: 'Сложно' },
+	{ key: 'repeatability' as const, label: 'Повторяемость', emoji: '', low: 'Легко повторить', high: 'Трудно повторить' },
 ];
 
 const DOTS = [1, 2, 3, 4, 5];
 
 export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) => {
 	const items = [
-		{ label: 'Физическая нагрузка', emoji: '💪', value: data.avg_physical },
-		{ label: 'Скорость', emoji: '⚡', value: data.avg_speed },
-		{ label: 'Координация', emoji: '🎯', value: data.avg_coordination },
-		{ label: 'Повторяемость', emoji: '🔁', value: data.avg_repeatability },
+		{ label: 'Физическая нагрузка', value: data.avg_physical },
+		{ label: 'Скорость',  value: data.avg_speed },
+		{ label: 'Координация',  value: data.avg_coordination },
+		{ label: 'Повторяемость', value: data.avg_repeatability },
 	];
 
 	return (
@@ -45,7 +45,7 @@ export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) =>
 					const pct = ((displayValue - 1) / 4) * 100;
 					return (
 						<div key={item.label} className={styles.aggregatedItem}>
-							<span className={styles.aggEmoji}>{item.emoji}</span>
+							<span className={styles.aggEmoji}></span>
 							<span className={styles.aggLabel}>{item.label}</span>
 							<div className={styles.aggBar}>
 								<div className={styles.aggBarFill} style={{ width: `${pct}%` }} />
@@ -148,14 +148,14 @@ export const RatingForm: React.FC<RatingFormProps> = ({ userDanceId, onSubmit, o
 		return (
 			<div className={styles.container}>
 				<div className={styles.header}>
-					<h2 className={styles.title}>✅ Спасибо!</h2>
+					<h2 className={styles.title}>Спасибо!</h2>
 					<p className={styles.subtitle}>Считаем результаты...</p>
 				</div>
 				<div className={styles.successState}>
 					<p>Загружаем оценки других участников</p>
 					{!userDanceId && (
 						<p className={styles.hint}>
-							🔄 Видео ещё обрабатывается — оценка привяжется автоматически
+							Видео ещё обрабатывается — оценка привяжется автоматически
 						</p>
 					)}
 				</div>

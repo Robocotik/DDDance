@@ -1,15 +1,18 @@
-import Loading from '@/components/Loading/Loading';
-import CompareViewer from '@/components/CompareViewer/CompareViewer';
-import { getRating } from '@/api/users/compare';
 import type { RateResponse } from '@/api/users/compare';
-import { AggregatedResults, RatingForm } from '@/components/RatingForm/RatingForm';
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectIsUserAuthenticated } from '@/redux/features/user/selectors';
-import styles from './ComparePage.module.scss';
-import type { AppDispatch } from '@/redux/store';
+import { getRating } from '@/api/users/compare';
+import CompareViewer from '@/components/CompareViewer/CompareViewer';
+import Loading from '@/components/Loading/Loading';
+import {
+	AggregatedResults,
+	RatingForm,
+} from '@/components/RatingForm/RatingForm';
 import { resetUpload } from '@/redux/features/upload/uploadSlice';
+import { selectIsUserAuthenticated } from '@/redux/features/user/selectors';
+import type { AppDispatch } from '@/redux/store';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import styles from './ComparePage.module.scss';
 
 interface CompareResult {
 	user_glb_key: string;
@@ -57,7 +60,9 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 	const [showForm, setShowForm] = useState(false);
 
 	const statsBlock = ratingLoading ? (
-		<div className={styles.ratingLoading}><Loading /></div>
+		<div className={styles.ratingLoading}>
+			<Loading />
+		</div>
 	) : ratingData ? (
 		<AggregatedResults data={ratingData} />
 	) : null;
@@ -68,10 +73,11 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 				<h2 className={styles.sectionTitle}>Оценки участников</h2>
 				{statsBlock}
 				<div className={styles.prompt}>
-					<p className={styles.promptText}>
-						Войдите, чтобы оценить этот танец
-					</p>
-					<button className={styles.actionBtn} onClick={() => navigate('/login')}>
+					<p className={styles.promptText}>Войдите, чтобы оценить этот танец</p>
+					<button
+						className={styles.actionBtn}
+						onClick={() => navigate('/login')}
+					>
 						Войти и оценить
 					</button>
 				</div>
@@ -100,8 +106,13 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 					</div>
 				) : (
 					<div className={styles.prompt}>
-						<p className={styles.promptText}>Хотите оценить сложность танца или изменить оценку?</p>
-						<button className={styles.actionBtn} onClick={() => setShowForm(true)}>
+						<p className={styles.promptText}>
+							Хотите оценить сложность танца или изменить оценку?
+						</p>
+						<button
+							className={styles.actionBtn}
+							onClick={() => setShowForm(true)}
+						>
 							Оценить танец
 						</button>
 					</div>
@@ -134,15 +145,19 @@ const ComparePage: React.FC = () => {
 	const [ratingData, setRatingData] = useState<RateResponse | null>(null);
 	const [ratingLoading, setRatingLoading] = useState(false);
 
-	const [hasRated, setHasRated] = useState(() =>
-		!!result?.dance_id && sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true'
+	const [hasRated, setHasRated] = useState(
+		() =>
+			!!result?.dance_id &&
+			sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true',
 	);
 
 	const [ratingRefreshKey, setRatingRefreshKey] = useState(0);
 
 	useEffect(() => {
 		if (result?.dance_id) {
-			setHasRated(sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true');
+			setHasRated(
+				sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true',
+			);
 		} else {
 			setHasRated(false);
 		}
@@ -188,7 +203,11 @@ const ComparePage: React.FC = () => {
 	}, [dispatch]);
 
 	if (loading) {
-		return <div className={styles.page}><Loading /></div>;
+		return (
+			<div className={styles.page}>
+				<Loading />
+			</div>
+		);
 	}
 
 	if (error || !result) {
@@ -215,19 +234,22 @@ const ComparePage: React.FC = () => {
 		<div className={styles.page}>
 			<div className={styles.inner}>
 				<div className={styles.header}>
-					<button
-						className={styles.backBtn}
-						onClick={handleBackToLesson}
-					>
-						← К уроку
+					<button className={styles.backBtn} onClick={handleBackToLesson}>
+						Назад к уроку
 					</button>
 					<h1 className={styles.title}>Результат сравнения</h1>
 				</div>
 
 				<div className={styles.scoreRow}>
-					<div className={styles.scoreCard} style={{ borderColor: scoreColor(score) }}>
+					<div
+						className={styles.scoreCard}
+						style={{ borderColor: scoreColor(score) }}
+					>
 						<span className={styles.scoreLabel}>Твой результат</span>
-						<span className={styles.scoreValue} style={{ color: scoreColor(score) }}>
+						<span
+							className={styles.scoreValue}
+							style={{ color: scoreColor(score) }}
+						>
 							{score}
 							<span className={styles.scoreMax}>/100</span>
 						</span>
@@ -244,7 +266,7 @@ const ComparePage: React.FC = () => {
 						onRated={setRatingData}
 						onHasRatedChange={() => {
 							setHasRated(true);
-							setRatingRefreshKey(prev => prev + 1);
+							setRatingRefreshKey((prev) => prev + 1);
 						}}
 					/>
 				</div>
