@@ -42,6 +42,7 @@ import { S3_ADDRESS } from '../../consts/urls';
 import type { AppDispatch } from '../../redux/store';
 
 import styles from './LessonPage.module.scss';
+import http from '@/api/http';
 
 const CACHE_KEY_PREFIX = 'segment_desc_';
 
@@ -88,21 +89,17 @@ function useSegmentDescription(danceId: string | undefined, segmentIdx: number |
 
 		const controller = new AbortController();
 
-		fetch(
-			`http://localhost:5458/api/users/dance/${danceId}/segment/${segmentIdx}`,
-			{ signal: controller.signal }
-		)
+		http.get(`/users/dance/${danceId}/segment/${segmentIdx}`, {
+			signal: controller.signal,
+		})
 			.then((res) => {
-				if (!res.ok) throw new Error(`HTTP ${res.status}`);
-				return res.json();
-			})
-			.then((data) => {
-				const desc: string = data.description ?? data.text ?? '';
+				const desc: string = res.data.description ?? res.data.text ?? '';
 				setCachedDescription(danceId, segmentIdx, desc);
 				setDescription(desc);
 			})
 			.catch((err) => {
 				if (err.name !== 'AbortError') {
+					console.error('Failed to load segment description:', err);
 					setDescription('');
 				}
 			})
@@ -111,7 +108,7 @@ function useSegmentDescription(danceId: string | undefined, segmentIdx: number |
 			});
 
 		return () => controller.abort();
-	}, [danceId, segmentIdx]);
+		}, [danceId, segmentIdx]);
 
 	return { description, loading };
 }
