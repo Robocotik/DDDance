@@ -3,6 +3,8 @@ import React, { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import tiktokLogo from '../../assets/svg/tiktok-logo.svg';
+import InstaLogo from '../../assets/svg/insta-logo.svg';
+import VkClipsLogo from '../../assets/svg/vkclips-logo.svg';
 import Title from '../../components/Title/Title';
 import actions from '../../redux/features/lesson/actions';
 import Button from '../Button/Button';
@@ -71,6 +73,8 @@ const VideoUploader: React.FC = () => {
 					Мы работаем с:
 				</Paragraph>
 				<img src={tiktokLogo} alt="TikTok" className={styles.tiktokLogo} />
+				<img src={VkClipsLogo} alt="VkClips" className={styles.tiktokLogo} />
+				<img src={InstaLogo} alt="Instagram" className={styles.tiktokLogo} />
 			</div>
 
 			<form className={styles.linkForm} onSubmit={handleSubmitLink}>

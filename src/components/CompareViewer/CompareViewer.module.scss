@@ -1,0 +1,96 @@
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.videoContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 8px;
+	background: #0a0a0f;
+	flex-shrink: 0;
+}
+
+.videoLabel {
+	color: #aaa;
+	font-size: 12px;
+	margin: 0 0 4px;
+}
+
+.video {
+	width: 100%;
+	max-height: 200px;
+	object-fit: contain;
+	border-radius: 6px;
+}
+
+.canvas {
+	flex: 1;
+	min-height: 0; 
+}
+
+.loadingOverlay,
+.errorOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #0a0a0f;
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 14px;
+	z-index: 2;
+}
+
+.errorOverlay {
+	color: #ff6b6b;
+}
+
+.label {
+	position: absolute;
+	top: 14px;
+	z-index: 3;
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 16px;
+	color: #fff;
+	background: rgba(0, 0, 0, 0.55);
+	padding: 4px 14px;
+	border-radius: 20px;
+	backdrop-filter: blur(4px);
+	pointer-events: none;
+}
+
+.labelLeft {
+	left: 14px;
+}
+
+.labelRight {
+	right: 14px;
+}
+
+.backBtn {
+	position: absolute;
+	top: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 10;
+	background: rgba(10, 10, 15, 0.7);
+	border: 1px solid rgba(148, 34, 142, 0.3);
+	color: #fff;
+	font-size: 14px;
+	padding: 10px 24px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background 0.2s ease, border-color 0.2s ease;
+	white-space: nowrap;
+	backdrop-filter: blur(6px);
+
+	&:hover {
+		background: rgba(148, 34, 142, 0.3);
+		border-color: rgba(148, 34, 142, 0.6);
+	}
+}

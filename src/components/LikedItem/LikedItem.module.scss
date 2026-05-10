@@ -44,6 +44,19 @@
 	font-family: NauryzRedKeds, sans-serif;
 }
 
+.input {
+	font-size: 24px;
+	font-weight: 600;
+	font-family: NauryzRedKeds, sans-serif;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 4px;
+	padding: 2px 6px;
+	outline: none;
+	width: 100%;
+}
+
 .date {
 	font-size: 20px;
 	color: rgba(255, 255, 255, 0.5);
@@ -59,7 +72,7 @@
 	transition: opacity 0.2s ease;
 }
 
-.likeBtn {
+.editBtn {
 	background: rgba(0, 0, 0, 0.6);
 	border: none;
 	cursor: pointer;
@@ -73,16 +86,6 @@
 	&:hover {
 		background: rgba(0, 0, 0, 0.85);
 	}
-
-	&.liked {
-		animation: pulse 0.3s ease;
-	}
-}
-
-@keyframes pulse {
-	0% { transform: scale(1); }
-	50% { transform: scale(1.2); }
-	100% { transform: scale(1); }
 }
 
 .video {

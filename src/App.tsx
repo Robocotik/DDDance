@@ -11,6 +11,7 @@ import RulesPage from './pages/RulesPage/RulesPage';
 import UserPage from './pages/UserPage/UserPage';
 import { checkAuthStatus } from './redux/features/user/actions';
 import type { AppDispatch } from './redux/store';
+import ComparePage from './pages/ComparePage/ComparePage';
 
 function App() {
 	const dispatch = useDispatch<AppDispatch>();
@@ -34,6 +35,7 @@ function App() {
 					<Route path="/lesson/:id" element={<LessonPage />} />
 					<Route path="/lesson" element={<LessonPage />} />
 					<Route path="/profile/:id" element={<UserPage />} />
+					<Route path="/compare/:userDanceId" element={<ComparePage />} />
 				</Routes>
 			</main>
 

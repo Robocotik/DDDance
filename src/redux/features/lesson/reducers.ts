@@ -1,17 +1,24 @@
 import type { AnyAction, Reducer } from 'redux';
 import LessonActionTypes from './actionTypes';
 import type { UploadLessonResult } from './actions';
+import type { SegmentsResult } from './actions';
 
 export interface LessonState {
 	resultLoading: boolean;
 	result: UploadLessonResult | null;
 	resultError: string | null;
+	segmentsLoading: boolean;
+	segments: SegmentsResult | null;
+	segmentsError: string | null;
 }
 
 const initialState: LessonState = {
 	resultLoading: false,
 	result: null,
 	resultError: null,
+	segmentsLoading: false,
+	segments: null,
+	segmentsError: null,
 };
 
 const videoReducer: Reducer<LessonState, AnyAction> = (
@@ -26,11 +33,7 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 
 	switch (type) {
 		case LessonActionTypes.LESSON_UPLOAD_LOADING:
-			return {
-				...state,
-				resultLoading: true,
-				resultError: null,
-			};
+			return { ...state, resultLoading: true, resultError: null };
 
 		case LessonActionTypes.LESSON_UPLOAD_LOADED:
 			return {
@@ -45,6 +48,24 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 				...state,
 				resultLoading: false,
 				resultError: payload.error,
+			};
+
+		case LessonActionTypes.SEGMENTS_LOADING:
+			return { ...state, segmentsLoading: true, segmentsError: null };
+
+		case LessonActionTypes.SEGMENTS_LOADED:
+			return {
+				...state,
+				segmentsLoading: false,
+				segments: payload.result,
+				segmentsError: null,
+			};
+
+		case LessonActionTypes.SEGMENTS_ERROR:
+			return {
+				...state,
+				segmentsLoading: false,
+				segmentsError: payload.error,
 			};
 
 		case LessonActionTypes.CLEAR_LESSON:

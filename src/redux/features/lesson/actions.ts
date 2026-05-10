@@ -1,6 +1,6 @@
 import http from '../../../api/http';
 import actionTypes from './actionTypes';
-
+import { S3_ADDRESS } from '../../../consts/urls';
 const inFlightLessonById = new Map<string, Promise<void>>();
 
 export interface UploadLessonResult {
@@ -62,9 +62,7 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 
 		dispatch(returnLessonLoadedAction(response.data));
 	} catch (error: any) {
-		const errorMessage =
-			error?.message ||
-			(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+		const errorMessage = 'Что-то пошло не так, но мы это уже чиним';
 
 		dispatch(returnLessonErrorAction(errorMessage));
 	}
@@ -113,17 +111,78 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 
 		dispatch(returnLessonLoadedAction(response.data));
 	} catch (error: any) {
-		const errorMessage =
-			error?.message ||
-			(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+		const errorMessage = 'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор';
 
 		dispatch(returnLessonErrorAction(errorMessage));
 	}
 };
+
+export interface SegmentData {
+	index: number;
+	label: string;
+	start_frame: number;
+	end_frame: number;
+	llm_description: string;
+	features: string;
+}
+
+export interface SegmentsResult {
+	dance_id: string;
+	meta: {
+		fps: number;
+		num_frames: number;
+		duration_sec: number;
+	};
+	num_segments: number;
+	segments: SegmentData[];
+}
+
+const setSegmentsLoadingAction = () => ({
+	type: actionTypes.SEGMENTS_LOADING,
+});
+
+const returnSegmentsLoadedAction = (data: SegmentsResult) => ({
+	type: actionTypes.SEGMENTS_LOADED,
+	payload: { result: data },
+});
+
+const returnSegmentsErrorAction = (error: string) => ({
+	type: actionTypes.SEGMENTS_ERROR,
+	payload: { error },
+});
+
+const uploadSegmentsAction =
+	(segmentsKey: string) => async (dispatch: any) => {
+		dispatch(setSegmentsLoadingAction());
+
+		try {
+			const base = (S3_ADDRESS || '').replace(/\/+$/, '');
+			const cleanKey = segmentsKey.replace(/^\/+/, '');
+			const url = `${base}/${cleanKey}`;
+
+			const response = await fetch(url);
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			const data: SegmentsResult = await response.json();
+			dispatch(returnSegmentsLoadedAction(data));
+		} catch (error: any) {
+			const errorMessage =
+				error?.message ||
+				(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+			dispatch(returnSegmentsErrorAction(errorMessage));
+		}
+	};
+
 
 export default {
 	uploadLessonByVideoAction,
 	uploadLessonByIdAction,
 	uploadLessonByLinkAction,
 	clearLessonAction,
+	uploadSegmentsAction
 };
+
+

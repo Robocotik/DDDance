@@ -1,5 +1,6 @@
 import type { LoginPayload } from '@/api/auth/login';
 import type { BaseAuthResponse, RegisterPayload } from '@/api/auth/register';
+import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
 import { validateAuthForm } from '@/helpers/validateAuthForm';
 import {
 	setUser,
@@ -70,8 +71,7 @@ export const Auth: FC<AuthProps> = ({
 				navigate('/');
 				setError(null);
 			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : 'Ошибка при входе';
+				const errorMessage = getAuthErrorMessage(err);
 
 				setError(errorMessage);
 				dispatch(setUserError(errorMessage));

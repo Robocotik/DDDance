@@ -1,14 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { thunk } from 'redux-thunk';
-import historyReducer, {
-	type HistoryState,
-} from './features/history/historySlice.ts';
+import historyReducer, { type HistoryState } from './features/history/historySlice.ts';
 import type { LessonState } from './features/lesson/reducers';
 import videoReducer from './features/lesson/reducers';
 import type { TrendsState } from './features/trends/reducers';
 import trendsReducer from './features/trends/reducers';
 import type { UserState } from './features/user/userSlice';
 import userReducer from './features/user/userSlice';
+import likesReducer from './features/likes/likesSlice';
+import uploadReducer from './features/upload/uploadSlice';
+import  type {  UploadState } from './features/upload/uploadSlice';;
 
 export const store = configureStore({
 	reducer: {
@@ -16,6 +17,8 @@ export const store = configureStore({
 		user: userReducer,
 		trends: trendsReducer,
 		history: historyReducer,
+		likes: likesReducer,
+		upload: uploadReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({ thunk: false }).concat(thunk),
@@ -26,6 +29,8 @@ export interface RootState {
 	user: UserState;
 	trends: TrendsState;
 	history: HistoryState;
+	likes: ReturnType<typeof likesReducer>;
+	upload: UploadState;
 }
 
 export type AppDispatch = typeof store.dispatch;

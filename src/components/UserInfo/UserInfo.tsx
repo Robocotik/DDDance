@@ -1,7 +1,6 @@
 import type { BaseAuthResponse } from '@/api/auth/register';
 import React from 'react';
 import Paragraph from '../Paragraph/Paragraph';
-import Title from '../Title/Title';
 import UserHistory from '../UserHistory/UserHistory';
 import styles from './UserInfo.module.scss';
 
@@ -15,7 +14,6 @@ export const defaultAvatarURL =
 const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
 	return (
 		<div className={styles.container}>
-			<Title className={styles.title}>Добро пожаловать в ваш профиль</Title>
 			<div className={styles.avatarWrapper}>
 				<img
 					src={defaultAvatarURL}

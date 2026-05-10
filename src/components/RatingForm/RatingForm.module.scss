@@ -1,0 +1,226 @@
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	width: 100%;
+}
+
+.header { text-align: center; }
+
+.title {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 32px;
+	color: #fff;
+	margin: 0 0 8px;
+}
+
+.subtitle {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.5);
+	margin: 0;
+}
+
+.criteria { display: flex; flex-direction: column; gap: 16px; }
+
+.criterionRow {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	background: rgba(47, 47, 138, 0.3);
+	border-radius: 12px;
+	padding: 14px 18px;
+}
+
+.criterionHeader { display: flex; align-items: center; gap: 10px; }
+.criterionEmoji { font-size: 20px; line-height: 1; }
+.criterionLabel { font-family: NauryzRedKeds, sans-serif; font-size: 18px; color: #fff; }
+
+.sliderWrapper { display: flex; align-items: center; gap: 12px; }
+
+.anchor {
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.4);
+	white-space: nowrap;
+	min-width: 80px;
+	&:last-of-type { text-align: right; }
+}
+
+.sliderTrack {
+	position: relative;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.slider {
+	width: 100%;
+	accent-color: #94228e;
+	cursor: pointer;
+	height: 4px;
+	position: relative;
+	z-index: 2;
+	background: transparent;
+}
+
+.dots { display: flex; justify-content: space-between; padding: 0 2px; }
+
+.dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.15);
+	transition: background 0.2s ease;
+}
+
+.dotActive { background: #94228e; }
+
+.valueDisplay { display: flex; justify-content: space-between; padding: 0 2px; }
+
+.valueDot {
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.25);
+	width: 20px;
+	text-align: center;
+	transition: color 0.15s ease, font-size 0.15s ease;
+}
+
+.valueDotActive {
+	color: #fff;
+	font-size: 15px;
+	font-family: NauryzRedKeds, sans-serif;
+}
+
+.error {
+	font-size: 14px;
+	color: #ff6b6b;
+	text-align: center;
+	padding: 10px;
+	background: rgba(255, 0, 0, 0.08);
+	border-radius: 8px;
+	margin: 0;
+}
+
+.submitBtn {
+	width: 100%;
+	padding: 16px;
+	background: #94228e;
+	border: none;
+	border-radius: 12px;
+	color: #fff;
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 20px;
+	cursor: pointer;
+	transition: background 0.2s ease, transform 0.1s ease;
+
+	&:hover:not(:disabled) { background: #b02aaa; transform: translateY(-1px); }
+	&:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.successState {
+	text-align: center;
+	padding: 20px;
+}
+
+.successState p {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.6);
+	margin: 0 0 8px;
+}
+
+.hint {
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.4);
+	text-align: center;
+	margin: 0;
+}
+
+.aggregated {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.aggregatedTitle {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 22px;
+	color: #fff;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.totalRatings {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.4);
+	font-family: Comfortaa, sans-serif;
+}
+
+.aggregatedItems { display: flex; flex-direction: column; gap: 12px; }
+
+.aggregatedItem {
+	display: grid;
+	grid-template-columns: 24px 1fr auto auto;
+	align-items: center;
+	gap: 10px;
+}
+
+.aggEmoji { font-size: 18px; }
+.aggLabel { font-size: 14px; color: rgba(255, 255, 255, 0.7); }
+
+.aggBar {
+	height: 6px;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.aggBarFill {
+	height: 100%;
+	background: #94228e;
+	border-radius: 3px;
+	transition: width 0.5s ease;
+}
+
+.aggValue {
+	font-size: 14px;
+	color: #fff;
+	font-weight: 600;
+	min-width: 28px;
+	text-align: right;
+}
+
+.avgScore {
+	font-size: 15px;
+	color: rgba(255, 255, 255, 0.6);
+	text-align: center;
+	padding: 12px;
+	background: rgba(148, 34, 142, 0.1);
+	border-radius: 8px;
+
+	strong { color: #fff; font-size: 18px; }
+}
+
+.closeBtn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 50px;
+    height: 50px;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #ffffff;
+    }
+}

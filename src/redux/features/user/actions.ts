@@ -1,6 +1,7 @@
 import { checkAuth } from '@/api/auth/check';
 import { logout } from '@/api/auth/logout';
 import { clearAuthToken } from '@/helpers/authToken';
+import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
 import { clearVkAuthUser, getVkAuthUser } from '@/helpers/vkIdSession';
 import type { AppDispatch } from '@/redux/store';
 import { clearUser, setError, setLoading, setUser } from './userSlice';
@@ -20,18 +21,6 @@ export const checkAuthStatus = () => async (dispatch: AppDispatch) => {
 		}
 
 		dispatch(clearUser());
-
-		if (
-			typeof error === 'object' &&
-			error !== null &&
-			'response' in error &&
-			typeof error.response === 'object' &&
-			error.response !== null &&
-			'status' in error.response &&
-			error.response.status === 500
-		) {
-			dispatch(setError('Internal Server Error'));
-		}
 	}
 };
 
@@ -59,19 +48,7 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 			return;
 		}
 
-		if (
-			typeof error === 'object' &&
-			error !== null &&
-			'response' in error &&
-			typeof error.response === 'object' &&
-			error.response !== null &&
-			'status' in error.response &&
-			error.response.status === 500
-		) {
-			dispatch(setError('Internal Server Error'));
-			return;
-		}
-
-		dispatch(setError('Не удалось выйти из профиля'));
+		const errorMessage = getAuthErrorMessage(error);
+		dispatch(setError(errorMessage));
 	}
 };

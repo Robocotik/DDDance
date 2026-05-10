@@ -25,6 +25,9 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 			loop
 			playsInline
 			preload="metadata"
+			disablePictureInPicture
+				disableRemotePlayback
+			controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
 		/>
 	);
 };

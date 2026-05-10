@@ -1,8 +1,8 @@
 import type { BaseAuthResponse } from '@/api/auth/register';
 import * as VKID from '@vkid/sdk';
 import { useEffect, useMemo, useRef, useState, type FC } from 'react';
-//import { saveVkAuthUser } from '../../helpers/vkIdSession';
 import http from '@/api/http';
+import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
 
 type VkIdAuthButtonProps = {
 	className?: string;
@@ -11,8 +11,6 @@ type VkIdAuthButtonProps = {
 };
 
 let isVkIdInitialized = false;
-
-//const defaultAvatar = 'https://vk.com/images/camera_200.png';
 
 const initVkId = (appId: number, redirectUrl: string) => {
 	if (isVkIdInitialized) {
@@ -92,7 +90,10 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 		});
 
 		instance
-			.on(VKID.WidgetEvents.ERROR, () => {})
+			.on(VKID.WidgetEvents.ERROR, (error) => {
+				const errorMessage = getAuthErrorMessage(error);
+				onErrorRef.current?.(errorMessage);
+			})
 			.on(
 				VKID.OneTapInternalEvents.LOGIN_SUCCESS,
 				(payload: { code: string; device_id: string }) => {
@@ -130,8 +131,9 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 								}
 							}
 						})
-						.catch(() => {
-							onErrorRef.current?.('Не удалось завершить вход через VK ID');
+						.catch((error) => {
+							const errorMessage = getAuthErrorMessage(error);
+							onErrorRef.current?.(errorMessage);
 						});
 				},
 			);
@@ -160,4 +162,3 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 		</div>
 	);
 };
-

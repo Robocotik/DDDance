@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	Navigate,
@@ -7,116 +7,378 @@ import {
 	useSearchParams,
 } from 'react-router-dom';
 
+import {
+	selectUploadState,
+} from '../../redux/features/upload/selectors';
+import {
+	resetUpload,
+	setShowRating,
+} from '../../redux/features/upload/uploadSlice';
+
 import arrowIcon from '../../assets/svg/arrow.svg';
 import Button from '../../components/Button/Button';
 import LessonFinish from '../../components/LessonFinish/LessonFinish';
 import LessonStart from '../../components/LessonStart/LessonStart';
 import Loading from '../../components/Loading/Loading';
-import MixamoViewer from '../../components/SkeletonViewer/MixamoViewer';
-
+import MixamoViewer, { type MixamoViewerHandle } from '../../components/SkeletonViewer/MixamoViewer';
+import LikeButton from '../../components/LikeButton/LikeButton';
+import CheckYourself from '../../components/CheckYourself/CheckYourself';
+import RatingForm from '../../components/RatingForm/RatingForm';
+import { uploadAndCompare } from '@/redux/features/upload/actions';
+import { fetchHistory } from '../../redux/features/history/actions';
+import { fetchLikes } from '../../redux/features/likes/actions';
 import lessonActions from '../../redux/features/lesson/actions';
 import {
 	selectLesson,
 	selectLessonError,
 	selectLessonLoading,
+	selectSegments,
+	selectSegmentsLoading,
 } from '../../redux/features/lesson/selectors';
+import {
+	selectIsUserAuthenticated,
+} from '../../redux/features/user/selectors';
+import { S3_ADDRESS } from '../../consts/urls';
+import type { AppDispatch } from '../../redux/store';
 
 import styles from './LessonPage.module.scss';
 
-const LessonPage: React.FC = () => {
-	const dispatch = useDispatch();
-	const navigate = useNavigate();
-	const { id } = useParams<{ id: string }>();
-	const [searchParams] = useSearchParams();
+const CACHE_KEY_PREFIX = 'segment_desc_';
 
-	const lesson = useSelector(selectLesson);
-	const lessonError = useSelector(selectLessonError);
-	const lessonLoading = useSelector(selectLessonLoading);
-	const segment = searchParams.get('segment');
-	const [playbackSpeed, setPlaybackSpeed] = useState(1);
+function getCacheKey(danceId: string, segmentIdx: number): string {
+	return `${CACHE_KEY_PREFIX}${danceId}_${segmentIdx}`;
+}
 
-	// useEffect(() => {
-	// 	if (id && !lesson) {
-	// 		dispatch(lessonActions.uploadLessonByIdAction(id) as any);
-	// 	}
-
-	// 	return () => {
-	// 		if (id) {
-	// 			dispatch(lessonActions.clearLessonAction());
-	// 		}
-	// 	};
-	// }, [dispatch, id, lesson]);
-
-	//МОЙ ПЕРЕПИСАННЫЙ USE EFFECT
-
-	useEffect(() => {
-		if (id && (!lesson || lesson.dance_id !== id)) {
-			dispatch(lessonActions.uploadLessonByIdAction(id) as any);
-		}
-
-		return () => {
-			if (id) {
-				dispatch(lessonActions.clearLessonAction());
-			}
-		};
-	}, [dispatch, id]); // убран lesson из зависимостей
-
-	if (lessonLoading) {
-		return (
-			<div className={styles.page}>
-				<Loading />
-			</div>
-		);
-	}
-
-	if (lessonError) {
-		return (
-			<div className={styles.page}>
-				<p className={styles.error}>Ошибка: {lessonError}</p>
-			</div>
-		);
-	}
-
-	if (!id) {
-		return <Navigate to={`/lesson/${lesson?.dance_id}`} replace />;
-	}
-
-	if (!lesson) {
+function getCachedDescription(danceId: string, segmentIdx: number): string | null {
+	try {
+		return localStorage.getItem(getCacheKey(danceId, segmentIdx));
+	} catch {
 		return null;
 	}
+}
 
-	if (!segment) {
-		return <Navigate to={`/lesson/${id}?segment=start`} replace />;
+function setCachedDescription(danceId: string, segmentIdx: number, description: string): void {
+	try {
+		localStorage.setItem(getCacheKey(danceId, segmentIdx), description);
+	} catch {
+		return;
 	}
+}
 
-	const isNumericSegment = /^\d+$/.test(segment);
-	const segmentIndex = isNumericSegment ? Number(segment) : -1;
-	const hasFullStep = !!lesson.full_glb_key;
-	const totalSteps = lesson.glb_keys.length + (hasFullStep ? 1 : 0);
+function useSegmentDescription(danceId: string | undefined, segmentIdx: number | null) {
+	const [description, setDescription] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
 
-	const navigateToSegment = (nextSegment: string) => {
-		navigate(`/lesson/${id}?segment=${nextSegment}`);
+	useEffect(() => {
+		if (!danceId || segmentIdx === null || segmentIdx < 0) {
+			setDescription(null);
+			setLoading(false);
+			return;
+		}
+
+		const cached = getCachedDescription(danceId, segmentIdx);
+		if (cached !== null) {
+			setDescription(cached);
+			setLoading(false);
+			return;
+		}
+
+		setLoading(true);
+		setDescription(null);
+
+		const controller = new AbortController();
+
+		fetch(
+			`http://localhost:5458/api/users/dance/${danceId}/segment/${segmentIdx}`,
+			{ signal: controller.signal }
+		)
+			.then((res) => {
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				return res.json();
+			})
+			.then((data) => {
+				const desc: string = data.description ?? data.text ?? '';
+				setCachedDescription(danceId, segmentIdx, desc);
+				setDescription(desc);
+			})
+			.catch((err) => {
+				if (err.name !== 'AbortError') {
+					setDescription('');
+				}
+			})
+			.finally(() => {
+				setLoading(false);
+			});
+
+		return () => controller.abort();
+	}, [danceId, segmentIdx]);
+
+	return { description, loading };
+}
+
+const DescriptionBlock: React.FC<{ description: string | null; loading: boolean }> = ({
+	description,
+	loading,
+}) => {
+	if (!loading && !description) return null;
+
+	return (
+		<div className={styles.descriptionBlock}>
+			{loading ? (
+				<div className={styles.descriptionShimmer}>
+					<span className={styles.shimmerDot} />
+					<span className={styles.shimmerDot} />
+					<span className={styles.shimmerDot} />
+				</div>
+			) : (
+				<p className={styles.descriptionText}>{description}</p>
+			)}
+		</div>
+	);
+};
+
+interface VideoClipProps {
+	src: string;
+	start: number;
+	end: number;
+	playbackSpeed: number;
+	loading: boolean;
+	onReady: () => void;
+	onLoop: () => void;
+}
+
+const VideoClip: React.FC<VideoClipProps> = ({
+	src,
+	start,
+	end,
+	playbackSpeed,
+	loading,
+	onReady,
+	onLoop,
+}) => {
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const startRef = useRef(start);
+	const endRef = useRef(end);
+	const onReadyRef = useRef(onReady);
+	const onLoopRef = useRef(onLoop);
+	const playbackSpeedRef = useRef(playbackSpeed);
+	const rafRef = useRef<number | null>(null);
+	const isSeekingRef = useRef(false);
+	const isLoopingRef = useRef(false);
+
+	useEffect(() => { startRef.current = start; }, [start]);
+	useEffect(() => { endRef.current = end; }, [end]);
+	useEffect(() => { onReadyRef.current = onReady; }, [onReady]);
+	useEffect(() => { onLoopRef.current = onLoop; }, [onLoop]);
+	useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
+
+	useEffect(() => {
+		if (videoRef.current && !isSeekingRef.current) {
+			videoRef.current.playbackRate = playbackSpeed;
+		}
+	}, [playbackSpeed]);
+
+	useEffect(() => {
+		const video = videoRef.current;
+		if (!video || loading) return;
+
+		let destroyed = false;
+		isSeekingRef.current = false;
+		isLoopingRef.current = false;
+
+		const checkFrame = () => {
+			if (destroyed) return;
+			if (!isSeekingRef.current && video.currentTime >= endRef.current) {
+				isSeekingRef.current = true;
+				isLoopingRef.current = true;
+				onLoopRef.current();
+				video.currentTime = startRef.current === 0 ? 0.001 : startRef.current;
+			}
+			rafRef.current = requestAnimationFrame(checkFrame);
+		};
+
+		const handleSeeked = () => {
+			if (destroyed) return;
+			isSeekingRef.current = false;
+			video.playbackRate = playbackSpeedRef.current;
+			video.play().catch(() => {});
+		};
+
+		const handlePlaying = () => {
+			if (destroyed) return;
+			if (isLoopingRef.current) {
+				isLoopingRef.current = false;
+			}
+			onReadyRef.current();
+		};
+
+		video.addEventListener('seeked', handleSeeked);
+		video.addEventListener('playing', handlePlaying);
+
+		isSeekingRef.current = true;
+		const safeStart = start === 0 ? 0.001 : start;
+		video.currentTime = safeStart;
+
+		rafRef.current = requestAnimationFrame(checkFrame);
+
+		return () => {
+			destroyed = true;
+			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+			video.removeEventListener('seeked', handleSeeked);
+			video.removeEventListener('playing', handlePlaying);
+			video.pause();
+		};
+	}, [src, start, end, loading]);
+
+	return (
+		<div className={styles.videoClipWrapper}>
+			{loading && <div className={styles.videoLoading}>Загрузка...</div>}
+			<video
+				ref={videoRef}
+				src={src}
+				muted
+				playsInline
+				preload="auto"
+				className={styles.videoElement}
+				controlsList="nofullscreen nodownload noremoteplayback"
+				disablePictureInPicture
+				disableRemotePlayback
+			/>
+		</div>
+	);
+};
+
+interface LessonLayoutProps {
+	danceId: string;
+	glbPath: string | null;
+	stepLabel: string;
+	currentStepNumber?: number;
+	totalSteps?: number;
+	videoTimes?: { start: number; end: number } | null;
+	videoUrl: string | null;
+	isFullDance: boolean;
+	playbackSpeed: number;
+	segmentsLoading: boolean;
+	lessonDuration: number;
+	lastStep: number | null;
+	description: string | null;
+	descriptionLoading: boolean;
+	preloadGlbPath?: string | null;
+	onSpeedChange: (speed: number) => void;
+	onNavigate: (segment: string) => void;
+	onFullDance: () => void;
+	onReturnFromFull: () => void;
+	onFinish: () => void;
+	onCheckYourself: () => void;
+}
+
+const LessonLayout: React.FC<LessonLayoutProps> = ({
+	danceId,
+	glbPath,
+	stepLabel,
+	currentStepNumber,
+	totalSteps,
+	videoTimes,
+	videoUrl,
+	isFullDance,
+	playbackSpeed,
+	segmentsLoading,
+	lessonDuration,
+	lastStep,
+	description,
+	descriptionLoading,
+	preloadGlbPath,
+	onSpeedChange,
+	onNavigate,
+	onFullDance,
+	onReturnFromFull,
+	onFinish,
+	onCheckYourself,
+}) => {
+	const viewerRef = useRef<MixamoViewerHandle>(null);
+	const modelReadyRef = useRef(false);
+	const videoReadyRef = useRef(false);
+
+	const tryStart = () => {
+		if (modelReadyRef.current && videoReadyRef.current) {
+			viewerRef.current?.resume();
+		}
 	};
 
-	const renderLessonLayout = (
-		glbPath: string | null,
-		stepLabel: string,
-		currentStepNumber?: number,
-		totalSteps?: number,
-	) => (
+	const handleAnimationReady = () => {
+		modelReadyRef.current = true;
+		tryStart();
+	};
+
+	const handleVideoReady = () => {
+		videoReadyRef.current = true;
+		tryStart();
+	};
+
+	const handleVideoLoop = () => {
+		videoReadyRef.current = false;
+		modelReadyRef.current = true;
+		viewerRef.current?.pause();
+		viewerRef.current?.resetToStart();
+	};
+
+	useEffect(() => {
+		modelReadyRef.current = false;
+		videoReadyRef.current = false;
+	}, [glbPath]);
+
+	useEffect(() => {
+		if (!glbPath) return;
+
+		const timer = setTimeout(() => {
+			if (modelReadyRef.current && !videoReadyRef.current) {
+				videoReadyRef.current = true;
+				tryStart();
+			}
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [glbPath]);
+
+	return (
 		<div className={styles.page}>
 			<div className={styles.lesson}>
 				<div className={styles.viewerColumn}>
-					<MixamoViewer glbPath={glbPath} timeScale={playbackSpeed} />
+					<div className={styles.viewerWrapper}>
+						<div className={styles.modelContainer}>
+							<MixamoViewer
+								ref={viewerRef}
+								glbPath={glbPath}
+								timeScale={playbackSpeed}
+								preloadPath={preloadGlbPath}
+								onAnimationReady={handleAnimationReady}
+							/>
+						</div>
+						{videoUrl && (
+							<div className={styles.videoContainer}>
+								<VideoClip
+									key={`${glbPath}-${videoTimes?.start}-${videoTimes?.end}`}
+									src={videoUrl}
+									start={videoTimes?.start ?? 0}
+									end={videoTimes?.end ?? lessonDuration}
+									playbackSpeed={playbackSpeed}
+									loading={segmentsLoading}
+									onReady={handleVideoReady}
+									onLoop={handleVideoLoop}
+								/>
+							</div>
+						)}
+					</div>
 				</div>
+
 				<div className={styles.controlsColumn}>
 					<div className={styles.stepHeader}>
 						<div className={`${styles.stepButtons} ${styles.stepButtonsLeft}`}>
-							{currentStepNumber && (
+							{!isFullDance && currentStepNumber !== undefined && (
 								<button
 									className={styles.stepButton}
 									onClick={() =>
-										navigateToSegment(
+										onNavigate(
 											currentStepNumber > 1
 												? String(currentStepNumber - 2)
 												: 'start',
@@ -125,42 +387,45 @@ const LessonPage: React.FC = () => {
 								>
 									<img
 										src={arrowIcon}
-										alt={
-											currentStepNumber > 1
-												? 'К предыдущим шагам'
-												: 'К началу урока'
-										}
+										alt={currentStepNumber > 1 ? 'Предыдущий шаг' : 'К началу'}
 										className={styles.arrowLeft}
 									/>
 								</button>
 							)}
 						</div>
-						<h2 className={styles.stepTitle}>{stepLabel}</h2>
+
+						<h2 className={isFullDance ? styles.stepTitleFull : styles.stepTitle}>
+							{stepLabel}
+						</h2>
+
 						<div className={`${styles.stepButtons} ${styles.stepButtonsRight}`}>
-							{currentStepNumber && totalSteps && (
-								<button
-									className={styles.stepButton}
-									onClick={() =>
-										navigateToSegment(
-											currentStepNumber < totalSteps
-												? String(currentStepNumber)
-												: 'finish',
-										)
-									}
-								>
-									<img
-										src={arrowIcon}
-										alt={
-											currentStepNumber < totalSteps
-												? 'К следующим шагам'
-												: 'К завершению урока'
+							{!isFullDance &&
+								currentStepNumber !== undefined &&
+								totalSteps !== undefined && (
+									<button
+										className={styles.stepButton}
+										onClick={() =>
+											onNavigate(
+												currentStepNumber < totalSteps
+													? String(currentStepNumber)
+													: 'finish',
+											)
 										}
-										className={styles.arrowRight}
-									/>
-								</button>
-							)}
+									>
+										<img
+											src={arrowIcon}
+											alt={currentStepNumber < totalSteps ? 'Следующий шаг' : 'К финишу'}
+											className={styles.arrowRight}
+										/>
+									</button>
+								)}
 						</div>
 					</div>
+
+					<LikeButton danceId={danceId} />
+
+					<DescriptionBlock description={description} loading={descriptionLoading} />
+
 					<div className={styles.speedControl}>
 						<label htmlFor="speed-control">
 							Скорость: {playbackSpeed.toFixed(1)}x
@@ -168,79 +433,368 @@ const LessonPage: React.FC = () => {
 						<input
 							id="speed-control"
 							type="range"
-							min={0.1}
-							max={3}
-							step={0.1}
+							min={0.5}
+							max={1.25}
+							step={0.05}
 							value={playbackSpeed}
-							onChange={(event) => setPlaybackSpeed(Number(event.target.value))}
+							onChange={(e) => onSpeedChange(Number(e.target.value))}
 						/>
 					</div>
+
+					{isFullDance ? (
+						<Button size="s" className={styles.fullDanceButton} onClick={onReturnFromFull}>
+							← Вернуться к шагу {lastStep !== null ? lastStep + 1 : 1}
+						</Button>
+					) : (
+						<Button size="s" className={styles.fullDanceButton} onClick={onFullDance}>
+							▶ Полный танец
+						</Button>
+					)}
+
+					<Button size="s" className={styles.finishButton} onClick={onFinish}>
+						Завершить урок
+					</Button>
+
 					<Button
 						size="s"
 						className={styles.finishButton}
-						onClick={() => navigateToSegment('finish')}
+						onClick={onCheckYourself}
 					>
-						Завершить урок
+						Проверить себя
 					</Button>
 				</div>
 			</div>
 		</div>
 	);
+};
+
+const LessonPage: React.FC = () => {
+	const dispatch = useDispatch<AppDispatch>();
+	const navigate = useNavigate();
+	const { id } = useParams<{ id: string }>();
+	const [searchParams] = useSearchParams();
+
+	const lesson = useSelector(selectLesson);
+	const lessonError = useSelector(selectLessonError);
+	const lessonLoading = useSelector(selectLessonLoading);
+	const segments = useSelector(selectSegments);
+	const segmentsLoading = useSelector(selectSegmentsLoading);
+	const isAuthenticated = useSelector(selectIsUserAuthenticated);
+	const uploadState = useSelector(selectUploadState);
+
+	const segment = searchParams.get('segment');
+	const [playbackSpeed, setPlaybackSpeed] = useState(1);
+	const [showCheckYourself, setShowCheckYourself] = useState(false);
+	const lastStepRef = useRef<number | null>(null);
+
+	const hasNavigatedRef = useRef(false);
+	const hasShownRatingRef = useRef(false);
+	const isNumericSegment = segment !== null && /^\d+$/.test(segment);
+	const segmentIndex = isNumericSegment ? Number(segment) : -1;
+
+	const { description, loading: descriptionLoading } = useSegmentDescription(
+		id,
+		isNumericSegment ? segmentIndex : null,
+	);
+
+	useEffect(() => {
+		if (id && (!lesson || lesson.dance_id !== id)) {
+			dispatch(lessonActions.uploadLessonByIdAction(id) as any)
+				.then(() => {
+					if (isAuthenticated) {
+						dispatch(fetchHistory() as any);
+						dispatch(fetchLikes() as any);
+					}
+				});
+		}
+		return () => {
+			if (id) {
+				dispatch(lessonActions.clearLessonAction());
+			}
+		};
+	}, [dispatch, id, isAuthenticated]);
+
+	useEffect(() => {
+		if (lesson?.segments_key && !segments) {
+			dispatch(lessonActions.uploadSegmentsAction(lesson.segments_key) as any);
+		}
+	}, [dispatch, lesson, segments]);
+
+	useEffect(() => {
+		if (segment && /^\d+$/.test(segment)) {
+			lastStepRef.current = Number(segment);
+		}
+	}, [segment]);
+
+	useEffect(() => {
+		if (uploadState.isUploading && showCheckYourself) {
+			setShowCheckYourself(false);
+		}
+	}, [uploadState.isUploading, showCheckYourself]);
+
+	useEffect(() => {
+		const alreadyRated = id && sessionStorage.getItem(`hasRated_${id}`) === 'true';
+
+		if (
+			uploadState.isUploading &&
+			isAuthenticated &&
+			!uploadState.showRating &&
+			!hasShownRatingRef.current &&
+			!alreadyRated
+		) {
+			hasShownRatingRef.current = true;
+			dispatch(setShowRating(true));
+		}
+	}, [uploadState.isUploading, isAuthenticated, uploadState.showRating, dispatch, id]);
+
+	useEffect(() => {
+		hasNavigatedRef.current = false;
+		hasShownRatingRef.current = false;
+	}, [id]);
+
+	useEffect(() => {
+		if (
+			!uploadState.isUploading &&
+			!uploadState.isProcessing &&
+			!uploadState.error &&
+			uploadState.userDanceId &&
+			!hasNavigatedRef.current
+		) {
+			hasNavigatedRef.current = true;
+			navigate(`/compare/${uploadState.userDanceId}`);
+		}
+	}, [uploadState.isUploading, uploadState.isProcessing, uploadState.error, uploadState.userDanceId, navigate]);
+
+	const ratingOverlay = uploadState.showRating ? (
+		<div className={styles.ratingOverlay}>
+			<div className={styles.ratingModal}>
+				<RatingForm
+					userDanceId={uploadState.userDanceId ?? ''}
+					danceId={id ?? ''}
+					onSubmit={() => {
+						sessionStorage.setItem(`hasRated_${id}`, 'true');
+						dispatch(setShowRating(false));
+					}}
+					onClose={() => dispatch(setShowRating(false))}
+				/>
+			</div>
+		</div>
+	) : null;
+
+	if (uploadState.isUploading || uploadState.isProcessing) {
+		return (
+			<>
+				<div className={styles.fullscreenUpload}>
+					<div className={styles.uploadContent}>
+						<Loading />
+
+						{uploadState.isProcessing && !uploadState.error && (
+							<>
+								<p className={styles.uploadText}>Обрабатываем твоё видео…</p>
+								<p className={styles.uploadHint}>Это может занять до минуты</p>
+							</>
+						)}
+
+						{uploadState.error && (
+							<>
+								<p className={`${styles.uploadText} ${styles.uploadError}`}>
+									❌ {uploadState.error}
+								</p>
+								<button
+									className={styles.retryBtn}
+									onClick={() => {
+										hasNavigatedRef.current = false;
+										dispatch(resetUpload());
+									}}
+								>
+									Попробовать снова
+								</button>
+							</>
+						)}
+					</div>
+				</div>
+				{ratingOverlay}
+			</>
+		);
+	}
+
+	if (lessonLoading) {
+		return (
+			<>
+				<div className={styles.page}>
+					<Loading />
+				</div>
+				{ratingOverlay}
+			</>
+		);
+	}
+
+	if (lessonError) {
+		return (
+			<>
+				<div className={styles.page}>
+					<p className={styles.error}>Ошибка: {lessonError}</p>
+				</div>
+				{ratingOverlay}
+			</>
+		);
+	}
+
+	if (!id) {
+		return <Navigate to={`/lesson/${lesson?.dance_id}`} replace />;
+	}
+
+	if (!lesson) {
+		return <>{ratingOverlay}</>;
+	}
+
+	if (!segment) {
+		return <Navigate to={`/lesson/${id}?segment=start`} replace />;
+	}
+
+	const totalSteps = lesson.glb_keys.length;
+
+	const navigateToSegment = (nextSegment: string) => {
+		navigate(`/lesson/${id}?segment=${nextSegment}`);
+	};
+
+	const handleFullDance = () => navigateToSegment('full');
+
+	const handleReturnFromFull = () => {
+		const returnTo = lastStepRef.current !== null ? String(lastStepRef.current) : '0';
+		navigateToSegment(returnTo);
+	};
+
+	const getCurrentVideoTimes = (index: number): { start: number; end: number } | null => {
+		if (!segments || !lesson) return null;
+		const seg = segments.segments[index];
+		if (!seg) return null;
+		const fps = segments.meta.fps;
+		return {
+			start: seg.start_frame / fps,
+			end: (seg.end_frame - 5) / fps,
+		};
+	};
+
+	const videoUrl = lesson.video_path
+		? `${(S3_ADDRESS || '').replace(/\/+$/, '')}/${lesson.video_path.replace(/^\/+/, '')}`
+		: null;
 
 	if (segment === 'start') {
 		return (
-			<div className={styles.page}>
-				<LessonStart lesson={lesson} />
-			</div>
+			<>
+				<div className={styles.page}>
+					<LessonStart lesson={lesson} />
+				</div>
+				{ratingOverlay}
+			</>
 		);
 	}
 
 	if (segment === 'finish') {
 		return (
-			<div className={styles.page}>
-				<LessonFinish lesson={lesson} />
-			</div>
+			<>
+				<div className={styles.page}>
+					<LessonFinish lesson={lesson} />
+				</div>
+				{ratingOverlay}
+			</>
 		);
 	}
 
 	if (segment === 'full') {
 		return (
-			<Navigate
-				to={`/lesson/${id}?segment=${lesson.glb_keys.length}`}
-				replace
-			/>
+			<>
+				<LessonLayout
+					danceId={id}
+					glbPath={lesson.full_glb_key}
+					stepLabel="ПОЛНЫЙ ТАНЕЦ"
+					videoTimes={{ start: 0, end: lesson.duration_sec }}
+					videoUrl={videoUrl}
+					isFullDance={true}
+					playbackSpeed={playbackSpeed}
+					segmentsLoading={segmentsLoading}
+					lessonDuration={lesson.duration_sec}
+					lastStep={lastStepRef.current}
+					description={null}
+					descriptionLoading={false}
+					onSpeedChange={setPlaybackSpeed}
+					onNavigate={navigateToSegment}
+					onFullDance={handleFullDance}
+					onReturnFromFull={handleReturnFromFull}
+					onFinish={() => navigateToSegment('finish')}
+					onCheckYourself={() => setShowCheckYourself(true)}
+					preloadGlbPath={lesson.full_glb_key}
+				/>
+				{showCheckYourself && id && (
+					<CheckYourself
+						referenceVideoUrl={videoUrl}
+						referenceDanceId={id}
+						onClose={() => setShowCheckYourself(false)}
+						onSubmit={(blob) => dispatch(uploadAndCompare(blob, id) as any)}
+						submitting={uploadState.isProcessing}
+					/>
+				)}
+				{ratingOverlay}
+			</>
 		);
 	}
 
 	if (isNumericSegment) {
-		const isRegularStep =
-			segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
+		const isValidStep = segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
 
-		const isFullStep = hasFullStep && segmentIndex === lesson.glb_keys.length;
-		let glbPath: string | null = null;
-
-		if (isRegularStep) {
-			glbPath = lesson.glb_keys[segmentIndex];
-		} else if (isFullStep) {
-			glbPath = lesson.full_glb_key ?? null;
-		}
-
-		if (!glbPath) {
+		if (!isValidStep) {
 			return <Navigate to={`/lesson/${id}?segment=finish`} replace />;
 		}
 
-		return renderLessonLayout(
-			glbPath,
-			`ШАГ ${segmentIndex + 1}`,
-			segmentIndex + 1,
-			totalSteps,
+		const glbPath = lesson.glb_keys[segmentIndex];
+		const videoTimes = getCurrentVideoTimes(segmentIndex);
+
+		return (
+			<>
+				<LessonLayout
+					danceId={id}
+					glbPath={glbPath}
+					stepLabel={`${segmentIndex + 1} / ${totalSteps}`}
+					currentStepNumber={segmentIndex + 1}
+					totalSteps={totalSteps}
+					videoTimes={videoTimes}
+					videoUrl={videoUrl}
+					isFullDance={false}
+					playbackSpeed={playbackSpeed}
+					segmentsLoading={segmentsLoading}
+					lessonDuration={lesson.duration_sec}
+					lastStep={lastStepRef.current}
+					description={description}
+					descriptionLoading={descriptionLoading}
+					onSpeedChange={setPlaybackSpeed}
+					onNavigate={navigateToSegment}
+					onFullDance={handleFullDance}
+					onReturnFromFull={handleReturnFromFull}
+					onFinish={() => navigateToSegment('finish')}
+					onCheckYourself={() => setShowCheckYourself(true)}
+				/>
+				{showCheckYourself && id && (
+					<CheckYourself
+						referenceVideoUrl={videoUrl}
+						referenceDanceId={id}
+						onClose={() => setShowCheckYourself(false)}
+						onSubmit={(blob) => dispatch(uploadAndCompare(blob, id) as any)}
+						submitting={uploadState.isProcessing}
+					/>
+				)}
+				{ratingOverlay}
+			</>
 		);
 	}
 
 	return (
-		<div className={styles.page}>
-			<p className={styles.error}>Некорректный параметр segment</p>
-		</div>
+		<>
+			<div className={styles.page}>
+				<p className={styles.error}>Некорректный параметр segment</p>
+			</div>
+			{ratingOverlay}
+		</>
 	);
 };
 
