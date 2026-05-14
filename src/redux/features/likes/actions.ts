@@ -2,10 +2,10 @@ import { getLikes, toggleLike, updateLikeName } from '../../../api/users/likes';
 import type { AppDispatch, RootState } from '../../store';
 import {
 	removeLike,
+	renameLike,
 	setLikesError,
 	setLikesItems,
 	setLikesLoading,
-	renameLike,
 } from './likesSlice';
 
 export const fetchLikes = () => async (dispatch: AppDispatch) => {
@@ -36,10 +36,12 @@ export const toggleLikeThunk =
 	};
 
 export const renameLikeItem =
-	(historyId: string, danceId: string, newName: string) => 
+	(historyId: string, danceId: string, newName: string) =>
 	async (dispatch: AppDispatch, getState: () => RootState) => {
-		const oldName = getState().likes.items.find(i => i.dance_id === danceId)?.name;
-		
+		const oldName = getState().likes.items.find(
+			(i) => i.dance_id === danceId,
+		)?.name;
+
 		dispatch(renameLike({ danceId, newName }));
 
 		try {

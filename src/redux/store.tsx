@@ -1,16 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { thunk } from 'redux-thunk';
-import historyReducer, { type HistoryState } from './features/history/historySlice.ts';
+import historyReducer, {
+	type HistoryState,
+} from './features/history/historySlice.ts';
 import type { LessonState } from './features/lesson/reducers';
 import videoReducer from './features/lesson/reducers';
+import likesReducer from './features/likes/likesSlice';
 import type { TrendsState } from './features/trends/reducers';
 import trendsReducer from './features/trends/reducers';
+import type { UploadState } from './features/upload/uploadSlice';
+import uploadReducer from './features/upload/uploadSlice';
 import type { UserState } from './features/user/userSlice';
 import userReducer from './features/user/userSlice';
-import likesReducer from './features/likes/likesSlice';
-import uploadReducer from './features/upload/uploadSlice';
-import  type {  UploadState } from './features/upload/uploadSlice';;
-
 export const store = configureStore({
 	reducer: {
 		video: videoReducer,

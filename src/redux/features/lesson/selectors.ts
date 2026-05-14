@@ -1,6 +1,5 @@
 import type { RootState } from '../../store';
-import type { UploadLessonResult } from './actions';
-import type { SegmentsResult } from './actions';
+import type { SegmentsResult, UploadLessonResult } from './actions';
 
 export const selectLesson = (state: RootState): UploadLessonResult | null =>
 	state.video.result;

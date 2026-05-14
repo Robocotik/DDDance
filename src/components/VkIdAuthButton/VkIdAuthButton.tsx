@@ -1,8 +1,8 @@
 import type { BaseAuthResponse } from '@/api/auth/register';
-import * as VKID from '@vkid/sdk';
-import { useEffect, useMemo, useRef, useState, type FC } from 'react';
 import http from '@/api/http';
 import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
+import * as VKID from '@vkid/sdk';
+import { useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 type VkIdAuthButtonProps = {
 	className?: string;
@@ -112,7 +112,9 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 								.filter(Boolean)
 								.join(' ')
 								.trim();
-							const login = (user.email ?? user.phone ?? fullName) || `vk_${tokenResult.user_id}`;
+							const login =
+								(user.email ?? user.phone ?? fullName) ||
+								`vk_${tokenResult.user_id}`;
 
 							try {
 								const response = await http.post('/auth/vk', {

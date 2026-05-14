@@ -19,7 +19,7 @@
 
 .message {
 	font-size: 14px;
-	color: rgba(255, 255, 255, 0.4);
+	color: rgb(255 255 255 / 40%);
 	padding: 12px 24px;
 }
 
@@ -34,7 +34,7 @@
 	overflow-x: auto;
 	padding: 8px 24px 20px;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(148, 34, 142, 0.5) transparent;
+	scrollbar-color: rgb(148 34 142 / 50%) transparent;
 
 	&::-webkit-scrollbar {
 		height: 4px;
@@ -45,7 +45,7 @@
 	}
 
 	&::-webkit-scrollbar-thumb {
-		background: rgba(148, 34, 142, 0.5);
+		background: rgb(148 34 142 / 50%);
 		border-radius: 2px;
 	}
 }

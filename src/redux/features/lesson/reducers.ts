@@ -1,7 +1,6 @@
 import type { AnyAction, Reducer } from 'redux';
 import LessonActionTypes from './actionTypes';
-import type { UploadLessonResult } from './actions';
-import type { SegmentsResult } from './actions';
+import type { SegmentsResult, UploadLessonResult } from './actions';
 
 export interface LessonState {
 	resultLoading: boolean;

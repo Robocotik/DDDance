@@ -33,7 +33,10 @@ export const getAuthErrorMessage = (error: any): string => {
 	}
 
 	if (error instanceof Error) {
-		if (error.message.includes('Network') || error.message.includes('ERR_NETWORK')) {
+		if (
+			error.message.includes('Network') ||
+			error.message.includes('ERR_NETWORK')
+		) {
 			return 'Проблема с подключением. Проверьте интернет';
 		}
 		if (error.message.includes('timeout')) {

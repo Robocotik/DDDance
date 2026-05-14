@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { CompareResponse } from '@/api/users/compare';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface UploadState {
 	isUploading: boolean;

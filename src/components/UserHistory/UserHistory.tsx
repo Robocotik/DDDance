@@ -1,11 +1,14 @@
 import { fetchHistory } from '@/redux/features/history/actions';
-import { fetchLikes } from '@/redux/features/likes/actions';
 import {
 	selectHistoryError,
 	selectHistoryItems,
 	selectHistoryLoading,
 } from '@/redux/features/history/selectors';
-import { selectLikesItems, selectLikesLoading } from '@/redux/features/likes/selectors';
+import { fetchLikes } from '@/redux/features/likes/actions';
+import {
+	selectLikesItems,
+	selectLikesLoading,
+} from '@/redux/features/likes/selectors';
 import type { AppDispatch } from '@/redux/store';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -40,7 +43,7 @@ const UserHistory: React.FC = () => {
 				{likedItems.length > 0 && (
 					<div className={styles.scrollWrapper}>
 						<div className={styles.row}>
-							{likedItems.map((item : any) => (
+							{likedItems.map((item: any) => (
 								<div key={item.dance_id} className={styles.cardWrapper}>
 									<LikedItemCard item={item} />
 								</div>

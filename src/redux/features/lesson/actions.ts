@@ -1,6 +1,6 @@
 import http from '../../../api/http';
-import actionTypes from './actionTypes';
 import { S3_ADDRESS } from '../../../consts/urls';
+import actionTypes from './actionTypes';
 const inFlightLessonById = new Map<string, Promise<void>>();
 
 export interface UploadLessonResult {
@@ -111,7 +111,8 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 
 		dispatch(returnLessonLoadedAction(response.data));
 	} catch (error: any) {
-		const errorMessage = 'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор';
+		const errorMessage =
+			'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор';
 
 		dispatch(returnLessonErrorAction(errorMessage));
 	}
@@ -151,38 +152,34 @@ const returnSegmentsErrorAction = (error: string) => ({
 	payload: { error },
 });
 
-const uploadSegmentsAction =
-	(segmentsKey: string) => async (dispatch: any) => {
-		dispatch(setSegmentsLoadingAction());
+const uploadSegmentsAction = (segmentsKey: string) => async (dispatch: any) => {
+	dispatch(setSegmentsLoadingAction());
 
-		try {
-			const base = (S3_ADDRESS || '').replace(/\/+$/, '');
-			const cleanKey = segmentsKey.replace(/^\/+/, '');
-			const url = `${base}/${cleanKey}`;
+	try {
+		const base = (S3_ADDRESS || '').replace(/\/+$/, '');
+		const cleanKey = segmentsKey.replace(/^\/+/, '');
+		const url = `${base}/${cleanKey}`;
 
-			const response = await fetch(url);
+		const response = await fetch(url);
 
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}`);
-			}
-
-			const data: SegmentsResult = await response.json();
-			dispatch(returnSegmentsLoadedAction(data));
-		} catch (error: any) {
-			const errorMessage =
-				error?.message ||
-				(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
-			dispatch(returnSegmentsErrorAction(errorMessage));
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
 		}
-	};
 
+		const data: SegmentsResult = await response.json();
+		dispatch(returnSegmentsLoadedAction(data));
+	} catch (error: any) {
+		const errorMessage =
+			error?.message ||
+			(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+		dispatch(returnSegmentsErrorAction(errorMessage));
+	}
+};
 
 export default {
 	uploadLessonByVideoAction,
 	uploadLessonByIdAction,
 	uploadLessonByLinkAction,
 	clearLessonAction,
-	uploadSegmentsAction
+	uploadSegmentsAction,
 };
-
-

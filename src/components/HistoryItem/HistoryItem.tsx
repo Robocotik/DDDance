@@ -15,7 +15,7 @@ interface HistoryItemProps {
 const HistoryItemCard: React.FC<HistoryItemProps> = ({ item }) => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch<AppDispatch>();
-	
+
 	const isLiked = useSelector(selectIsLiked(item.dance_id));
 
 	const videoSrc = `${(S3_ADDRESS || '').replace(/\/+$/, '')}/results/${item.dance_id}/video.mp4`;
@@ -48,14 +48,15 @@ const HistoryItemCard: React.FC<HistoryItemProps> = ({ item }) => {
 				<button
 					className={`${styles.likeBtn} ${isLiked ? styles.liked : ''}`}
 					onClick={handleToggleLike}
-					title={isLiked ? 'Убрать из понравившихся' : 'Добавить в понравившиеся'}
+					title={
+						isLiked ? 'Убрать из понравившихся' : 'Добавить в понравившиеся'
+					}
 				>
 					{isLiked ? '❤️' : '🤍'}
 				</button>
 			</div>
 
 			<div className={styles.info} onClick={(e) => e.stopPropagation()}>
-				
 				<span className={styles.date}>
 					{new Date(item.created_at).toLocaleDateString('ru-RU', {
 						day: '2-digit',

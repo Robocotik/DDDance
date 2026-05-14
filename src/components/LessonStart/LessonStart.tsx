@@ -26,7 +26,7 @@ const LessonStart: React.FC<LessonStartProps> = ({ lesson }) => {
 	const navigate = useNavigate();
 
 	const handleStartLesson = () => {
-		navigate(`?segment=full`);
+		navigate(`?segment=0`);
 	};
 
 	return (

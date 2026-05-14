@@ -12,7 +12,7 @@
 }
 
 .backBtn {
-	background: rgba(255, 255, 255, 0.08);
+	background: rgb(255 255 255 / 8%);
 	border: none;
 	color: #fff;
 	font-size: 14px;
@@ -21,7 +21,10 @@
 	cursor: pointer;
 	transition: background 0.2s ease;
 	white-space: nowrap;
-	&:hover { background: rgba(255, 255, 255, 0.15); }
+
+	&:hover {
+		background: rgb(255 255 255 / 15%);
+	}
 }
 
 .title {
@@ -35,7 +38,7 @@
 	color: #ff6b6b;
 	font-size: 14px;
 	padding: 12px 16px;
-	background: rgba(255, 0, 0, 0.08);
+	background: rgb(255 0 0 / 8%);
 	border-radius: 8px;
 }
 
@@ -54,7 +57,7 @@
 	overflow: hidden;
 	background: #000;
 	aspect-ratio: 9 / 16;
-	box-shadow: 0 0 0 1px rgba(148, 34, 142, 0.3);
+	box-shadow: 0 0 0 1px rgb(148 34 142 / 30%);
 }
 
 .video {
@@ -81,8 +84,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	background: rgba(47, 47, 138, 0.4);
-	border: 1px solid rgba(148, 34, 142, 0.3);
+	background: rgb(47 47 138 / 40%);
+	border: 1px solid rgb(148 34 142 / 30%);
 	border-radius: 10px;
 	padding: 8px 14px;
 	min-width: 70px;
@@ -90,7 +93,7 @@
 
 .timeChipLabel {
 	font-size: 11px;
-	color: rgba(255, 255, 255, 0.4);
+	color: rgb(255 255 255 / 40%);
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 }
@@ -102,14 +105,17 @@
 }
 
 .timeSeparator {
-	color: rgba(148, 34, 142, 0.7);
+	color: rgb(148 34 142 / 70%);
 	font-size: 18px;
 }
 
 .durationChip {
 	font-size: 13px;
-	color: rgba(255, 255, 255, 0.5);
-	strong { color: #fff; }
+	color: rgb(255 255 255 / 50%);
+
+	strong {
+		color: #fff;
+	}
 }
 
 .trackWrapper {
@@ -122,7 +128,7 @@
 	position: relative;
 	height: 8px;
 	border-radius: 4px;
-	background: rgba(255, 255, 255, 0.08);
+	background: rgb(255 255 255 / 8%);
 	margin: 36px 0 8px;
 	cursor: default;
 	user-select: none;
@@ -132,7 +138,7 @@
 	position: absolute;
 	top: 0;
 	height: 100%;
-	background: rgba(255, 255, 255, 0.08);
+	background: rgb(255 255 255 / 8%);
 	border-radius: 4px;
 }
 
@@ -142,8 +148,10 @@
 	height: 100%;
 	background: linear-gradient(90deg, #94228e, #c040b8);
 	border-radius: 4px;
-	box-shadow: 0 0 8px rgba(148, 34, 142, 0.5);
-	transition: left 0.02s, width 0.02s;
+	box-shadow: 0 0 8px rgb(148 34 142 / 50%);
+	transition:
+		left 0.02s,
+		width 0.02s;
 }
 
 .handle {
@@ -156,7 +164,9 @@
 	align-items: center;
 	z-index: 10;
 
-	&:active { cursor: grabbing; }
+	&:active {
+		cursor: grabbing;
+	}
 
 	&::after {
 		content: '';
@@ -171,16 +181,22 @@
 
 .handleStart {
 	flex-direction: column-reverse;
+
 	&::after {
 		margin-top: 0;
 		margin-bottom: -8px;
 		order: -1;
 	}
-	> :first-child { margin-bottom: 4px; }
+
+	> :first-child {
+		margin-bottom: 4px;
+	}
 }
 
 .handleEnd {
-	> :first-child { margin-top: 4px; }
+	> :first-child {
+		margin-top: 4px;
+	}
 }
 
 .handleDragging {
@@ -192,7 +208,7 @@
 	display: flex;
 	justify-content: space-between;
 	font-size: 11px;
-	color: rgba(255, 255, 255, 0.3);
+	color: rgb(255 255 255 / 30%);
 	padding: 0 2px;
 }
 
@@ -206,9 +222,19 @@
 	font-family: NauryzRedKeds, sans-serif;
 	font-size: 20px;
 	cursor: pointer;
-	transition: background 0.2s ease, transform 0.1s ease;
-	&:hover:not(:disabled) { background: #b02aaa; transform: translateY(-1px); }
-	&:disabled { opacity: 0.5; cursor: not-allowed; }
+	transition:
+		background 0.2s ease,
+		transform 0.1s ease;
+
+	&:hover:not(:disabled) {
+		background: #b02aaa;
+		transform: translateY(-1px);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 }
 
 .waitingWrapper {
@@ -222,7 +248,7 @@
 
 .waitingText {
 	font-size: 16px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 	text-align: center;
 }
 
@@ -248,15 +274,15 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 4px;
-	background: rgba(148, 34, 142, 0.2);
-	border: 1px solid rgba(148, 34, 142, 0.5);
+	background: rgb(148 34 142 / 20%);
+	border: 1px solid rgb(148 34 142 / 50%);
 	border-radius: 16px;
 	padding: 20px 48px;
 }
 
 .scoreLabel {
 	font-size: 14px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 }
 
 .scoreValue {
@@ -268,12 +294,12 @@
 
 .scoreMax {
 	font-size: 24px;
-	color: rgba(255, 255, 255, 0.4);
+	color: rgb(255 255 255 / 40%);
 }
 
 .resultSubtitle {
 	font-size: 14px;
-	color: rgba(255, 255, 255, 0.4);
+	color: rgb(255 255 255 / 40%);
 	margin: 0;
 }
 

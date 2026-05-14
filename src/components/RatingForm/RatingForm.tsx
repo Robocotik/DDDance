@@ -1,5 +1,5 @@
 import { rateDance, type RateResponse } from '@/api/users/compare';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './RatingForm.module.scss';
 
 interface RatingValues {
@@ -10,26 +10,52 @@ interface RatingValues {
 }
 
 interface RatingFormProps {
-    userDanceId: string;
-    danceId: string;
-    onSubmit: (values: RatingValues, aggregated?: RateResponse) => void;
-    onClose?: () => void;
+	userDanceId: string;
+	danceId: string;
+	onSubmit: (values: RatingValues, aggregated?: RateResponse) => void;
+	onClose?: () => void;
 }
 
 const CRITERIA = [
-	{ key: 'physical' as const, label: 'Физическая нагрузка', emoji: '', low: 'Легко', high: 'Тяжело' },
-	{ key: 'speed' as const, label: 'Скорость', emoji: '', low: 'Медленно', high: 'Быстро' },
-	{ key: 'coordination' as const, label: 'Координация', emoji: '', low: 'Просто', high: 'Сложно' },
-	{ key: 'repeatability' as const, label: 'Повторяемость', emoji: '', low: 'Легко повторить', high: 'Трудно повторить' },
+	{
+		key: 'physical' as const,
+		label: 'Физическая нагрузка',
+		emoji: '',
+		low: 'Легко',
+		high: 'Тяжело',
+	},
+	{
+		key: 'speed' as const,
+		label: 'Скорость',
+		emoji: '',
+		low: 'Медленно',
+		high: 'Быстро',
+	},
+	{
+		key: 'coordination' as const,
+		label: 'Координация',
+		emoji: '',
+		low: 'Просто',
+		high: 'Сложно',
+	},
+	{
+		key: 'repeatability' as const,
+		label: 'Повторяемость',
+		emoji: '',
+		low: 'Легко повторить',
+		high: 'Трудно повторить',
+	},
 ];
 
 const DOTS = [1, 2, 3, 4, 5];
 
-export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) => {
+export const AggregatedResults: React.FC<{ data: RateResponse }> = ({
+	data,
+}) => {
 	const items = [
 		{ label: 'Физическая нагрузка', value: data.avg_physical },
-		{ label: 'Скорость',  value: data.avg_speed },
-		{ label: 'Координация',  value: data.avg_coordination },
+		{ label: 'Скорость', value: data.avg_speed },
+		{ label: 'Координация', value: data.avg_coordination },
 		{ label: 'Повторяемость', value: data.avg_repeatability },
 	];
 
@@ -37,7 +63,9 @@ export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) =>
 		<div className={styles.aggregated}>
 			<h3 className={styles.aggregatedTitle}>
 				Оценки других участников
-				<span className={styles.totalRatings}>({data.total_ratings} оценок)</span>
+				<span className={styles.totalRatings}>
+					({data.total_ratings} оценок)
+				</span>
 			</h3>
 			<div className={styles.aggregatedItems}>
 				{items.map((item) => {
@@ -48,7 +76,10 @@ export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) =>
 							<span className={styles.aggEmoji}></span>
 							<span className={styles.aggLabel}>{item.label}</span>
 							<div className={styles.aggBar}>
-								<div className={styles.aggBarFill} style={{ width: `${pct}%` }} />
+								<div
+									className={styles.aggBarFill}
+									style={{ width: `${pct}%` }}
+								/>
 							</div>
 							<span className={styles.aggValue}>{displayValue.toFixed(1)}</span>
 						</div>
@@ -62,9 +93,17 @@ export const AggregatedResults: React.FC<{ data: RateResponse }> = ({ data }) =>
 	);
 };
 
-export const RatingForm: React.FC<RatingFormProps> = ({ userDanceId, onSubmit, onClose, danceId }) => {
+export const RatingForm: React.FC<RatingFormProps> = ({
+	userDanceId,
+	onSubmit,
+	onClose,
+	danceId,
+}) => {
 	const [values, setValues] = useState<RatingValues>({
-		physical: 3, speed: 3, coordination: 3, repeatability: 3,
+		physical: 3,
+		speed: 3,
+		coordination: 3,
+		repeatability: 3,
 	});
 	const [submitting, setSubmitting] = useState(false);
 	const [aggregated, setAggregated] = useState<RateResponse | null>(null);
@@ -133,11 +172,17 @@ export const RatingForm: React.FC<RatingFormProps> = ({ userDanceId, onSubmit, o
 		return (
 			<div className={styles.container}>
 				<div className={styles.header}>
-					<h2 className={styles.title}>Спасибо за оценку! Это поможет нам стать лучше</h2>
+					<h2 className={styles.title}>
+						Спасибо за оценку! Это поможет нам стать лучше
+					</h2>
 					<p className={styles.subtitle}>Вот что думают остальные</p>
 				</div>
 				<AggregatedResults data={aggregated} />
-				<button className={styles.submitBtn} onClick={handleFinish} style={{ marginTop: '16px' }}>
+				<button
+					className={styles.submitBtn}
+					onClick={handleFinish}
+					style={{ marginTop: '16px' }}
+				>
 					Закрыть
 				</button>
 			</div>
@@ -167,7 +212,9 @@ export const RatingForm: React.FC<RatingFormProps> = ({ userDanceId, onSubmit, o
 		<div className={styles.container}>
 			<div className={styles.header}>
 				<h2 className={styles.title}>Как тебе танец?</h2>
-				<p className={styles.subtitle}>Оцени по четырём параметрам — это поможет другим</p>
+				<p className={styles.subtitle}>
+					Оцени по четырём параметрам — это поможет другим
+				</p>
 				{onClose && (
 					<button
 						className={styles.closeBtn}
@@ -194,9 +241,13 @@ export const RatingForm: React.FC<RatingFormProps> = ({ userDanceId, onSubmit, o
 								<div className={styles.sliderTrack}>
 									<input
 										type="range"
-										min={1} max={5} step={1}
+										min={1}
+										max={5}
+										step={1}
 										value={value}
-										onChange={(e) => handleChange(criterion.key, Number(e.target.value))}
+										onChange={(e) =>
+											handleChange(criterion.key, Number(e.target.value))
+										}
 										className={styles.slider}
 										disabled={submitting}
 									/>

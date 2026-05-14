@@ -4,9 +4,11 @@
 	flex-direction: column;
 	border-radius: 12px;
 	background: #94228e44;
-	border: 1px solid rgba(148, 34, 142, 0.3);
+	border: 1px solid rgb(148 34 142 / 30%);
 	cursor: pointer;
-	transition: transform 0.2s ease, background 0.2s ease;
+	transition:
+		transform 0.2s ease,
+		background 0.2s ease;
 	aspect-ratio: 9 / 16;
 	min-width: 240px;
 	min-height: 360px;
@@ -28,7 +30,7 @@
 	left: 0;
 	right: 0;
 	padding: 10px 8px 8px;
-	background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+	background: linear-gradient(to top, rgb(0 0 0 / 85%) 0%, transparent 100%);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -46,7 +48,7 @@
 
 .date {
 	font-size: 20px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 }
 
 .actions {
@@ -60,7 +62,7 @@
 }
 
 .likeBtn {
-	background: rgba(0, 0, 0, 0.6);
+	background: rgb(0 0 0 / 60%);
 	border: none;
 	cursor: pointer;
 	font-size: 26px;
@@ -71,7 +73,7 @@
 	backdrop-filter: blur(4px);
 
 	&:hover {
-		background: rgba(0, 0, 0, 0.85);
+		background: rgb(0 0 0 / 85%);
 	}
 
 	&.liked {
@@ -80,9 +82,17 @@
 }
 
 @keyframes pulse {
-	0% { transform: scale(1); }
-	50% { transform: scale(1.2); }
-	100% { transform: scale(1); }
+	0% {
+		transform: scale(1);
+	}
+
+	50% {
+		transform: scale(1.2);
+	}
+
+	100% {
+		transform: scale(1);
+	}
 }
 
 .video {

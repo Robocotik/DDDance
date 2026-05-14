@@ -1,4 +1,10 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+	forwardRef,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	Navigate,
@@ -7,26 +13,26 @@ import {
 	useSearchParams,
 } from 'react-router-dom';
 
-import {
-	selectUploadState,
-} from '../../redux/features/upload/selectors';
+import { selectUploadState } from '../../redux/features/upload/selectors';
 import {
 	resetUpload,
 	setShowRating,
 } from '../../redux/features/upload/uploadSlice';
 
+import { uploadAndCompare } from '@/redux/features/upload/actions';
 import arrowIcon from '../../assets/svg/arrow.svg';
 import Button from '../../components/Button/Button';
+import CheckYourself from '../../components/CheckYourself/CheckYourself';
 import LessonFinish from '../../components/LessonFinish/LessonFinish';
 import LessonStart from '../../components/LessonStart/LessonStart';
-import Loading from '../../components/Loading/Loading';
-import MixamoViewer, { type MixamoViewerHandle } from '../../components/SkeletonViewer/MixamoViewer';
 import LikeButton from '../../components/LikeButton/LikeButton';
-import CheckYourself from '../../components/CheckYourself/CheckYourself';
+import Loading from '../../components/Loading/Loading';
 import RatingForm from '../../components/RatingForm/RatingForm';
-import { uploadAndCompare } from '@/redux/features/upload/actions';
+import MixamoViewer, {
+	type MixamoViewerHandle,
+} from '../../components/SkeletonViewer/MixamoViewer';
+import { S3_ADDRESS } from '../../consts/urls';
 import { fetchHistory } from '../../redux/features/history/actions';
-import { fetchLikes } from '../../redux/features/likes/actions';
 import lessonActions from '../../redux/features/lesson/actions';
 import {
 	selectLesson,
@@ -35,14 +41,12 @@ import {
 	selectSegments,
 	selectSegmentsLoading,
 } from '../../redux/features/lesson/selectors';
-import {
-	selectIsUserAuthenticated,
-} from '../../redux/features/user/selectors';
-import { S3_ADDRESS } from '../../consts/urls';
+import { fetchLikes } from '../../redux/features/likes/actions';
+import { selectIsUserAuthenticated } from '../../redux/features/user/selectors';
 import type { AppDispatch } from '../../redux/store';
 
-import styles from './LessonPage.module.scss';
 import http from '@/api/http';
+import styles from './LessonPage.module.scss';
 
 const CACHE_KEY_PREFIX = 'segment_desc_';
 
@@ -50,7 +54,10 @@ function getCacheKey(danceId: string, segmentIdx: number): string {
 	return `${CACHE_KEY_PREFIX}${danceId}_${segmentIdx}`;
 }
 
-function getCachedDescription(danceId: string, segmentIdx: number): string | null {
+function getCachedDescription(
+	danceId: string,
+	segmentIdx: number,
+): string | null {
 	try {
 		return localStorage.getItem(getCacheKey(danceId, segmentIdx));
 	} catch {
@@ -58,7 +65,11 @@ function getCachedDescription(danceId: string, segmentIdx: number): string | nul
 	}
 }
 
-function setCachedDescription(danceId: string, segmentIdx: number, description: string): void {
+function setCachedDescription(
+	danceId: string,
+	segmentIdx: number,
+	description: string,
+): void {
 	try {
 		localStorage.setItem(getCacheKey(danceId, segmentIdx), description);
 	} catch {
@@ -66,7 +77,24 @@ function setCachedDescription(danceId: string, segmentIdx: number, description: 
 	}
 }
 
-function useSegmentDescription(danceId: string | undefined, segmentIdx: number | null) {
+/** Текст-заглушка с бэкенда до готовности LLM-описания */
+const PENDING_SEGMENT_DESCRIPTION = /скоро будет описание сегмента/i;
+
+function formatSegmentDescriptionForDisplay(
+	text: string | null,
+): string | null {
+	if (text === null) return null;
+	const trimmed = text.trim();
+	if (trimmed && PENDING_SEGMENT_DESCRIPTION.test(trimmed)) {
+		return 'Готовим описание сегмента';
+	}
+	return text;
+}
+
+function useSegmentDescription(
+	danceId: string | undefined,
+	segmentIdx: number | null,
+) {
 	const [description, setDescription] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 
@@ -89,12 +117,15 @@ function useSegmentDescription(danceId: string | undefined, segmentIdx: number |
 
 		const controller = new AbortController();
 
-		http.get(`/users/dance/${danceId}/segment/${segmentIdx}`, {
-			signal: controller.signal,
-		})
+		http
+			.get(`/users/dance/${danceId}/segment/${segmentIdx}`, {
+				signal: controller.signal,
+			})
 			.then((res) => {
 				const desc: string = res.data.description ?? res.data.text ?? '';
-				setCachedDescription(danceId, segmentIdx, desc);
+				if (desc.trim() && !PENDING_SEGMENT_DESCRIPTION.test(desc.trim())) {
+					setCachedDescription(danceId, segmentIdx, desc);
+				}
 				setDescription(desc);
 			})
 			.catch((err) => {
@@ -108,16 +139,17 @@ function useSegmentDescription(danceId: string | undefined, segmentIdx: number |
 			});
 
 		return () => controller.abort();
-		}, [danceId, segmentIdx]);
+	}, [danceId, segmentIdx]);
 
 	return { description, loading };
 }
 
-const DescriptionBlock: React.FC<{ description: string | null; loading: boolean }> = ({
-	description,
-	loading,
-}) => {
-	if (!loading && !description) return null;
+const DescriptionBlock: React.FC<{
+	description: string | null;
+	loading: boolean;
+}> = ({ description, loading }) => {
+	const displayText = formatSegmentDescriptionForDisplay(description);
+	if (!loading && !displayText) return null;
 
 	return (
 		<div className={styles.descriptionBlock}>
@@ -128,7 +160,7 @@ const DescriptionBlock: React.FC<{ description: string | null; loading: boolean 
 					<span className={styles.shimmerDot} />
 				</div>
 			) : (
-				<p className={styles.descriptionText}>{description}</p>
+				<p className={styles.descriptionText}>{displayText}</p>
 			)}
 		</div>
 	);
@@ -148,112 +180,116 @@ interface VideoClipProps {
 	onLoop: () => void;
 }
 
-const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(({
-	src,
-	start,
-	end,
-	playbackSpeed,
-	loading,
-	onReady,
-	onLoop,
-}, ref) => {
-	const videoRef = useRef<HTMLVideoElement>(null);
-	const startRef = useRef(start);
-	const endRef = useRef(end);
-	const onReadyRef = useRef(onReady);
-	const onLoopRef = useRef(onLoop);
-	const playbackSpeedRef = useRef(playbackSpeed);
-	const rafRef = useRef<number | null>(null);
-	const isSeekingRef = useRef(false);
-	const isLoopingRef = useRef(false);
+const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
+	({ src, start, end, playbackSpeed, loading, onReady, onLoop }, ref) => {
+		const videoRef = useRef<HTMLVideoElement>(null);
+		const startRef = useRef(start);
+		const endRef = useRef(end);
+		const onReadyRef = useRef(onReady);
+		const onLoopRef = useRef(onLoop);
+		const playbackSpeedRef = useRef(playbackSpeed);
+		const rafRef = useRef<number | null>(null);
+		const isSeekingRef = useRef(false);
+		const isLoopingRef = useRef(false);
 
-	useEffect(() => { startRef.current = start; }, [start]);
-	useEffect(() => { endRef.current = end; }, [end]);
-	useEffect(() => { onReadyRef.current = onReady; }, [onReady]);
-	useEffect(() => { onLoopRef.current = onLoop; }, [onLoop]);
-	useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
+		useEffect(() => {
+			startRef.current = start;
+		}, [start]);
+		useEffect(() => {
+			endRef.current = end;
+		}, [end]);
+		useEffect(() => {
+			onReadyRef.current = onReady;
+		}, [onReady]);
+		useEffect(() => {
+			onLoopRef.current = onLoop;
+		}, [onLoop]);
+		useEffect(() => {
+			playbackSpeedRef.current = playbackSpeed;
+		}, [playbackSpeed]);
 
-	useEffect(() => {
-		if (videoRef.current && !isSeekingRef.current) {
-			videoRef.current.playbackRate = playbackSpeed;
-		}
-	}, [playbackSpeed]);
+		useEffect(() => {
+			if (videoRef.current && !isSeekingRef.current) {
+				videoRef.current.playbackRate = playbackSpeed;
+			}
+		}, [playbackSpeed]);
 
-	useImperativeHandle(ref, () => ({
-		start: () => {
+		useImperativeHandle(ref, () => ({
+			start: () => {
+				const video = videoRef.current;
+				if (video && !isSeekingRef.current) {
+					video.play().catch(() => {});
+				}
+			},
+		}));
+
+		useEffect(() => {
 			const video = videoRef.current;
-			if (video && !isSeekingRef.current) {
-				video.play().catch(() => {});
-			}
-		},
-	}));
+			if (!video || loading) return;
 
-	useEffect(() => {
-		const video = videoRef.current;
-		if (!video || loading) return;
-
-		let destroyed = false;
-		isSeekingRef.current = false;
-		isLoopingRef.current = false;
-
-		const checkFrame = () => {
-			if (destroyed) return;
-			if (!isSeekingRef.current && video.currentTime >= endRef.current) {
-				isSeekingRef.current = true;
-				isLoopingRef.current = true;
-				onLoopRef.current();
-				video.pause();
-				video.currentTime = startRef.current === 0 ? 0.001 : startRef.current;
-			}
-			rafRef.current = requestAnimationFrame(checkFrame);
-		};
-
-		const handleSeeked = () => {
-			if (destroyed) return;
+			let destroyed = false;
 			isSeekingRef.current = false;
 			isLoopingRef.current = false;
-			video.playbackRate = playbackSpeedRef.current;
-			onReadyRef.current();
-		};
 
-		video.addEventListener('seeked', handleSeeked);
+			const checkFrame = () => {
+				if (destroyed) return;
+				if (!isSeekingRef.current && video.currentTime >= endRef.current) {
+					isSeekingRef.current = true;
+					isLoopingRef.current = true;
+					onLoopRef.current();
+					video.pause();
+					video.currentTime = startRef.current === 0 ? 0.001 : startRef.current;
+				}
+				rafRef.current = requestAnimationFrame(checkFrame);
+			};
 
-		isSeekingRef.current = true;
-		const safeStart = start === 0 ? 0.001 : start;
-		video.currentTime = safeStart;
+			const handleSeeked = () => {
+				if (destroyed) return;
+				isSeekingRef.current = false;
+				isLoopingRef.current = false;
+				video.playbackRate = playbackSpeedRef.current;
+				onReadyRef.current();
+			};
 
-		rafRef.current = requestAnimationFrame(checkFrame);
+			video.addEventListener('seeked', handleSeeked);
 
-		return () => {
-			destroyed = true;
-			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-			video.removeEventListener('seeked', handleSeeked);
-			video.pause();
-		};
-	}, [src, start, end, loading]);
+			isSeekingRef.current = true;
+			const safeStart = start === 0 ? 0.001 : start;
+			video.currentTime = safeStart;
 
-	return (
-		<div className={styles.videoClipWrapper}>
-			{loading && <div className={styles.videoLoading}>Загрузка...</div>}
-			<video
-				ref={videoRef}
-				src={src}
-				muted
-				playsInline
-				preload="auto"
-				className={styles.videoElement}
-				controlsList="nofullscreen nodownload noremoteplayback"
-				disablePictureInPicture
-				disableRemotePlayback
-			/>
-		</div>
-	);
-});
+			rafRef.current = requestAnimationFrame(checkFrame);
+
+			return () => {
+				destroyed = true;
+				if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+				video.removeEventListener('seeked', handleSeeked);
+				video.pause();
+			};
+		}, [src, start, end, loading]);
+
+		return (
+			<div className={styles.videoClipWrapper}>
+				{loading && <div className={styles.videoLoading}>Загрузка...</div>}
+				<video
+					ref={videoRef}
+					src={src}
+					muted
+					playsInline
+					preload="auto"
+					className={styles.videoElement}
+					controlsList="nofullscreen nodownload noremoteplayback"
+					disablePictureInPicture
+					disableRemotePlayback
+				/>
+			</div>
+		);
+	},
+);
 
 interface LessonLayoutProps {
 	danceId: string;
 	glbPath: string | null;
-	stepLabel: string;
+	stepLabel: React.ReactNode;
 	currentStepNumber?: number;
 	totalSteps?: number;
 	videoTimes?: { start: number; end: number } | null;
@@ -399,7 +435,9 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 							)}
 						</div>
 
-						<h2 className={isFullDance ? styles.stepTitleFull : styles.stepTitle}>
+						<h2
+							className={isFullDance ? styles.stepTitleFull : styles.stepTitle}
+						>
 							{stepLabel}
 						</h2>
 
@@ -419,7 +457,11 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 									>
 										<img
 											src={arrowIcon}
-											alt={currentStepNumber < totalSteps ? 'Следующий шаг' : 'К финишу'}
+											alt={
+												currentStepNumber < totalSteps
+													? 'Следующий шаг'
+													: 'К финишу'
+											}
 											className={styles.arrowRight}
 										/>
 									</button>
@@ -429,7 +471,10 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 
 					<LikeButton danceId={danceId} />
 
-					<DescriptionBlock description={description} loading={descriptionLoading} />
+					<DescriptionBlock
+						description={description}
+						loading={descriptionLoading}
+					/>
 
 					<div className={styles.speedControl}>
 						<label htmlFor="speed-control">
@@ -447,12 +492,29 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 					</div>
 
 					{isFullDance ? (
-						<Button size="s" className={styles.fullDanceButton} onClick={onReturnFromFull}>
-							← Вернуться к шагу {lastStep !== null ? lastStep + 1 : 1}
+						<Button
+							size="s"
+							className={styles.fullDanceButton}
+							onClick={onReturnFromFull}
+						>
+							<img
+								src={arrowIcon}
+								alt=""
+								className={styles.returnStepArrow}
+								aria-hidden
+							/>
+							Вернуться к шагу {lastStep !== null ? lastStep + 1 : 1}
 						</Button>
 					) : (
-						<Button size="s" className={styles.fullDanceButton} onClick={onFullDance}>
-							▶ Полный танец
+						<Button
+							size="s"
+							className={`${styles.fullDanceButton} ${styles.fullDancePlayButton}`}
+							onClick={onFullDance}
+						>
+							Полный танец
+							<span className={styles.fullDancePlayIcon} aria-hidden>
+								{'\u25B6\uFE0E'}
+							</span>
 						</Button>
 					)}
 
@@ -504,13 +566,12 @@ const LessonPage: React.FC = () => {
 
 	useEffect(() => {
 		if (id && (!lesson || lesson.dance_id !== id)) {
-			dispatch(lessonActions.uploadLessonByIdAction(id) as any)
-				.then(() => {
-					if (isAuthenticated) {
-						dispatch(fetchHistory() as any);
-						dispatch(fetchLikes() as any);
-					}
-				});
+			dispatch(lessonActions.uploadLessonByIdAction(id) as any).then(() => {
+				if (isAuthenticated) {
+					dispatch(fetchHistory() as any);
+					dispatch(fetchLikes() as any);
+				}
+			});
 		}
 		return () => {
 			if (id) {
@@ -538,7 +599,8 @@ const LessonPage: React.FC = () => {
 	}, [uploadState.isUploading, showCheckYourself]);
 
 	useEffect(() => {
-		const alreadyRated = id && sessionStorage.getItem(`hasRated_${id}`) === 'true';
+		const alreadyRated =
+			id && sessionStorage.getItem(`hasRated_${id}`) === 'true';
 
 		if (
 			uploadState.isUploading &&
@@ -550,7 +612,13 @@ const LessonPage: React.FC = () => {
 			hasShownRatingRef.current = true;
 			dispatch(setShowRating(true));
 		}
-	}, [uploadState.isUploading, isAuthenticated, uploadState.showRating, dispatch, id]);
+	}, [
+		uploadState.isUploading,
+		isAuthenticated,
+		uploadState.showRating,
+		dispatch,
+		id,
+	]);
 
 	useEffect(() => {
 		hasNavigatedRef.current = false;
@@ -568,7 +636,13 @@ const LessonPage: React.FC = () => {
 			hasNavigatedRef.current = true;
 			navigate(`/compare/${uploadState.userDanceId}`);
 		}
-	}, [uploadState.isUploading, uploadState.isProcessing, uploadState.error, uploadState.userDanceId, navigate]);
+	}, [
+		uploadState.isUploading,
+		uploadState.isProcessing,
+		uploadState.error,
+		uploadState.userDanceId,
+		navigate,
+	]);
 
 	const ratingOverlay = uploadState.showRating ? (
 		<div className={styles.ratingOverlay}>
@@ -666,11 +740,14 @@ const LessonPage: React.FC = () => {
 	const handleFullDance = () => navigateToSegment('full');
 
 	const handleReturnFromFull = () => {
-		const returnTo = lastStepRef.current !== null ? String(lastStepRef.current) : '0';
+		const returnTo =
+			lastStepRef.current !== null ? String(lastStepRef.current) : '0';
 		navigateToSegment(returnTo);
 	};
 
-	const getCurrentVideoTimes = (index: number): { start: number; end: number } | null => {
+	const getCurrentVideoTimes = (
+		index: number,
+	): { start: number; end: number } | null => {
 		if (!segments || !lesson) return null;
 		const seg = segments.segments[index];
 		if (!seg) return null;
@@ -713,7 +790,13 @@ const LessonPage: React.FC = () => {
 				<LessonLayout
 					danceId={id}
 					glbPath={lesson.full_glb_key}
-					stepLabel="ПОЛНЫЙ ТАНЕЦ"
+					stepLabel={
+						<>
+							ПОЛНЫЙ
+							<br />
+							ТАНЕЦ
+						</>
+					}
 					videoTimes={{ start: 0, end: lesson.duration_sec }}
 					videoUrl={videoUrl}
 					isFullDance={true}
@@ -746,7 +829,8 @@ const LessonPage: React.FC = () => {
 	}
 
 	if (isNumericSegment) {
-		const isValidStep = segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
+		const isValidStep =
+			segmentIndex >= 0 && segmentIndex < lesson.glb_keys.length;
 
 		if (!isValidStep) {
 			return <Navigate to={`/lesson/${id}?segment=finish`} replace />;

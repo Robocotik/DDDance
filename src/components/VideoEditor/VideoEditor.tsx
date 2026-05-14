@@ -12,8 +12,12 @@ interface VideoEditorProps {
 }
 
 const fmt = (sec: number) => {
-	const m = Math.floor(sec / 60).toString().padStart(2, '0');
-	const s = Math.floor(sec % 60).toString().padStart(2, '0');
+	const m = Math.floor(sec / 60)
+		.toString()
+		.padStart(2, '0');
+	const s = Math.floor(sec % 60)
+		.toString()
+		.padStart(2, '0');
 	return `${m}:${s}`;
 };
 
@@ -39,8 +43,12 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 	const endRef = useRef(0);
 	const durationHackActiveRef = useRef(false);
 
-	useEffect(() => { startRef.current = startTime; }, [startTime]);
-	useEffect(() => { endRef.current = endTime; }, [endTime]);
+	useEffect(() => {
+		startRef.current = startTime;
+	}, [startTime]);
+	useEffect(() => {
+		endRef.current = endTime;
+	}, [endTime]);
 
 	useEffect(() => {
 		return () => {
@@ -130,27 +138,36 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 		if (video.paused) video.play().catch(() => {});
 	}, []);
 
-	const getTimeFromPointer = useCallback((clientX: number): number => {
-		const track = trackRef.current;
-		if (!track || duration === 0) return 0;
-		const rect = track.getBoundingClientRect();
-		const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-		return ratio * duration;
-	}, [duration]);
+	const getTimeFromPointer = useCallback(
+		(clientX: number): number => {
+			const track = trackRef.current;
+			if (!track || duration === 0) return 0;
+			const rect = track.getBoundingClientRect();
+			const ratio = Math.max(
+				0,
+				Math.min(1, (clientX - rect.left) / rect.width),
+			);
+			return ratio * duration;
+		},
+		[duration],
+	);
 
-	const handleMouseMove = useCallback((e: MouseEvent | Touch) => {
-		if (!dragging) return;
-		const t = getTimeFromPointer((e as MouseEvent).clientX);
-		if (dragging === 'start') {
-			const newStart = Math.max(0, Math.min(t, endRef.current - 0.5));
-			setStartTime(newStart);
-			seekAndPlay(newStart);
-		} else {
-			const newEnd = Math.min(duration, Math.max(t, startRef.current + 0.5));
-			setEndTime(newEnd);
-		}
-		setDurationWarning(false);
-	}, [dragging, getTimeFromPointer, duration, seekAndPlay]);
+	const handleMouseMove = useCallback(
+		(e: MouseEvent | Touch) => {
+			if (!dragging) return;
+			const t = getTimeFromPointer((e as MouseEvent).clientX);
+			if (dragging === 'start') {
+				const newStart = Math.max(0, Math.min(t, endRef.current - 0.5));
+				setStartTime(newStart);
+				seekAndPlay(newStart);
+			} else {
+				const newEnd = Math.min(duration, Math.max(t, startRef.current + 0.5));
+				setEndTime(newEnd);
+			}
+			setDurationWarning(false);
+		},
+		[dragging, getTimeFromPointer, duration, seekAndPlay],
+	);
 
 	const handleMouseUp = useCallback(() => setDragging(null), []);
 
@@ -191,7 +208,9 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 	return (
 		<div className={styles.container}>
 			<div className={styles.header}>
-				<button className={styles.backBtn} onClick={onBack}>← Назад</button>
+				<button className={styles.backBtn} onClick={onBack}>
+					← Назад
+				</button>
 				<h2 className={styles.title}>Редактор видео</h2>
 			</div>
 
@@ -226,8 +245,11 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 						Длительность:{' '}
 						<strong>{duration > 0 ? fmt(clipDuration) : '—'}</strong>
 						{maxDuration !== undefined && (
-							<span className={isTooLong ? styles.durationBad : styles.durationGood}>
-								{' '}/ макс. {fmt(maxDuration)}
+							<span
+								className={isTooLong ? styles.durationBad : styles.durationGood}
+							>
+								{' '}
+								/ макс. {fmt(maxDuration)}
 							</span>
 						)}
 					</div>
@@ -241,7 +263,10 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 								/>
 								<div
 									className={styles.trackActive}
-									style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
+									style={{
+										left: `${startPct}%`,
+										width: `${endPct - startPct}%`,
+									}}
 								/>
 								<div
 									className={styles.trackInactive}
@@ -250,14 +275,26 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 								<div
 									className={`${styles.handle} ${styles.handleStart} ${dragging === 'start' ? styles.handleDragging : ''}`}
 									style={{ left: `${startPct}%` }}
-									onMouseDown={(e) => { e.preventDefault(); setDragging('start'); }}
-									onTouchStart={(e) => { e.preventDefault(); setDragging('start'); }}
+									onMouseDown={(e) => {
+										e.preventDefault();
+										setDragging('start');
+									}}
+									onTouchStart={(e) => {
+										e.preventDefault();
+										setDragging('start');
+									}}
 								/>
 								<div
 									className={`${styles.handle} ${styles.handleEnd} ${dragging === 'end' ? styles.handleDragging : ''}`}
 									style={{ left: `${endPct}%` }}
-									onMouseDown={(e) => { e.preventDefault(); setDragging('end'); }}
-									onTouchStart={(e) => { e.preventDefault(); setDragging('end'); }}
+									onMouseDown={(e) => {
+										e.preventDefault();
+										setDragging('end');
+									}}
+									onTouchStart={(e) => {
+										e.preventDefault();
+										setDragging('end');
+									}}
 								/>
 							</div>
 
@@ -287,8 +324,10 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 							<div className={styles.durationWarningText}>
 								<strong>Видео слишком длинное</strong>
 								<p>
-									Твой фрагмент — <strong>{fmt(clipDuration)}</strong>, а танец длится <strong>{fmt(maxDuration!)}</strong>.
-									Передвинь ручки на шкале, чтобы выбрать более короткий отрезок — оставь самый удачный момент.
+									Твой фрагмент — <strong>{fmt(clipDuration)}</strong>, а танец
+									длится <strong>{fmt(maxDuration!)}</strong>. Передвинь ручки
+									на шкале, чтобы выбрать более короткий отрезок — оставь самый
+									удачный момент.
 								</p>
 							</div>
 						</div>
