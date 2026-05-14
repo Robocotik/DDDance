@@ -17,10 +17,14 @@ const Title: React.FC<TitleProps> = ({
 }) => {
 	return (
 		<h1
-			className={clsx(styles.title, className, {
-				[styles.level1]: level === '1',
-				[styles.level2]: level === '2',
-			})}
+			className={clsx(
+				styles.title,
+				{
+					[styles.level1]: level === '1',
+					[styles.level2]: level === '2',
+				},
+				className,
+			)}
 			{...rest}
 		>
 			{children}

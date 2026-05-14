@@ -40,17 +40,25 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 		setScreen('editor');
 	};
 
-	const handleVideoSubmit = (blob: Blob, startTime: number, endTime: number) => {
+	const handleVideoSubmit = (
+		blob: Blob,
+		startTime: number,
+		endTime: number,
+	) => {
 		onSubmit(blob, startTime, endTime);
 	};
 
 	return (
 		<div
 			className={styles.overlay}
-			onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+			onClick={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
 		>
 			<div className={styles.modal}>
-				<button className={styles.closeBtn} onClick={onClose}>✕</button>
+				<button className={styles.closeBtn} onClick={onClose}>
+					✕
+				</button>
 
 				{screen === 'choice' && (
 					<div className={styles.choice}>
@@ -66,7 +74,9 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 								/>
 								<span className={styles.optionIcon}>📁</span>
 								<span className={styles.optionLabel}>Загрузить видео</span>
-								<span className={styles.optionHint}>mp4, mov, avi и другие</span>
+								<span className={styles.optionHint}>
+									mp4, mov, avi и другие
+								</span>
 							</label>
 
 							<button

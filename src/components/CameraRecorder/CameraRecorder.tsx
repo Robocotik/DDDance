@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styles from "./CameraRecorder.module.scss"
+import styles from './CameraRecorder.module.scss';
 
 type RecorderState = 'idle' | 'countdown' | 'recording' | 'done';
 
@@ -25,85 +25,96 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 	const [countdown, setCountdown] = useState(3);
 	const [error, setError] = useState<string | null>(null);
 	const [recordingTime, setRecordingTime] = useState(0);
-	
-	useEffect(() => {
-    const video = referenceRef.current;
-    if (!video) return;
-
-    const handleEnded = () => {
-        stopRecording();
-    };
-
-    video.addEventListener('ended', handleEnded);
-    return () => video.removeEventListener('ended', handleEnded);
-}, []);
 
 	useEffect(() => {
-    let cancelled = false;
+		const video = referenceRef.current;
+		if (!video) return;
 
-    const initCamera = async () => {
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoInputs = devices.filter(d => d.kind === 'videoinput');
-            
-            if (videoInputs.length === 0) {
-                throw new Error('No video input devices found');
-            }
+		const handleEnded = () => {
+			stopRecording();
+		};
 
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                },
-                audio: false
-            });
-            
-            if (cancelled) {
-                stream.getTracks().forEach(t => t.stop());
-                return;
-            }
+		video.addEventListener('ended', handleEnded);
+		return () => video.removeEventListener('ended', handleEnded);
+	}, []);
 
-            streamRef.current = stream;
-            if (cameraRef.current) {
-                cameraRef.current.srcObject = stream;
-            }
-            
-            if (videoInputs.length > 0) {
-                try {
-                    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    if (!cancelled) {
-                        audioStream.getTracks().forEach(track => stream.addTrack(track));
-                    } else {
-                        audioStream.getTracks().forEach(t => t.stop());
-                    }
-                } catch (audioErr) {
-                }
-            }
-            
-        } catch (err: any) {
-            if (cancelled) return;
-            
-            if (err.name === 'NotFoundError' || err.message?.includes('not found')) {
-                setError('Камера не найдена браузером. Проверьте: 1) Камера подключена 2) Не используется другой программой 3) Разрешения ОС');
-            } else if (err.name === 'NotAllowedError') {
-                setError('Доступ к камере запрещён. Нажмите на 🔒 в адресной строке и разрешите доступ.');
-            } else if (err.name === 'NotReadableError') {
-                setError('Камера занята. Закройте Zoom, Skype, Teams или другие приложения.');
-            } else {
-                setError(`Ошибка камеры: ${err.message || 'Неизвестная ошибка'}`);
-            }
-        }
-    };
+	useEffect(() => {
+		let cancelled = false;
 
-    initCamera();
+		const initCamera = async () => {
+			try {
+				const devices = await navigator.mediaDevices.enumerateDevices();
+				const videoInputs = devices.filter((d) => d.kind === 'videoinput');
 
-    return () => {
-		cancelled = true;
-		if (canvasRafRef.current) cancelAnimationFrame(canvasRafRef.current);
-		streamRef.current?.getTracks().forEach((t) => t.stop());
-	};
-}, []);
-	
+				if (videoInputs.length === 0) {
+					throw new Error('No video input devices found');
+				}
+
+				const stream = await navigator.mediaDevices.getUserMedia({
+					video: {
+						width: { ideal: 1280 },
+						height: { ideal: 720 },
+					},
+					audio: false,
+				});
+
+				if (cancelled) {
+					stream.getTracks().forEach((t) => t.stop());
+					return;
+				}
+
+				streamRef.current = stream;
+				if (cameraRef.current) {
+					cameraRef.current.srcObject = stream;
+				}
+
+				if (videoInputs.length > 0) {
+					try {
+						const audioStream = await navigator.mediaDevices.getUserMedia({
+							audio: true,
+						});
+						if (!cancelled) {
+							audioStream
+								.getTracks()
+								.forEach((track) => stream.addTrack(track));
+						} else {
+							audioStream.getTracks().forEach((t) => t.stop());
+						}
+					} catch (audioErr) {}
+				}
+			} catch (err: any) {
+				if (cancelled) return;
+
+				if (
+					err.name === 'NotFoundError' ||
+					err.message?.includes('not found')
+				) {
+					setError(
+						'Камера не найдена браузером. Проверьте: 1) Камера подключена 2) Не используется другой программой 3) Разрешения ОС',
+					);
+				} else if (err.name === 'NotAllowedError') {
+					setError(
+						'Доступ к камере запрещён. Нажмите на 🔒 в адресной строке и разрешите доступ.',
+					);
+				} else if (err.name === 'NotReadableError') {
+					setError(
+						'Камера занята. Закройте Zoom, Skype, Teams или другие приложения.',
+					);
+				} else {
+					setError(`Ошибка камеры: ${err.message || 'Неизвестная ошибка'}`);
+				}
+			}
+		};
+
+		initCamera();
+
+		return () => {
+			cancelled = true;
+			if (canvasRafRef.current) cancelAnimationFrame(canvasRafRef.current);
+			streamRef.current?.getTracks().forEach((t) => t.stop());
+		};
+	}, []);
+
 	useEffect(() => {
 		if (state !== 'recording') return;
 		const interval = setInterval(() => {
@@ -157,7 +168,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 
 		const canvasStream = canvas.captureStream(30);
 
-		streamRef.current.getAudioTracks().forEach(track => {
+		streamRef.current.getAudioTracks().forEach((track) => {
 			canvasStream.addTrack(track);
 		});
 
@@ -195,7 +206,9 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 	};
 
 	const fmt = (sec: number) => {
-		const m = Math.floor(sec / 60).toString().padStart(2, '0');
+		const m = Math.floor(sec / 60)
+			.toString()
+			.padStart(2, '0');
 		const s = (sec % 60).toString().padStart(2, '0');
 		return `${m}:${s}`;
 	};
@@ -203,7 +216,9 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 	return (
 		<div className={styles.container}>
 			<div className={styles.header}>
-				<button className={styles.backBtn} onClick={onBack}>← Назад</button>
+				<button className={styles.backBtn} onClick={onBack}>
+					← Назад
+				</button>
 				<h2 className={styles.title}>Запись с камеры</h2>
 			</div>
 
@@ -235,9 +250,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 						playsInline
 					/>
 					{state === 'recording' && (
-						<div className={styles.recBadge}>
-							⏺ {fmt(recordingTime)}
-						</div>
+						<div className={styles.recBadge}>⏺ {fmt(recordingTime)}</div>
 					)}
 				</div>
 			</div>

@@ -4,6 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Footer from './components/Footer/Footer';
 import Header from './components/Header/Header';
 import { AuthPage } from './pages/AuthPage/AuthPage';
+import ComparePage from './pages/ComparePage/ComparePage';
 import HomePage from './pages/HomePage/HomePage';
 import LessonPage from './pages/LessonPage/LessonPage';
 import { RegisterPage } from './pages/RegisterPage/RegisterPage';
@@ -11,7 +12,6 @@ import RulesPage from './pages/RulesPage/RulesPage';
 import UserPage from './pages/UserPage/UserPage';
 import { checkAuthStatus } from './redux/features/user/actions';
 import type { AppDispatch } from './redux/store';
-import ComparePage from './pages/ComparePage/ComparePage';
 
 function App() {
 	const dispatch = useDispatch<AppDispatch>();

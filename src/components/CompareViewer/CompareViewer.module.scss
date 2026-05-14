@@ -30,7 +30,7 @@
 
 .canvas {
 	flex: 1;
-	min-height: 0; 
+	min-height: 0;
 }
 
 .loadingOverlay,
@@ -41,7 +41,7 @@
 	align-items: center;
 	justify-content: center;
 	background: #0a0a0f;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 	font-size: 14px;
 	z-index: 2;
 }
@@ -57,7 +57,7 @@
 	font-family: NauryzRedKeds, sans-serif;
 	font-size: 16px;
 	color: #fff;
-	background: rgba(0, 0, 0, 0.55);
+	background: rgb(0 0 0 / 55%);
 	padding: 4px 14px;
 	border-radius: 20px;
 	backdrop-filter: blur(4px);
@@ -78,19 +78,21 @@
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 10;
-	background: rgba(10, 10, 15, 0.7);
-	border: 1px solid rgba(148, 34, 142, 0.3);
+	background: rgb(10 10 15 / 70%);
+	border: 1px solid rgb(148 34 142 / 30%);
 	color: #fff;
 	font-size: 14px;
 	padding: 10px 24px;
 	border-radius: 10px;
 	cursor: pointer;
-	transition: background 0.2s ease, border-color 0.2s ease;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease;
 	white-space: nowrap;
 	backdrop-filter: blur(6px);
 
 	&:hover {
-		background: rgba(148, 34, 142, 0.3);
-		border-color: rgba(148, 34, 142, 0.6);
+		background: rgb(148 34 142 / 30%);
+		border-color: rgb(148 34 142 / 60%);
 	}
 }

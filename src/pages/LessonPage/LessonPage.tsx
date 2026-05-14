@@ -23,6 +23,7 @@ import { uploadAndCompare } from '@/redux/features/upload/actions';
 import arrowIcon from '../../assets/svg/arrow.svg';
 import Button from '../../components/Button/Button';
 import CheckYourself from '../../components/CheckYourself/CheckYourself';
+import ErrorScreen from '../../components/Error/Error';
 import LessonFinish from '../../components/LessonFinish/LessonFinish';
 import LessonStart from '../../components/LessonStart/LessonStart';
 import LikeButton from '../../components/LikeButton/LikeButton';
@@ -701,7 +702,9 @@ const LessonPage: React.FC = () => {
 		return (
 			<>
 				<div className={styles.page}>
-					<Loading />
+					<div className={styles.pageCenter}>
+						<Loading />
+					</div>
 				</div>
 				{ratingOverlay}
 			</>
@@ -712,7 +715,7 @@ const LessonPage: React.FC = () => {
 		return (
 			<>
 				<div className={styles.page}>
-					<p className={styles.error}>Ошибка: {lessonError}</p>
+					<ErrorScreen />
 				</div>
 				{ratingOverlay}
 			</>

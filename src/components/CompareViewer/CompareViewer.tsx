@@ -1,8 +1,8 @@
+import { S3_ADDRESS } from '@/consts/urls';
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { S3_ADDRESS } from '@/consts/urls';
 import styles from './CompareViewer.module.scss';
 
 interface CompareViewerProps {
@@ -19,7 +19,6 @@ const resolveS3 = (key: string) => {
 	return `${base}/${key.replace(/^\/+/, '')}`;
 };
 
-
 const loadGlb = (
 	animUrl: string,
 	scene: THREE.Scene,
@@ -30,54 +29,68 @@ const loadGlb = (
 	const loader = new GLTFLoader();
 	const characterUrl = resolveS3(CHARACTER_KEY);
 
-	loader.load(characterUrl, (characterGltf) => {
-		const model = characterGltf.scene;
+	loader.load(
+		characterUrl,
+		(characterGltf) => {
+			const model = characterGltf.scene;
 
-		const box = new THREE.Box3().setFromObject(model);
-		const h = box.max.y - box.min.y;
-		if (h > 0) model.scale.setScalar(TARGET_HEIGHT / h);
+			const box = new THREE.Box3().setFromObject(model);
+			const h = box.max.y - box.min.y;
+			if (h > 0) model.scale.setScalar(TARGET_HEIGHT / h);
 
-		model.updateWorldMatrix(true, true);
-		const box2 = new THREE.Box3().setFromObject(model);
-		model.position.y = -box2.min.y;
-		model.position.x = offsetX;
-		scene.add(model);
+			model.updateWorldMatrix(true, true);
+			const box2 = new THREE.Box3().setFromObject(model);
+			model.position.y = -box2.min.y;
+			model.position.x = offsetX;
+			scene.add(model);
 
-		let armature: THREE.Object3D = model;
-		model.traverse((obj) => {
-			if ((obj as THREE.SkinnedMesh).isSkinnedMesh) {
-				armature = (obj as THREE.SkinnedMesh).skeleton?.bones[0]?.parent || obj.parent || obj;
-			}
-		});
+			let armature: THREE.Object3D = model;
+			model.traverse((obj) => {
+				if ((obj as THREE.SkinnedMesh).isSkinnedMesh) {
+					armature =
+						(obj as THREE.SkinnedMesh).skeleton?.bones[0]?.parent ||
+						obj.parent ||
+						obj;
+				}
+			});
 
-		const mixer = new THREE.AnimationMixer(model);
+			const mixer = new THREE.AnimationMixer(model);
 
-		loader.load(animUrl, (animGltf) => {
-			if (!animGltf.animations?.length) {
-				onError();
-				return;
-			}
+			loader.load(
+				animUrl,
+				(animGltf) => {
+					if (!animGltf.animations?.length) {
+						onError();
+						return;
+					}
 
-			const action = mixer.clipAction(animGltf.animations[0], armature);
-			action.reset();
-			action.loop = THREE.LoopRepeat;
-			action.play();
-			onDone(model, mixer);
-		}, undefined, () => {
+					const action = mixer.clipAction(animGltf.animations[0], armature);
+					action.reset();
+					action.loop = THREE.LoopRepeat;
+					action.play();
+					onDone(model, mixer);
+				},
+				undefined,
+				() => {
+					onError();
+				},
+			);
+		},
+		undefined,
+		() => {
 			onError();
-		});
-
-	}, undefined, () => {
-		onError();
-	});
+		},
+	);
 };
 
-const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbKey }) => {
+const CompareViewer: React.FC<CompareViewerProps> = ({
+	userGlbKey,
+	referenceGlbKey,
+}) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;
@@ -102,7 +115,10 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 		camera.lookAt(0, 1.0, 0);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: true });
-		renderer.setSize(Math.max(container.clientWidth, 1), Math.max(container.clientHeight, 1));
+		renderer.setSize(
+			Math.max(container.clientWidth, 1),
+			Math.max(container.clientHeight, 1),
+		);
 		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		renderer.shadowMap.enabled = true;
 		container.appendChild(renderer.domElement);
@@ -123,7 +139,11 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 			new THREE.Vector3(0, 0, 0),
 			new THREE.Vector3(0, TARGET_HEIGHT * 1.1, 0),
 		]);
-		const lineMat = new THREE.LineBasicMaterial({ color: 0x94228e, transparent: true, opacity: 0.6 });
+		const lineMat = new THREE.LineBasicMaterial({
+			color: 0x94228e,
+			transparent: true,
+			opacity: 0.6,
+		});
 		scene.add(new THREE.Line(lineGeo, lineMat));
 
 		const fitCameraToModels = () => {
@@ -132,8 +152,8 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 			const centerY = totalHeight * 0.5;
 			const fovRad = camera.fov * (Math.PI / 180);
 			const aspect = camera.aspect;
-			const distForHeight = (totalHeight / 2) / Math.tan(fovRad / 2);
-			const distForWidth = (totalWidth / 2) / Math.tan((fovRad * aspect) / 2);
+			const distForHeight = totalHeight / 2 / Math.tan(fovRad / 2);
+			const distForWidth = totalWidth / 2 / Math.tan((fovRad * aspect) / 2);
 			const cameraZ = Math.max(distForHeight, distForWidth) * 1.3;
 
 			camera.position.set(0, centerY, cameraZ);
@@ -190,7 +210,9 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 				mixers.push(mixer);
 				checkAllLoaded();
 			},
-			() => { if (!cancelled) setError('Не удалось загрузить эталонную модель'); },
+			() => {
+				if (!cancelled) setError('Не удалось загрузить эталонную модель');
+			},
 		);
 
 		loadGlb(
@@ -202,7 +224,9 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 				mixers.push(mixer);
 				checkAllLoaded();
 			},
-			() => { if (!cancelled) setError('Не удалось загрузить вашу модель'); },
+			() => {
+				if (!cancelled) setError('Не удалось загрузить вашу модель');
+			},
 		);
 
 		return () => {
@@ -220,16 +244,12 @@ const CompareViewer: React.FC<CompareViewerProps> = ({ userGlbKey, referenceGlbK
 
 	return (
 		<div className={styles.wrapper}>
-			
-
 			{loading && !error && (
 				<div className={styles.loadingOverlay}>
 					<p>Загрузка моделей...</p>
 				</div>
 			)}
-			{error && (
-				<div className={styles.errorOverlay}>{error}</div>
-			)}
+			{error && <div className={styles.errorOverlay}>{error}</div>}
 			{!loading && !error && (
 				<>
 					<div className={`${styles.label} ${styles.labelLeft}`}>Эталон</div>

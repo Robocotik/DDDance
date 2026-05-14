@@ -23,6 +23,9 @@ export const toggleLike = async (danceId: string): Promise<void> => {
 	await http.post(`/users/dance/${danceId}/like`);
 };
 
-export const updateLikeName = async (historyId: string, newName: string): Promise<void> => {
+export const updateLikeName = async (
+	historyId: string,
+	newName: string,
+): Promise<void> => {
 	await http.put(`/users/history/${historyId}`, { name: newName });
 };

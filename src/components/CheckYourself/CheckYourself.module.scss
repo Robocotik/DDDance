@@ -1,7 +1,7 @@
 .overlay {
 	position: fixed;
 	inset: 0;
-	background: rgba(0, 0, 0, 0.75);
+	background: rgb(0 0 0 / 75%);
 	backdrop-filter: blur(6px);
 	display: flex;
 	align-items: center;
@@ -13,7 +13,7 @@
 .modal {
 	position: relative;
 	background: #12123a;
-	border: 1px solid rgba(148, 34, 142, 0.4);
+	border: 1px solid rgb(148 34 142 / 40%);
 	border-radius: 20px;
 	width: min(900px, 100%);
 	max-height: 90vh;
@@ -22,11 +22,10 @@
 }
 
 .ratingOverlay {
-	flex-direction: row;
+	flex-flow: row wrap;
 	align-items: center;
 	justify-content: center;
 	gap: 32px;
-	flex-wrap: wrap;
 }
 
 .loaderBlock {
@@ -47,14 +46,14 @@
 
 .waitingHint {
 	font-size: 14px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 	margin: 0;
 }
 
 .ratingPopup {
 	position: relative;
 	background: #12123a;
-	border: 1px solid rgba(148, 34, 142, 0.5);
+	border: 1px solid rgb(148 34 142 / 50%);
 	border-radius: 20px;
 	width: min(560px, 100%);
 	max-height: 90vh;
@@ -67,12 +66,12 @@
 
 .ratingHint {
 	font-size: 15px;
-	color: rgba(255, 255, 255, 0.7);
+	color: rgb(255 255 255 / 70%);
 	text-align: center;
 	line-height: 1.6;
 	margin: 0;
 	padding: 14px 16px;
-	background: rgba(148, 34, 142, 0.12);
+	background: rgb(148 34 142 / 12%);
 	border-left: 3px solid #94228e;
 	border-radius: 8px;
 }
@@ -81,7 +80,7 @@
 	position: absolute;
 	top: 16px;
 	right: 16px;
-	background: rgba(255, 255, 255, 0.08);
+	background: rgb(255 255 255 / 8%);
 	border: none;
 	color: #fff;
 	font-size: 18px;
@@ -95,7 +94,7 @@
 	transition: background 0.2s ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.15);
+		background: rgb(255 255 255 / 15%);
 	}
 }
 
@@ -116,7 +115,7 @@
 
 .subtitle {
 	font-size: 16px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 	margin: -20px 0 0;
 	text-align: center;
 }
@@ -137,17 +136,20 @@
 	gap: 12px;
 	width: 220px;
 	height: 200px;
-	background: rgba(47, 47, 138, 0.3);
-	border: 2px solid rgba(148, 34, 142, 0.3);
+	background: rgb(47 47 138 / 30%);
+	border: 2px solid rgb(148 34 142 / 30%);
 	border-radius: 16px;
 	cursor: pointer;
-	transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+	transition:
+		border-color 0.2s ease,
+		background 0.2s ease,
+		transform 0.2s ease;
 	text-align: center;
 	padding: 24px;
 
 	&:hover {
-		border-color: rgba(148, 34, 142, 0.9);
-		background: rgba(148, 34, 142, 0.15);
+		border-color: rgb(148 34 142 / 90%);
+		background: rgb(148 34 142 / 15%);
 		transform: translateY(-4px);
 	}
 }
@@ -169,7 +171,7 @@
 
 .optionHint {
 	font-size: 12px;
-	color: rgba(255, 255, 255, 0.4);
+	color: rgb(255 255 255 / 40%);
 }
 
 @media (max-width: 600px) {
@@ -189,11 +191,10 @@
 
 .postSubmitLayout {
 	display: flex;
-	flex-direction: row;
+	flex-flow: row wrap;
 	align-items: flex-start;
 	justify-content: center;
 	gap: 32px;
-	flex-wrap: wrap;
 	width: 100%;
 	max-width: 1000px;
 	padding: 16px;
@@ -210,7 +211,7 @@
 	min-width: 240px;
 	padding: 48px 32px;
 	background: #12123a;
-	border: 1px solid rgba(148, 34, 142, 0.4);
+	border: 1px solid rgb(148 34 142 / 40%);
 	border-radius: 20px;
 }
 
@@ -223,6 +224,6 @@
 
 .waitingHint {
 	font-size: 14px;
-	color: rgba(255, 255, 255, 0.5);
+	color: rgb(255 255 255 / 50%);
 	margin: 0;
 }

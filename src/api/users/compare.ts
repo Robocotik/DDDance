@@ -30,11 +30,13 @@ export type RateResponse = {
 export const compareDance = async (
 	videoBlob: Blob,
 	referenceDanceId: string,
-	options?: { signal?: AbortSignal }
+	options?: { signal?: AbortSignal },
 ): Promise<CompareResponse> => {
 	const formData = new FormData();
 
-	const filename = videoBlob.type?.includes('webm') ? 'recording.webm' : 'recording.mp4';
+	const filename = videoBlob.type?.includes('webm')
+		? 'recording.webm'
+		: 'recording.mp4';
 	const mimeType = videoBlob.type || 'video/mp4';
 
 	const file = new File([videoBlob], filename, { type: mimeType });
@@ -50,17 +52,21 @@ export const compareDance = async (
 			headers: {
 				'Content-Type': undefined,
 			},
-		}
+		},
 	);
 	return response.data;
 };
 
-export const rateDance = async (payload: RatePayload): Promise<RateResponse> => {
+export const rateDance = async (
+	payload: RatePayload,
+): Promise<RateResponse> => {
 	const response = await http.post<RateResponse>('/users/dance/rate', payload);
 	return response.data;
 };
 
 export const getRating = async (danceId: string): Promise<RateResponse> => {
-    const response = await http.get<RateResponse>(`/users/dance/rate?dance_id=${danceId}`);
-    return response.data;
+	const response = await http.get<RateResponse>(
+		`/users/dance/rate?dance_id=${danceId}`,
+	);
+	return response.data;
 };
