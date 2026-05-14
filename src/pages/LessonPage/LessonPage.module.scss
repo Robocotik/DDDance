@@ -47,9 +47,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     width: 100%;
-    height: auto;
-    max-height: 580px;
-    min-height: 300px;
+    height: clamp(300px, 42vw, 580px);
 }
 
 .modelContainer,
@@ -469,7 +467,7 @@
     }
 
     .viewerWrapper {
-        min-height: clamp(280px, 40vh, 400px);
+        height: clamp(280px, 40vh, 400px);
     }
 
     .stepHeader {
@@ -491,7 +489,7 @@
 @media (max-width: 600px) {
     .viewerWrapper {
         grid-template-columns: 1fr;
-        min-height: clamp(400px, 70vh, 600px);
+        height: clamp(600px, 80vh, 900px);
     }
 
     .lesson {

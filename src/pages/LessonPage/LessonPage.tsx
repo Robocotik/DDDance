@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
 	Navigate,
@@ -134,6 +134,10 @@ const DescriptionBlock: React.FC<{ description: string | null; loading: boolean 
 	);
 };
 
+interface VideoClipHandle {
+	start: () => void;
+}
+
 interface VideoClipProps {
 	src: string;
 	start: number;
@@ -144,7 +148,7 @@ interface VideoClipProps {
 	onLoop: () => void;
 }
 
-const VideoClip: React.FC<VideoClipProps> = ({
+const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(({
 	src,
 	start,
 	end,
@@ -152,7 +156,7 @@ const VideoClip: React.FC<VideoClipProps> = ({
 	loading,
 	onReady,
 	onLoop,
-}) => {
+}, ref) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const startRef = useRef(start);
 	const endRef = useRef(end);
@@ -175,6 +179,15 @@ const VideoClip: React.FC<VideoClipProps> = ({
 		}
 	}, [playbackSpeed]);
 
+	useImperativeHandle(ref, () => ({
+		start: () => {
+			const video = videoRef.current;
+			if (video && !isSeekingRef.current) {
+				video.play().catch(() => {});
+			}
+		},
+	}));
+
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video || loading) return;
@@ -189,6 +202,7 @@ const VideoClip: React.FC<VideoClipProps> = ({
 				isSeekingRef.current = true;
 				isLoopingRef.current = true;
 				onLoopRef.current();
+				video.pause();
 				video.currentTime = startRef.current === 0 ? 0.001 : startRef.current;
 			}
 			rafRef.current = requestAnimationFrame(checkFrame);
@@ -197,20 +211,12 @@ const VideoClip: React.FC<VideoClipProps> = ({
 		const handleSeeked = () => {
 			if (destroyed) return;
 			isSeekingRef.current = false;
+			isLoopingRef.current = false;
 			video.playbackRate = playbackSpeedRef.current;
-			video.play().catch(() => {});
-		};
-
-		const handlePlaying = () => {
-			if (destroyed) return;
-			if (isLoopingRef.current) {
-				isLoopingRef.current = false;
-			}
 			onReadyRef.current();
 		};
 
 		video.addEventListener('seeked', handleSeeked);
-		video.addEventListener('playing', handlePlaying);
 
 		isSeekingRef.current = true;
 		const safeStart = start === 0 ? 0.001 : start;
@@ -222,7 +228,6 @@ const VideoClip: React.FC<VideoClipProps> = ({
 			destroyed = true;
 			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 			video.removeEventListener('seeked', handleSeeked);
-			video.removeEventListener('playing', handlePlaying);
 			video.pause();
 		};
 	}, [src, start, end, loading]);
@@ -243,7 +248,7 @@ const VideoClip: React.FC<VideoClipProps> = ({
 			/>
 		</div>
 	);
-};
+});
 
 interface LessonLayoutProps {
 	danceId: string;
@@ -293,12 +298,14 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 	onCheckYourself,
 }) => {
 	const viewerRef = useRef<MixamoViewerHandle>(null);
+	const videoClipRef = useRef<VideoClipHandle>(null);
 	const modelReadyRef = useRef(false);
 	const videoReadyRef = useRef(false);
 
 	const tryStart = () => {
 		if (modelReadyRef.current && videoReadyRef.current) {
 			viewerRef.current?.resume();
+			videoClipRef.current?.start();
 		}
 	};
 
@@ -354,6 +361,7 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 						{videoUrl && (
 							<div className={styles.videoContainer}>
 								<VideoClip
+									ref={videoClipRef}
 									key={`${glbPath}-${videoTimes?.start}-${videoTimes?.end}`}
 									src={videoUrl}
 									start={videoTimes?.start ?? 0}
