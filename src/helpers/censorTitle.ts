@@ -1,0 +1,18 @@
+const BANNED = [
+	// Русский мат (подстроки — покрывают словоформы)
+	'хуй', 'хуя', 'хуйн', 'пизд', 'ёбан', 'ебан', 'ебат', 'ебал',
+	'нахуй', 'блядь', 'блять', 'сука', 'мудак', 'мудил', 'мразь',
+	'шлюх', 'залуп', 'манда', 'уёбок', 'уебок', 'долбоёб', 'долбоеб',
+	'пиздабол', 'гандон', 'пиздюк', 'ёблан', 'хуила', 'ублюдок',
+	'ёбнут', 'пиздёж', 'заёбан',
+	// English profanity
+	'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'nigger', 'nigga',
+	'faggot', 'motherfuck', 'cocksucker', 'whore', 'slut',
+];
+
+export const MAX_TITLE_LENGTH = 60;
+
+export const hasBannedWords = (text: string): boolean => {
+	const lower = text.toLowerCase();
+	return BANNED.some((w) => lower.includes(w));
+};

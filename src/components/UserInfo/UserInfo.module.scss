@@ -36,3 +36,18 @@
 .login {
 	font-size: var(--font-size-30);
 }
+
+@media (max-width: 768px) {
+	.container {
+		margin-top: 5rem;
+	}
+
+	.title {
+		margin-bottom: 1.5rem;
+	}
+
+	.avatarWrapper {
+		width: 110px;
+		height: 110px;
+	}
+}

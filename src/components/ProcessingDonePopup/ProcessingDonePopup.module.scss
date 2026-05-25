@@ -1,0 +1,214 @@
+.overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(8, 9, 34, 0.7);
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	z-index: 1100;
+	padding-bottom: 80px;
+	animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.card {
+	background: var(--color-menu-bg);
+	border-radius: 16px;
+	padding: 24px 28px;
+	max-width: 400px;
+	width: calc(100% - 32px);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+	animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.title {
+	font-family: var(--font-main);
+	font-size: var(--font-size-20);
+	color: var(--color-text);
+	margin: 0;
+}
+
+.subtitle {
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	color: var(--color-text);
+	opacity: 0.7;
+	margin: 0;
+}
+
+.actions {
+	display: flex;
+	gap: 10px;
+}
+
+.btnPrimary {
+	flex: 1;
+	padding: 10px 16px;
+	background: var(--color-gradient);
+	border: none;
+	border-radius: 10px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	cursor: pointer;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+.btnSecondary {
+	padding: 10px 16px;
+	background: transparent;
+	border: 1px solid var(--color-spots);
+	border-radius: 10px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 1;
+	}
+
+	&:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+}
+
+.btnPrimary:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.nameField {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.nameInput {
+	width: 100%;
+	box-sizing: border-box;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 16%);
+	border-radius: 8px;
+	padding: 10px 12px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	outline: none;
+	transition: border-color 0.15s;
+
+	&::placeholder {
+		color: rgb(255 255 255 / 35%);
+	}
+
+	&:focus {
+		border-color: rgb(255 255 255 / 35%);
+	}
+}
+
+.nameInputError {
+	border-color: #ff4757;
+}
+
+.nameError {
+	font-size: 12px;
+	color: #ff4757;
+}
+
+.nameCount {
+	font-size: 12px;
+	color: rgb(255 255 255 / 35%);
+	text-align: right;
+}
+
+.difficultyField {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.difficultyTitle {
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	color: var(--color-text);
+	opacity: 0.7;
+}
+
+.difficultyOptions {
+	display: flex;
+	gap: 8px;
+}
+
+.difficultyBtn {
+	flex: 1;
+	padding: 8px 10px;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 16%);
+	border-radius: 8px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	cursor: pointer;
+	opacity: 0.55;
+	transition:
+		opacity 0.15s,
+		border-color 0.15s,
+		background 0.15s;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+.difficultyBtnActive {
+	opacity: 1;
+	border-color: rgb(255 255 255 / 55%);
+	background: rgb(255 255 255 / 14%);
+}
+
+.skipBtn {
+	background: transparent;
+	border: none;
+	color: rgb(255 255 255 / 40%);
+	font-family: var(--font-main);
+	font-size: 12px;
+	cursor: pointer;
+	padding: 0;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	align-self: center;
+	transition: color 0.15s;
+
+	&:hover {
+		color: rgb(255 255 255 / 65%);
+	}
+}

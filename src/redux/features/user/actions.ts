@@ -1,6 +1,6 @@
 import { checkAuth } from '@/api/auth/check';
 import { logout } from '@/api/auth/logout';
-import { clearAuthToken } from '@/helpers/authToken';
+import { updateProfile, type UpdateProfilePayload } from '@/api/users/profile';
 import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
 import { clearVkAuthUser, getVkAuthUser } from '@/helpers/vkIdSession';
 import type { AppDispatch } from '@/redux/store';
@@ -29,7 +29,6 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 
 	try {
 		await logout();
-		clearAuthToken();
 		clearVkAuthUser();
 		dispatch(clearUser());
 	} catch (error) {
@@ -42,7 +41,6 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 			'status' in error.response &&
 			error.response.status === 401
 		) {
-			clearAuthToken();
 			clearVkAuthUser();
 			dispatch(clearUser());
 			return;
@@ -52,3 +50,10 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 		dispatch(setError(errorMessage));
 	}
 };
+
+export const updateUserProfile =
+	(payload: UpdateProfilePayload) => async (dispatch: AppDispatch) => {
+		const updated = await updateProfile(payload);
+		dispatch(setUser(updated));
+		return updated;
+	};

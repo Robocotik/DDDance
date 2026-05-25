@@ -1,0 +1,141 @@
+.card {
+	position: relative;
+	aspect-ratio: 9 / 16;
+	border-radius: 12px;
+	overflow: hidden;
+	cursor: pointer;
+	background: #000;
+	border: 1px solid rgb(255 255 255 / 8%);
+	transition: transform 0.15s, border-color 0.2s;
+
+	&:hover {
+		transform: translateY(-2px);
+		border-color: rgb(148 34 142 / 60%);
+	}
+}
+
+.video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.scoreBadge {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: rgb(8 9 34 / 80%);
+	backdrop-filter: blur(4px);
+	border-radius: 10px;
+	padding: 4px 9px;
+	font-family: var(--font-title);
+	font-size: 14px;
+	border: 0.5px solid rgb(255 255 255 / 15%);
+}
+
+.savedBadge {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	padding: 3px 8px;
+	border-radius: 10px;
+	background: rgb(91 224 160 / 18%);
+	border: 0.5px solid rgb(91 224 160 / 35%);
+	color: #5be0a0;
+	font-size: 10px;
+	font-family: var(--font-main);
+	backdrop-filter: blur(4px);
+	white-space: nowrap;
+}
+
+.lockBadge {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(4px);
+	border: 0.5px solid transparent;
+	cursor: pointer;
+	font: inherit;
+	transition: transform 0.12s ease;
+
+	&:hover { transform: scale(1.08); }
+	&:active { transform: scale(0.95); }
+	&:disabled { cursor: default; }
+}
+
+.lockBadgeLocked {
+	background: rgb(255 107 107 / 18%);
+	border-color: rgb(255 107 107 / 30%);
+	color: rgb(255 107 107 / 90%);
+}
+
+.lockBadgeOpen {
+	background: rgb(111 255 158 / 12%);
+	border-color: rgb(111 255 158 / 25%);
+	color: rgb(111 255 158 / 85%);
+}
+
+.removeBtn {
+	position: absolute;
+	top: 8px;
+	left: 40px;
+	background: rgb(8 9 34 / 70%);
+	border: 0.5px solid rgb(255 107 107 / 35%);
+	color: rgb(255 107 107 / 80%);
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	transition: background 0.2s, color 0.2s;
+
+	&:hover {
+		background: rgb(255 107 107 / 25%);
+		color: #fff;
+	}
+}
+
+.meta {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 10px 12px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	background: linear-gradient(180deg, transparent, rgb(0 0 0 / 80%));
+	color: #fff;
+}
+
+.name {
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.date {
+	font-size: 11px;
+	color: rgb(255 255 255 / 60%);
+}
+
+@media (max-width: 480px) {
+	.scoreBadge {
+		font-size: 12px;
+		padding: 3px 7px;
+	}
+}

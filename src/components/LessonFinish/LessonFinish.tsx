@@ -19,7 +19,12 @@ const LessonFinish: React.FC<LessonFinishProps> = ({ lesson: _lesson }) => {
 		navigate(`?segment=start`);
 	};
 
+	const handleAllDances = () => {
+		navigate('/');
+	};
+
 	return (
+		<div className={styles.wrapper}>
 		<div className={styles.lesson}>
 			<div className={styles.container}>
 				<Title className={styles.title}>Поздравляем</Title>
@@ -28,10 +33,16 @@ const LessonFinish: React.FC<LessonFinishProps> = ({ lesson: _lesson }) => {
 					<br />
 					Продолжайте в том же ритме
 				</Paragraph>
-				<Button size="s" className={styles.button} onClick={handleRepeatLesson}>
-					Пройти еще раз
-				</Button>
+				<div className={styles.buttons}>
+					<Button size="s" className={styles.button} onClick={handleRepeatLesson}>
+						Пройти еще раз
+					</Button>
+					<Button size="s" className={styles.button} onClick={handleAllDances}>
+						Все танцы
+					</Button>
+				</div>
 			</div>
+		</div>
 		</div>
 	);
 };

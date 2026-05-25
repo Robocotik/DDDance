@@ -314,3 +314,17 @@
 		margin: 0 auto;
 	}
 }
+
+@media (max-width: 400px) {
+	.scoreValue {
+		font-size: 48px;
+	}
+
+	.scoreBlock {
+		padding: 16px 24px;
+	}
+
+	.title {
+		font-size: 22px;
+	}
+}

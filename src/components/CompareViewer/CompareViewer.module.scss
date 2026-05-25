@@ -72,6 +72,21 @@
 	right: 14px;
 }
 
+.refUnavailableOverlay {
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	z-index: 3;
+	font-family: var(--font-main);
+	font-size: 12px;
+	color: rgb(255 255 255 / 55%);
+	background: rgb(0 0 0 / 60%);
+	padding: 4px 12px;
+	border-radius: 12px;
+	backdrop-filter: blur(4px);
+	pointer-events: none;
+}
+
 .backBtn {
 	position: absolute;
 	top: 16px;
@@ -94,5 +109,12 @@
 	&:hover {
 		background: rgb(148 34 142 / 30%);
 		border-color: rgb(148 34 142 / 60%);
+	}
+}
+
+@media (max-width: 480px) {
+	.backBtn {
+		font-size: 12px;
+		padding: 8px 16px;
 	}
 }

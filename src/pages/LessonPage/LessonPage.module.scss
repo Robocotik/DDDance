@@ -1,49 +1,27 @@
 .page {
-	--lesson-viewport: calc(100dvh - 140px);
-
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	box-sizing: border-box;
-	width: 100%;
-	height: var(--lesson-viewport);
-	max-height: var(--lesson-viewport);
-	min-height: 0;
-	padding: 12px;
-	overflow: hidden;
-}
-
-.pageCenter {
-	flex: 1;
-	width: 100%;
-	min-height: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	overflow: hidden;
+	min-height: calc(100vh - 80px);
+	padding: 16px;
+	overflow-y: auto;
 }
 
 .lesson {
-	flex: 0 1 auto;
-	min-height: 0;
-	max-height: 100%;
+	margin-top: clamp(20px, 5vw, 100px);
+	margin-bottom: 20px;
 	width: min(1400px, 100%);
-	margin: 0;
 	position: relative;
 	display: grid;
 	grid-template-columns: 2fr 1fr;
-	grid-template-rows: minmax(0, 1fr);
-	gap: clamp(12px, 2vh, 20px);
-	padding: clamp(12px, 2vw, 25px);
+	gap: 20px;
+	padding: 25px;
 	background-color: #2f2f8a56;
 	border-radius: 16px;
-	overflow: hidden;
 
 	> * {
 		position: relative;
 		z-index: 1;
-		min-height: 0;
 	}
 }
 
@@ -62,8 +40,6 @@
 	gap: clamp(16px, 3vh, 50px);
 	justify-content: center;
 	align-items: center;
-	min-height: 0;
-	overflow: hidden;
 }
 
 .viewerWrapper {
@@ -71,9 +47,7 @@
 	grid-template-columns: 1fr 1fr;
 	gap: 12px;
 	width: 100%;
-	min-height: 0;
-	height: clamp(220px, min(42vw, 52vh), 580px);
-	max-height: min(58vh, 580px);
+	height: clamp(300px, 42vw, 580px);
 }
 
 .modelContainer,
@@ -142,7 +116,7 @@
 }
 
 .stepTitleFull {
-	font-size: clamp(22px, 2.85vw, 36px);
+	font-size: clamp(16px, 2vw, 24px);
 	text-align: center;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -201,11 +175,32 @@
 	transform: rotate(180deg);
 }
 
-.returnStepArrow {
-	width: 16px;
-	height: 16px;
+.speedRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.pauseButton {
+	background: none;
+	border: none;
+	color: #fff;
+	font-size: 18px;
+	cursor: pointer;
+	width: 34px;
+	height: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	padding: 0;
+	line-height: 1;
 	flex-shrink: 0;
-	transform: rotate(180deg);
+	transition: background 0.2s ease;
+
+	&:hover {
+		background: rgb(255 255 255 / 12%);
+	}
 }
 
 .speedControl {
@@ -213,9 +208,9 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 12px;
-	padding: 16px 0;
-	margin: 24px 0 28px;
+	gap: 10px;
+	padding: 8px 0;
+	margin-top: -20px;
 	width: 100%;
 
 	label {
@@ -292,26 +287,7 @@
 }
 
 .fullDanceButton {
-	width: 70%;
-	padding: 15px;
 	flex-shrink: 0;
-	gap: 8px;
-}
-
-.fullDancePlayButton {
-	gap: 14px;
-}
-
-.fullDancePlayIcon {
-	flex-shrink: 0;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-size: clamp(15px, 1rem, 20px);
-	line-height: 1;
-	font-family: var(--font-text), sans-serif;
-	font-variant-emoji: text;
-	transform: translateY(1px);
 }
 
 .checkBtn {
@@ -331,20 +307,56 @@
 	}
 }
 
+.authorLikeRow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	width: 100%;
+}
+
 .descriptionBlock {
+	position: relative;
 	width: 100%;
 	min-height: 48px;
 	border-radius: 10px;
 	background: rgb(47 47 138 / 30%);
 	border: 1px solid rgb(255 255 255 / 8%);
 	backdrop-filter: blur(6px);
-	padding: 14px 18px;
+	padding: 14px 40px 14px 18px;
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	animation: fadeIn 0.35s ease both;
 	margin: 8px 0;
+}
+
+.descriptionClose {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+	background: none;
+	border: none;
+	color: rgb(255 255 255 / 45%);
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	padding: 0;
+	transition:
+		color 0.15s ease,
+		background 0.15s ease;
+
+	&:hover {
+		color: #fff;
+		background: rgb(255 255 255 / 12%);
+	}
 }
 
 .descriptionText {
@@ -390,7 +402,7 @@
 	inset: 0;
 	width: 100vw;
 	height: 100vh;
-	background: #0a0a0f;
+	background: #000;
 	z-index: 9999;
 }
 
@@ -423,20 +435,50 @@
 }
 
 .retryBtn {
-	margin-top: 8px;
-	padding: 10px 24px;
-	background: rgb(255 255 255 / 10%);
-	color: #fff;
-	border: 1px solid rgb(255 255 255 / 20%);
-	border-radius: 8px;
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s;
+	background: rgb(255 255 255 / 8%) !important;
+	border: 1px solid rgb(255 255 255 / 18%) !important;
+	color: #fff !important;
 
 	&:hover {
-		background: rgb(255 255 255 / 15%);
+		background: rgb(255 255 255 / 14%) !important;
+		transform: translateY(-1px);
 	}
 }
+
+.moderationScreen {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 16px;
+	max-width: 480px;
+	margin: auto;
+	padding: 48px 24px;
+}
+
+.moderationTitle {
+	font-size: 22px;
+	font-weight: 700;
+	color: #fff;
+	margin: 0;
+}
+
+.moderationText {
+	font-size: 15px;
+	color: #8888a0;
+	line-height: 1.6;
+	margin: 0;
+}
+
+.moderationActions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+	margin-top: 8px;
+}
+
 
 .ratingOverlay {
 	position: fixed;
@@ -496,6 +538,12 @@
 	}
 }
 
+.error {
+	color: #ff6b6b;
+	font-size: 16px;
+	text-align: center;
+}
+
 @keyframes fadeIn {
 	from {
 		opacity: 0;
@@ -540,13 +588,11 @@
 @media (max-width: 980px) {
 	.lesson {
 		grid-template-columns: 1fr;
-		grid-template-rows: minmax(0, 1fr) auto;
-		max-height: 100%;
+		height: auto;
 	}
 
 	.viewerWrapper {
-		height: clamp(200px, min(40vh, 48vh), 400px);
-		max-height: min(50vh, 400px);
+		height: clamp(280px, 40vh, 400px);
 	}
 
 	.stepHeader {
@@ -568,9 +614,7 @@
 @media (max-width: 600px) {
 	.viewerWrapper {
 		grid-template-columns: 1fr;
-		grid-template-rows: repeat(2, minmax(0, min(26vh, 200px)));
-		height: auto;
-		max-height: min(56vh, 440px);
+		height: clamp(600px, 80vh, 900px);
 	}
 
 	.lesson {

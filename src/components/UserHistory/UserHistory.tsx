@@ -12,6 +12,7 @@ import {
 import type { AppDispatch } from '@/redux/store';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import BestAttempts from '../BestAttempts/BestAttempts';
 import HistoryItemCard from '../HistoryItem/HistoryItem';
 import LikedItemCard from '../LikedItem/LikedItem';
 import Title from '../Title/Title';
@@ -34,6 +35,8 @@ const UserHistory: React.FC = () => {
 
 	return (
 		<div className={styles.wrapper}>
+			<BestAttempts />
+
 			<section className={styles.section}>
 				<Title className={styles.title}>Понравившиеся</Title>
 				{likesLoading && <p className={styles.message}>Загрузка...</p>}

@@ -154,6 +154,17 @@
 	}
 }
 
+.optionCardDisabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+
+	&:hover {
+		border-color: rgb(148 34 142 / 30%);
+		background: rgb(47 47 138 / 30%);
+		transform: none;
+	}
+}
+
 .hiddenInput {
 	display: none;
 }
@@ -186,6 +197,22 @@
 	.options {
 		flex-direction: column;
 		align-items: center;
+	}
+}
+
+@media (max-width: 400px) {
+	.optionCard {
+		width: min(180px, 90%);
+		height: 160px;
+		padding: 16px;
+	}
+
+	.optionIcon {
+		font-size: 36px;
+	}
+
+	.title {
+		font-size: 28px;
 	}
 }
 

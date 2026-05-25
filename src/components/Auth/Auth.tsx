@@ -1,18 +1,40 @@
 import type { LoginPayload } from '@/api/auth/login';
 import type { BaseAuthResponse, RegisterPayload } from '@/api/auth/register';
+import { claimUploads } from '@/api/notifications';
+import { clearAnonProgress } from '@/helpers/anonProgress';
 import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
 import { validateAuthForm } from '@/helpers/validateAuthForm';
+import {
+	clearPendingAnonymousUploads,
+	getPendingAnonymousUploads,
+} from '@/redux/features/lesson/actions';
 import {
 	setUser,
 	setError as setUserError,
 } from '@/redux/features/user/userSlice';
 import { useCallback, useState, type FC } from 'react';
 import { useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../Button/Button';
 import { Input } from '../common/Input/Input';
 import { VkIdAuthButton } from '../VkIdAuthButton/VkIdAuthButton';
 import styles from './Auth.module.css';
+
+// Закрепить за пользователем dance_id, которые он загружал анонимно.
+// Сетевая ошибка не блокирует логин: dance_id остаются в localStorage
+// и будут переотправлены при следующей авторизации.
+const claimPendingUploads = async (): Promise<void> => {
+	// После входа анонимный прогресс в шапке больше не нужен.
+	clearAnonProgress();
+	const ids = getPendingAnonymousUploads();
+	if (ids.length === 0) return;
+	try {
+		await claimUploads(ids);
+		clearPendingAnonymousUploads();
+	} catch {
+		/* оставляем в localStorage для следующей попытки */
+	}
+};
 
 type AuthProps = {
 	onSubmit: (
@@ -33,13 +55,25 @@ export const Auth: FC<AuthProps> = ({
 }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+	// Куда вернуться после успешной авторизации. Используется, чтобы пользователь
+	// не «терял» страницу сравнения, если ушёл регистрироваться из неё.
+	const returnToParam = searchParams.get('returnTo');
+	const safeReturnTo =
+		returnToParam && returnToParam.startsWith('/') && !returnToParam.startsWith('//')
+			? returnToParam
+			: null;
+
 	const [login, setLogin] = useState('');
 	const [password, setPassword] = useState('');
 	const [repeatPassword, setRepeatPassword] = useState('');
 	const [isRulesAccepted, setIsRulesAccepted] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const redirectClick = isRegistration ? '/login' : '/register';
+	const redirectPath = isRegistration ? '/login' : '/register';
+	const redirectClick = safeReturnTo
+		? `${redirectPath}?returnTo=${encodeURIComponent(safeReturnTo)}`
+		: redirectPath;
 	const redirectText = isRegistration
 		? 'Уже зарегистрированы?'
 		: 'У меня нет аккаунта';
@@ -68,7 +102,8 @@ export const Auth: FC<AuthProps> = ({
 			try {
 				const userData = await onSubmit({ login, password });
 				dispatch(setUser(userData));
-				navigate('/');
+				await claimPendingUploads();
+				navigate(safeReturnTo ?? '/');
 				setError(null);
 			} catch (err) {
 				const errorMessage = getAuthErrorMessage(err);
@@ -86,6 +121,7 @@ export const Auth: FC<AuthProps> = ({
 			isRulesAccepted,
 			navigate,
 			dispatch,
+			safeReturnTo,
 		],
 	);
 
@@ -104,11 +140,12 @@ export const Auth: FC<AuthProps> = ({
 	);
 
 	const handleVkAuthenticated = useCallback(
-		(userData: BaseAuthResponse) => {
+		async (userData: BaseAuthResponse) => {
 			dispatch(setUser(userData));
-			navigate('/');
+			await claimPendingUploads();
+			navigate(safeReturnTo ?? '/');
 		},
-		[dispatch, navigate],
+		[dispatch, navigate, safeReturnTo],
 	);
 
 	const handleVkError = useCallback(
@@ -152,7 +189,7 @@ export const Auth: FC<AuthProps> = ({
 							onChange={(e) => onChange(e, setRepeatPassword)}
 						/>
 					)}
-					{error && <p className={styles.error}>{error}</p>}
+					<p className={styles.error} aria-live="polite">{error}</p>
 				</div>
 				{isRegistration && (
 					<label className={styles.rulesConsent}>

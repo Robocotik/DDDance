@@ -32,6 +32,21 @@
 	will-change: transform, opacity, filter;
 }
 
+.subtitle {
+	font-size: 20px;
+	font-weight: 600;
+	color: #fff;
+	margin: 0;
+	text-align: center;
+}
+
+.hint {
+	font-size: 14px;
+	color: #8888a0;
+	margin: 0;
+	text-align: center;
+}
+
 @keyframes captionIn {
 	0% {
 		transform: translateY(10px) scale(0.98);

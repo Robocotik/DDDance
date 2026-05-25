@@ -1,0 +1,123 @@
+.section {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	margin: 0 0 16px;
+	padding-left: 24px;
+	font-family: var(--font-title);
+	font-size: var(--font-size-22);
+	color: var(--color-text);
+	letter-spacing: 0.5px;
+}
+
+.empty {
+	margin: 0;
+	font-size: 14px;
+	color: rgb(255 255 255 / 35%);
+	padding: 12px 24px;
+}
+
+.row {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 0 24px;
+}
+
+.card {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 16px;
+	border-radius: 16px;
+	border: 1px solid rgb(148 34 142 / 25%);
+	background: rgb(47 47 138 / 25%);
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s, transform 0.15s;
+
+	&:hover {
+		background: rgb(47 47 138 / 40%);
+		border-color: rgb(148 34 142 / 50%);
+		transform: translateX(4px);
+	}
+}
+
+.cardGold {
+	border-color: rgb(255 209 102 / 45%);
+	background: rgb(255 209 102 / 8%);
+
+	&:hover {
+		border-color: rgb(255 209 102 / 70%);
+		background: rgb(255 209 102 / 14%);
+	}
+}
+
+.rank {
+	font-family: var(--font-title);
+	font-size: 22px;
+	width: 36px;
+	text-align: center;
+	color: rgb(255 255 255 / 70%);
+	flex-shrink: 0;
+}
+
+.thumb {
+	width: 48px;
+	height: 64px;
+	border-radius: 8px;
+	object-fit: cover;
+	background: rgb(0 0 0 / 30%);
+	flex-shrink: 0;
+}
+
+.info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.name {
+	font-size: 14px;
+	color: rgb(255 255 255 / 85%);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.date {
+	font-size: 12px;
+	color: rgb(255 255 255 / 35%);
+}
+
+.scoreBlock {
+	display: flex;
+	flex-direction: row;
+	align-items: baseline;
+	gap: 2px;
+	flex-shrink: 0;
+	font-family: var(--font-title);
+}
+
+.scoreValue {
+	font-family: var(--font-title);
+	font-size: 28px;
+	line-height: 1;
+}
+
+.scoreLabel {
+	font-family: var(--font-title);
+	font-size: 16px;
+	color: rgb(255 255 255 / 50%);
+	letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+	.row { padding: 0 16px; }
+	.title { padding-left: 16px; }
+	.rank { width: 28px; font-size: 18px; }
+}

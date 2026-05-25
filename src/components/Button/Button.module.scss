@@ -23,6 +23,19 @@
 		opacity: 1;
 		animation: shine 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+
+		&:hover {
+			transform: none;
+		}
+
+		&::after {
+			display: none;
+		}
+	}
 }
 
 .btn::after {

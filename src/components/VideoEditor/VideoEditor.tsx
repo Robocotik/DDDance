@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Icon from '../Icon/Icon';
 import styles from './VideoEditor.module.scss';
 
 type DragHandle = 'start' | 'end' | null;
@@ -320,7 +321,12 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 
 					{durationWarning && (
 						<div className={styles.durationWarning}>
-							<span className={styles.durationWarningIcon}>✂️</span>
+							<Icon
+								name="scissors"
+								size="1.2em"
+								alt=""
+								className={styles.durationWarningIcon}
+							/>
 							<div className={styles.durationWarningText}>
 								<strong>Видео слишком длинное</strong>
 								<p>

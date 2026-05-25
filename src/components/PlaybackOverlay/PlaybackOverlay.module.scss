@@ -1,0 +1,274 @@
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	width: 100%;
+}
+
+// ── Панели (плееры) ─────────────────────────────────────────────────────────
+
+.panels {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 14px;
+}
+
+.panelsTwo {
+	grid-template-columns: 1fr 1fr;
+
+	@media (max-width: 720px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.panelLabel {
+	font-family: var(--font-title);
+	font-size: var(--font-size-14);
+	color: rgb(255 255 255 / 70%);
+	letter-spacing: 0.5px;
+	padding-left: 4px;
+}
+
+.viewport {
+	position: relative;
+	width: 100%;
+	margin: 0 auto;
+	background: #000;
+	border-radius: 14px;
+	overflow: hidden;
+	border: 0.5px solid rgb(255 255 255 / 10%);
+}
+
+.viewportNoVideo {
+	background: linear-gradient(180deg, #0c0d28, #15163f);
+}
+
+.video {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: block;
+	background: #000;
+}
+
+.canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.noVideoHint {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 8px 12px;
+	background: linear-gradient(180deg, transparent, rgb(0 0 0 / 70%));
+	font-size: 12px;
+	color: rgb(255 255 255 / 65%);
+	text-align: center;
+	pointer-events: none;
+	font-family: var(--font-main);
+}
+
+// ── Контролы (общие на обе панели) ──────────────────────────────────────────
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 14px;
+	background: rgb(255 255 255 / 5%);
+	border: 0.5px solid rgb(255 255 255 / 10%);
+	border-radius: 12px;
+	flex-wrap: wrap;
+}
+
+.playBtn {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #ff3c78, #8c3cff);
+	border: none;
+	color: #fff;
+	font-size: 13px;
+	font-weight: bold;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: opacity 0.2s, transform 0.15s;
+	font-family: var(--font-main);
+
+	&:hover { opacity: 0.85; }
+	&:active { transform: scale(0.96); }
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.4;
+		transform: none;
+	}
+}
+
+.muteBtn {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: rgb(255 255 255 / 8%);
+	border: 0.5px solid rgb(255 255 255 / 15%);
+	color: #fff;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: background 0.2s, transform 0.15s, border-color 0.2s;
+
+	&:hover { background: rgb(255 255 255 / 14%); }
+	&:active { transform: scale(0.96); }
+}
+
+.toggleActive {
+	background: rgb(255 60 120 / 18%);
+	border-color: rgb(255 60 120 / 50%);
+
+	&:hover { background: rgb(255 60 120 / 26%); }
+}
+
+.seekTrack {
+	position: relative;
+	width: 100%;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	touch-action: none;
+	user-select: none;
+
+	&::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: 4px;
+		background: rgb(255 255 255 / 12%);
+		border-radius: 2px;
+	}
+
+	&:hover .seekThumb {
+		opacity: 1;
+	}
+}
+
+.seekTrackDisabled {
+	pointer-events: none;
+	opacity: 0.4;
+}
+
+.seekFill {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	height: 4px;
+	background: linear-gradient(90deg, #ff3c78, #8c3cff);
+	border-radius: 2px;
+	pointer-events: none;
+}
+
+.seekThumb {
+	position: absolute;
+	top: 50%;
+	width: 12px;
+	height: 12px;
+	background: #fff;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	opacity: 0.85;
+	pointer-events: none;
+	box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+	transition: opacity 0.15s, transform 0.1s;
+}
+
+.bufferHint {
+	padding: 8px 14px;
+	background: rgb(255 255 255 / 5%);
+	border: 0.5px dashed rgb(255 255 255 / 18%);
+	border-radius: 10px;
+	color: rgb(255 255 255 / 70%);
+	font-family: var(--font-main);
+	font-size: 12px;
+	text-align: center;
+
+	p { margin: 0; }
+}
+
+.timeReadout {
+	font-family: var(--font-main);
+	font-size: 13px;
+	color: rgb(255 255 255 / 70%);
+	font-variant-numeric: tabular-nums;
+	min-width: 110px;
+}
+
+.speedGroup {
+	display: flex;
+	gap: 4px;
+	margin-left: auto;
+	background: rgb(255 255 255 / 5%);
+	padding: 3px;
+	border-radius: 18px;
+}
+
+.speedBtn {
+	background: transparent;
+	border: none;
+	color: rgb(255 255 255 / 55%);
+	font-family: var(--font-main);
+	font-size: 12px;
+	padding: 5px 12px;
+	border-radius: 14px;
+	cursor: pointer;
+	transition: background 0.2s, color 0.2s;
+	font-variant-numeric: tabular-nums;
+
+	&:hover { color: #fff; }
+}
+
+.speedBtnActive {
+	background: rgb(255 255 255 / 12%);
+	color: #fff;
+}
+
+// ── Loading/error ───────────────────────────────────────────────────────────
+
+.loading,
+.error {
+	padding: 32px 18px;
+	border: 0.5px dashed rgb(255 255 255 / 18%);
+	border-radius: 14px;
+	color: rgb(255 255 255 / 60%);
+	text-align: center;
+	font-family: var(--font-main);
+	font-size: 13px;
+
+	p {
+		margin: 0;
+	}
+}
+
+.error {
+	color: #ff6b6b;
+	border-color: rgb(255 107 107 / 35%);
+}

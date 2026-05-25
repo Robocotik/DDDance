@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Icon from '../Icon/Icon';
 import { SegmentBar } from './SegmentBar';
 import styles from './SkeletonViewer.module.scss';
 
@@ -373,7 +374,15 @@ const SkeletonViewer: React.FC = () => {
 			<div className={styles.controls}>
 				<div className={styles.playbackControls}>
 					<button onClick={() => setPlaying(!playing)}>
-						{playing ? '⏸ Пауза' : '▶ Воспроизвести'}
+						{playing ? (
+							<>
+								<Icon name="pause" size="1em" alt="" /> Пауза
+							</>
+						) : (
+							<>
+								<Icon name="play" size="1em" alt="" /> Воспроизвести
+							</>
+						)}
 					</button>
 					<button
 						onClick={() => {

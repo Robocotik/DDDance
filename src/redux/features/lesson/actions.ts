@@ -3,6 +3,14 @@ import { S3_ADDRESS } from '../../../consts/urls';
 import actionTypes from './actionTypes';
 const inFlightLessonById = new Map<string, Promise<void>>();
 
+export interface DanceAuthor {
+	id: string;
+	login: string;
+	avatar: string;
+}
+
+export type LessonDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface UploadLessonResult {
 	dance_id: string;
 	duration_sec: number;
@@ -14,7 +22,64 @@ export interface UploadLessonResult {
 	segments_key: string;
 	video_path: string;
 	title?: string;
+	likes_count?: number;
+	is_liked?: boolean;
+	author?: DanceAuthor;
+	difficulty?: LessonDifficulty;
+	// true — сложность посчитана по оценкам пользователей, false/undefined — задана автором.
+	difficulty_by_users?: boolean;
+	// Последняя попытка ТЕКУЩЕГО пользователя на этом танце — для кнопки
+	// «Моя последняя попытка» на LessonPage. Анонимам приходит undefined.
+	last_attempt_id?: string;
+	last_attempt_score?: number;
 }
+
+export interface ModerationPendingResponse {
+	error_code: 'MODERATION_PENDING';
+	message: string;
+	dance_id?: string;
+}
+
+const isModerationPending = (status: number, data: unknown): data is ModerationPendingResponse =>
+	status === 202 &&
+	typeof data === 'object' &&
+	data !== null &&
+	(data as { error_code?: string }).error_code === 'MODERATION_PENDING';
+
+// Ключ в localStorage, куда фронт складывает dance_id анонимных загрузок.
+// При регистрации это значение отправляется на /uploads/claim и очищается.
+const PENDING_UPLOADS_KEY = 'pending_anonymous_uploads';
+
+const savePendingUpload = (danceId: string | undefined): void => {
+	if (!danceId) return;
+	try {
+		const raw = localStorage.getItem(PENDING_UPLOADS_KEY);
+		const list: string[] = raw ? JSON.parse(raw) : [];
+		if (!list.includes(danceId)) {
+			list.push(danceId);
+			localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify(list));
+		}
+	} catch {
+		/* localStorage может быть недоступен (приватный режим, квота) — игнор */
+	}
+};
+
+export const getPendingAnonymousUploads = (): string[] => {
+	try {
+		const raw = localStorage.getItem(PENDING_UPLOADS_KEY);
+		return raw ? JSON.parse(raw) : [];
+	} catch {
+		return [];
+	}
+};
+
+export const clearPendingAnonymousUploads = (): void => {
+	try {
+		localStorage.removeItem(PENDING_UPLOADS_KEY);
+	} catch {
+		/* ignore */
+	}
+};
 
 const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка';
 
@@ -24,6 +89,18 @@ const clearLessonAction = () => {
 		type: actionTypes.CLEAR_LESSON,
 	};
 };
+
+// Точечно обновить last_attempt_id у уже загруженного урока. Используется
+// после успешного compare, чтобы кнопка «Моя последняя попытка» сразу
+// начала указывать на свежий attempt_id без перезагрузки урока.
+const patchLessonLastAttemptAction = (
+	danceId: string,
+	attemptId: string,
+	score?: number,
+) => ({
+	type: actionTypes.LESSON_PATCH_LAST_ATTEMPT,
+	payload: { danceId, attemptId, score },
+});
 
 const setLessonLoadingAction = () => ({
 	type: actionTypes.LESSON_UPLOAD_LOADING,
@@ -43,6 +120,10 @@ const returnLessonErrorAction = (error: string) => ({
 	},
 });
 
+const returnLessonModerationPendingAction = () => ({
+	type: actionTypes.LESSON_MODERATION_PENDING,
+});
+
 const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 	dispatch(setLessonLoadingAction());
 
@@ -50,7 +131,7 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 		const formData = new FormData();
 		formData.append('dance', file);
 
-		const response = await http.post<UploadLessonResult>(
+		const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
 			'/users/load',
 			formData,
 			{
@@ -60,7 +141,13 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 			},
 		);
 
-		dispatch(returnLessonLoadedAction(response.data));
+		if (isModerationPending(response.status, response.data)) {
+			savePendingUpload(response.data.dance_id);
+			dispatch(returnLessonModerationPendingAction());
+			return;
+		}
+
+		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
 	} catch (error: any) {
 		const errorMessage = 'Что-то пошло не так, но мы это уже чиним';
 
@@ -105,11 +192,18 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 	dispatch(setLessonLoadingAction());
 
 	try {
-		const response = await http.post<UploadLessonResult>('/users/loadByURL', {
-			url,
-		});
+		const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
+			'/users/loadByURL',
+			{ url },
+		);
 
-		dispatch(returnLessonLoadedAction(response.data));
+		if (isModerationPending(response.status, response.data)) {
+			savePendingUpload(response.data.dance_id);
+			dispatch(returnLessonModerationPendingAction());
+			return;
+		}
+
+		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
 	} catch (error: any) {
 		const errorMessage =
 			'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор';
@@ -117,6 +211,37 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 		dispatch(returnLessonErrorAction(errorMessage));
 	}
 };
+
+const uploadLessonByTrimAction =
+	(file: File, startSec: number, endSec: number) =>
+	async (dispatch: any) => {
+		dispatch(setLessonLoadingAction());
+
+		try {
+			const formData = new FormData();
+			formData.append('dance', file);
+			formData.append('start_sec', String(startSec));
+			formData.append('end_sec', String(endSec));
+
+			const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
+				'/users/load/trim',
+				formData,
+				{
+					headers: { 'Content-Type': 'multipart/form-data' },
+				},
+			);
+
+			if (isModerationPending(response.status, response.data)) {
+				savePendingUpload(response.data.dance_id);
+				dispatch(returnLessonModerationPendingAction());
+				return;
+			}
+
+			dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
+		} catch (error: any) {
+			dispatch(returnLessonErrorAction('Не удалось обработать видео'));
+		}
+	};
 
 export interface SegmentData {
 	index: number;
@@ -180,6 +305,8 @@ export default {
 	uploadLessonByVideoAction,
 	uploadLessonByIdAction,
 	uploadLessonByLinkAction,
+	uploadLessonByTrimAction,
 	clearLessonAction,
+	patchLessonLastAttemptAction,
 	uploadSegmentsAction,
 };

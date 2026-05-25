@@ -193,6 +193,18 @@
 	}
 }
 
+@media (max-width: 400px) {
+	.countdownNumber {
+		font-size: 80px;
+	}
+
+	.startBtn,
+	.stopBtn {
+		padding: 12px 28px;
+		font-size: 18px;
+	}
+}
+
 .screen:last-child .video {
 	transform: scaleX(-1);
 }

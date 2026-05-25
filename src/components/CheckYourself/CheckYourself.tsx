@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectIsProcessing } from '@/redux/features/upload/selectors';
 import CameraRecorder from '../CameraRecorder/CameraRecorder';
+import Icon from '../Icon/Icon';
 import VideoEditor from '../VideoEditor/VideoEditor';
 import styles from './CheckYourself.module.scss';
 
@@ -21,6 +24,7 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 }) => {
 	const [screen, setScreen] = useState<Screen>('choice');
 	const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+	const isProcessing = useSelector(selectIsProcessing);
 
 	useEffect(() => {
 		if (submitting) {
@@ -38,6 +42,7 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 		if (!file) return;
 		setVideoBlob(file);
 		setScreen('editor');
+		e.target.value = '';
 	};
 
 	const handleVideoSubmit = (
@@ -65,27 +70,47 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 						<h2 className={styles.title}>Проверить себя</h2>
 						<p className={styles.subtitle}>Выбери способ записи</p>
 						<div className={styles.options}>
-							<label className={styles.optionCard}>
+							<label
+								className={`${styles.optionCard} ${isProcessing ? styles.optionCardDisabled : ''}`}
+							>
 								<input
 									type="file"
 									accept="video/*"
 									className={styles.hiddenInput}
 									onChange={handleFileChange}
+									disabled={isProcessing}
 								/>
-								<span className={styles.optionIcon}>📁</span>
+								<Icon
+									name="folder"
+									size={48}
+									alt=""
+									className={styles.optionIcon}
+								/>
 								<span className={styles.optionLabel}>Загрузить видео</span>
 								<span className={styles.optionHint}>
-									mp4, mov, avi и другие
+									{isProcessing
+										? 'Дождитесь анализа предыдущего танца'
+										: 'mp4, mov, avi и другие'}
 								</span>
 							</label>
 
 							<button
-								className={styles.optionCard}
-								onClick={() => setScreen('camera')}
+								className={`${styles.optionCard} ${isProcessing ? styles.optionCardDisabled : ''}`}
+								onClick={() => !isProcessing && setScreen('camera')}
+								disabled={isProcessing}
 							>
-								<span className={styles.optionIcon}>🎥</span>
+								<Icon
+									name="camera"
+									size={48}
+									alt=""
+									className={styles.optionIcon}
+								/>
 								<span className={styles.optionLabel}>Записать с камеры</span>
-								<span className={styles.optionHint}>Синхронно с эталоном</span>
+								<span className={styles.optionHint}>
+									{isProcessing
+										? 'Дождитесь анализа предыдущего танца'
+										: 'Синхронно с эталоном'}
+								</span>
 							</button>
 						</div>
 					</div>

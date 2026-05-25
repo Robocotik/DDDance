@@ -1,0 +1,134 @@
+.section {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	margin-bottom: 24px;
+	padding-left: 24px;
+}
+
+.empty {
+	font-size: 14px;
+	color: rgb(255 255 255 / 35%);
+	padding: 12px 24px;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 0 24px;
+}
+
+// ── Podium card ───────────────────────────────────────────────────────────────
+
+.card {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 18px;
+	border-radius: 16px;
+	border: 1px solid rgb(148 34 142 / 25%);
+	background: rgb(47 47 138 / 25%);
+	cursor: pointer;
+	transition:
+		background 0.2s,
+		border-color 0.2s,
+		transform 0.15s;
+
+	&:hover {
+		background: rgb(47 47 138 / 40%);
+		border-color: rgb(148 34 142 / 50%);
+		transform: translateX(4px);
+	}
+}
+
+.cardGold {
+	border-color: rgb(255 209 102 / 45%);
+	background: rgb(255 209 102 / 8%);
+
+	&:hover {
+		border-color: rgb(255 209 102 / 70%);
+		background: rgb(255 209 102 / 14%);
+	}
+}
+
+.cardSilver {
+	border-color: rgb(192 192 192 / 35%);
+	background: rgb(192 192 192 / 6%);
+}
+
+.cardBronze {
+	border-color: rgb(205 127 50 / 35%);
+	background: rgb(205 127 50 / 6%);
+}
+
+.medal {
+	font-size: 28px;
+	flex-shrink: 0;
+}
+
+.thumb {
+	width: 48px;
+	height: 64px;
+	border-radius: 8px;
+	object-fit: cover;
+	background: rgb(0 0 0 / 30%);
+	flex-shrink: 0;
+}
+
+.info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.name {
+	font-size: 14px;
+	color: rgb(255 255 255 / 85%);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.date {
+	font-size: 12px;
+	color: rgb(255 255 255 / 35%);
+}
+
+.scoreBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 2px;
+	flex-shrink: 0;
+}
+
+.scoreValue {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 28px;
+	line-height: 1;
+}
+
+.scoreLabel {
+	font-size: 11px;
+	color: rgb(255 255 255 / 35%);
+}
+
+@media (max-width: 768px) {
+	.list {
+		padding: 0 16px;
+	}
+
+	.title {
+		padding-left: 16px;
+	}
+
+	.empty {
+		padding-left: 16px;
+	}
+}

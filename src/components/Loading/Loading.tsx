@@ -15,7 +15,12 @@ const messages = [
 	'Честно-честно',
 ];
 
-const Loading: React.FC = () => {
+interface LoadingProps {
+	subtitle?: string;
+	hint?: string;
+}
+
+const Loading: React.FC<LoadingProps> = ({ subtitle, hint }) => {
 	const [messageIndex, setMessageIndex] = useState(0);
 
 	useEffect(() => {
@@ -36,6 +41,8 @@ const Loading: React.FC = () => {
 						{messages[messageIndex]}
 					</Paragraph>
 				</div>
+				{subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+				{hint && <p className={styles.hint}>{hint}</p>}
 			</div>
 		</div>
 	);

@@ -2,8 +2,11 @@ import { selectUser } from '@/redux/features/user/selectors';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import AnonProgressPanel from '../AnonProgressPanel/AnonProgressPanel';
 import { AvatarMenu } from '../AvatarMenu/AvatarMenu';
 import Button from '../Button/Button';
+import FriendsPanel from '../FriendsPanel/FriendsPanel';
+import NotificationBell from '../NotificationBell/NotificationBell';
 import Paragraph from '../Paragraph/Paragraph';
 import Title from '../Title/Title';
 import styles from './Header.module.scss';
@@ -18,9 +21,22 @@ const Header: React.FC = () => {
 				DDDance
 			</Title>
 
+			<nav className={styles.nav}>
+				<Paragraph
+					level="2"
+					opacity="100"
+					className={styles.navLink}
+					onClick={() => navigate('/dances')}
+				>
+					Все танцы
+				</Paragraph>
+			</nav>
+
 			<span className={styles.right}>
 				{user ? (
 					<>
+						<FriendsPanel />
+						<NotificationBell />
 						<Paragraph
 							level="2"
 							opacity="100"
@@ -33,6 +49,7 @@ const Header: React.FC = () => {
 					</>
 				) : (
 					<>
+						<AnonProgressPanel />
 						<Paragraph
 							onClick={() => navigate('/register')}
 							level="2"

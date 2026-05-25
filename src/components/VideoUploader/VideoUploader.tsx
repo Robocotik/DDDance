@@ -1,36 +1,47 @@
 import type { ChangeEvent, FormEvent } from 'react';
 import React, { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import InstaLogo from '../../assets/svg/insta-logo.svg';
 import tiktokLogo from '../../assets/svg/tiktok-logo.svg';
 import VkClipsLogo from '../../assets/svg/vkclips-logo.svg';
 import Title from '../../components/Title/Title';
-import actions from '../../redux/features/lesson/actions';
+import { uploadDanceByUrl, uploadDanceFile } from '../../redux/features/upload/actions';
+import { selectIsProcessing } from '../../redux/features/upload/selectors';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
 import styles from './VideoUploader.module.scss';
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
+const MAX_FILE_SIZE = 60 * 1024 * 1024;
 
 const VideoUploader: React.FC = () => {
 	const dispatch = useDispatch();
-	const navigate = useNavigate();
 	const inputRef = useRef<HTMLInputElement | null>(null);
+	const isTaskProcessing = useSelector(selectIsProcessing);
 
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [videoLink, setVideoLink] = useState('');
+	const [isUploading, setIsUploading] = useState(false);
+	const [fileError, setFileError] = useState<string | null>(null);
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
 
 		if (!file) {
+			setFileError(null);
 			return;
 		}
 
 		if (file.size > MAX_FILE_SIZE) {
+			// Раньше пользователь молча оставался без feedback — теперь
+			// видит причину и может пережать видео.
+			setFileError(
+				`Файл слишком большой (${(file.size / 1024 / 1024).toFixed(1)} МБ). Максимум — 60 МБ.`,
+			);
+			setSelectedFile(null);
+			if (inputRef.current) inputRef.current.value = '';
 			return;
 		}
 
+		setFileError(null);
 		setSelectedFile(file);
 	};
 
@@ -42,18 +53,22 @@ const VideoUploader: React.FC = () => {
 		inputRef.current?.click();
 	};
 
-	const handleStartAnalysis = () => {
+	const handleStartAnalysis = async () => {
 		const trimmedLink = videoLink.trim();
+		if (!selectedFile && !trimmedLink) return;
 
-		if (selectedFile) {
-			dispatch(actions.uploadLessonByVideoAction(selectedFile) as any);
-			navigate('/lesson');
-			return;
-		}
-
-		if (trimmedLink) {
-			dispatch(actions.uploadLessonByLinkAction(trimmedLink) as any);
-			navigate('/lesson');
+		setIsUploading(true);
+		try {
+			if (selectedFile) {
+				await dispatch(uploadDanceFile(selectedFile) as any);
+			} else {
+				await dispatch(uploadDanceByUrl(trimmedLink) as any);
+			}
+		} finally {
+			setIsUploading(false);
+			setSelectedFile(null);
+			setVideoLink('');
+			if (inputRef.current) inputRef.current.value = '';
 		}
 	};
 
@@ -62,7 +77,7 @@ const VideoUploader: React.FC = () => {
 		handleStartAnalysis();
 	};
 
-	const isStartDisabled = !selectedFile && !videoLink.trim();
+	const isStartDisabled = (!selectedFile && !videoLink.trim()) || isUploading || isTaskProcessing;
 
 	return (
 		<div id="video-uploader" className={styles.container}>
@@ -94,6 +109,7 @@ const VideoUploader: React.FC = () => {
 					type="button"
 					className={styles.uploadButton}
 					onClick={handleOpenFilePicker}
+					disabled={isTaskProcessing || isUploading}
 					title={selectedFile ? selectedFile.name : 'Загрузить файл'}
 				>
 					<span className={styles.buttonText}>
@@ -111,8 +127,18 @@ const VideoUploader: React.FC = () => {
 
 				<Paragraph opacity="80" className={styles.subtitle}>
 					Форматы: MP4, MOV <br />
-					Вес файла: не более 25 МБ
+					Вес файла: не более 60 МБ
 				</Paragraph>
+
+				{fileError && (
+					<Paragraph
+						opacity="100"
+						className={styles.subtitle}
+						style={{ color: '#ff6b6b' }}
+					>
+						{fileError}
+					</Paragraph>
+				)}
 
 				<Button
 					type="button"
@@ -120,8 +146,15 @@ const VideoUploader: React.FC = () => {
 					onClick={handleStartAnalysis}
 					disabled={isStartDisabled}
 				>
-					<span className={styles.buttonText}>Начать разбор</span>
+					<span className={styles.buttonText}>
+						{isUploading
+							? 'Загрузка...'
+							: isTaskProcessing
+								? 'Дождитесь анализа предыдущего танца'
+								: 'Начать разбор'}
+					</span>
 				</Button>
+
 			</div>
 		</div>
 	);

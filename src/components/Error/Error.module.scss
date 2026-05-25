@@ -1,11 +1,11 @@
 .root {
 	flex: 1;
 	width: 100%;
-	min-height: 0;
+	min-height: calc(100vh - 80px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 24px;
+	padding: 100px 24px 48px;
 	box-sizing: border-box;
 }
 
@@ -35,4 +35,15 @@
 	margin-top: 1rem;
 	min-width: 220px;
 	padding: 14px 28px;
+}
+
+@media (max-width: 480px) {
+	.title {
+		white-space: normal;
+	}
+
+	.button {
+		min-width: 0;
+		width: 100%;
+	}
 }

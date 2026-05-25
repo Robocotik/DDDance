@@ -11,6 +11,9 @@
 	background-color: var(--color-auth-wrapper);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .wrapper::before {
@@ -57,10 +60,6 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 15px;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
 }
 
 .header {
@@ -84,9 +83,9 @@
 
 .error {
 	color: var(--color-error);
-	position: absolute;
-	bottom: -30px;
-	left: 0;
+	font-size: 14px;
+	margin: 0;
+	min-height: 1.4em;
 }
 
 .inputsWrapper {
@@ -94,11 +93,12 @@
 	display: flex;
 	flex-direction: column;
 	gap: 15px;
+	width: 328px;
 }
 
 .rulesConsent {
 	max-width: 328px;
-	margin: 30px 0 0;
+	margin: 4px 0 0;
 	font-family: var(--font-main);
 	font-size: 14px;
 	line-height: 1.4;
@@ -121,4 +121,22 @@
 	text-decoration: underline;
 	text-underline-offset: 2px;
 	cursor: pointer;
+}
+
+@media (max-width: 840px) {
+	.wrapper {
+		width: min(calc(100vw - 32px), 800px);
+		height: min(calc(100vw - 32px), 800px);
+	}
+
+	.input,
+	.inputsWrapper,
+	.submitBtn,
+	.vkidBtn {
+		width: min(calc(100% - 48px), 328px);
+	}
+
+	.rulesConsent {
+		max-width: min(calc(100% - 48px), 328px);
+	}
 }

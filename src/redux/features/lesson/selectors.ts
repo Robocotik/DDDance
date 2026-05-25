@@ -7,6 +7,9 @@ export const selectLesson = (state: RootState): UploadLessonResult | null =>
 export const selectLessonError = (state: RootState): string | null =>
 	state.video.resultError;
 
+export const selectLessonModerationPending = (state: RootState): boolean =>
+	state.video.moderationPending;
+
 export const selectLessonLoading = (state: RootState): boolean =>
 	state.video.resultLoading;
 

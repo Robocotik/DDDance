@@ -4,6 +4,7 @@ import { selectIsUserAuthenticated } from '@/redux/features/user/selectors';
 import type { AppDispatch } from '@/redux/store';
 import React, { useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Icon from '../Icon/Icon';
 import styles from './LikeButton.module.scss';
 
 interface LikeButtonProps {
@@ -29,7 +30,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({ danceId }) => {
 			onClick={handleClick}
 			title={isLiked ? 'Убрать лайк' : 'Нравится'}
 		>
-			{isLiked ? '❤️' : '🤍'}
+			<Icon
+				name={isLiked ? 'heart-filled' : 'heart-outline'}
+				size="1.4em"
+				alt={isLiked ? 'Лайкнуто' : 'Лайкнуть'}
+			/>
 		</button>
 	);
 };

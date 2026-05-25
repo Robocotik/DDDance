@@ -1,0 +1,170 @@
+.card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	border-radius: 12px;
+	background: #94228e44;
+	border: 1px solid rgb(148 34 142 / 30%);
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		background 0.2s ease;
+	aspect-ratio: 9 / 16;
+	width: 100%;
+	overflow: hidden;
+
+	&:hover {
+		transform: scale(1.03);
+		background: #94228e77;
+	}
+
+	&:hover .actions {
+		opacity: 1;
+	}
+}
+
+.video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.placeholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, #2f2f8a 0%, #4d1c65 100%);
+}
+
+.placeholderIcon {
+	font-size: 64px;
+	opacity: 0.4;
+}
+
+.actions {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	display: flex;
+	gap: 6px;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 2;
+}
+
+.actionBtn {
+	background: rgb(0 0 0 / 60%);
+	border: none;
+	cursor: pointer;
+	padding: 7px;
+	border-radius: 10px;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+	line-height: 1;
+	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+
+	&:hover {
+		background: rgb(0 0 0 / 85%);
+	}
+}
+
+.actionBtnPublished {
+	color: #48c78e;
+}
+
+.deleteBtn:hover {
+	color: #ff6b6b;
+}
+
+.info {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 36px 12px 12px;
+	background: linear-gradient(to top, rgb(0 0 0 / 90%) 0%, transparent 100%);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.titleRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.name {
+	font-size: 17px;
+	font-weight: 600;
+	color: #fff;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-family: NauryzRedKeds, sans-serif;
+	min-width: 0;
+	flex: 1;
+}
+
+.meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.statusBadge {
+	font-size: 11px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	white-space: nowrap;
+	font-weight: 600;
+}
+
+.statusPublished {
+	background: rgb(72 199 142 / 18%);
+	color: #6fff9e;
+}
+
+.statusPrivate {
+	background: rgb(255 255 255 / 12%);
+	color: rgb(255 255 255 / 75%);
+}
+
+.statusProcessing {
+	background: rgb(70 130 255 / 22%);
+	color: #6ea9ff;
+}
+
+.statusPending {
+	background: rgb(255 209 102 / 22%);
+	color: #ffd166;
+}
+
+.statusRejected {
+	background: rgb(255 107 107 / 22%);
+	color: #ff6b6b;
+}
+
+.stats {
+	font-size: 12px;
+	color: rgb(255 255 255 / 65%);
+}
+
+@media (max-width: 480px) {
+	.name {
+		font-size: 15px;
+	}
+
+	.stats {
+		font-size: 11px;
+	}
+}

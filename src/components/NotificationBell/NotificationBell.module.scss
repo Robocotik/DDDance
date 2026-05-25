@@ -1,0 +1,189 @@
+.wrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+
+.bellBtn {
+	position: relative;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 6px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	transition: background 0.15s ease;
+
+	&:hover {
+		background: rgb(255 255 255 / 8%);
+	}
+}
+
+.badge {
+	position: absolute;
+	top: -2px;
+	right: -2px;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	background: #ff4757;
+	color: #fff;
+	border-radius: 9px;
+	font-size: 11px;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	pointer-events: none;
+}
+
+.panel {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	width: min(360px, 90vw);
+	max-height: 480px;
+	overflow-y: auto;
+	background: #1a1a2e;
+	border: 1px solid rgb(255 255 255 / 10%);
+	border-radius: 12px;
+	box-shadow: 0 10px 40px rgb(0 0 0 / 40%);
+	z-index: 1000;
+}
+
+.panelHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px;
+	border-bottom: 1px solid rgb(255 255 255 / 8%);
+	position: sticky;
+	top: 0;
+	background: #1a1a2e;
+	z-index: 1;
+}
+
+.panelTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: #fff;
+}
+
+.markAllBtn {
+	background: transparent;
+	border: none;
+	color: #7aa2ff;
+	cursor: pointer;
+	font-size: 12px;
+	padding: 4px 8px;
+	border-radius: 6px;
+
+	&:hover {
+		background: rgb(122 162 255 / 10%);
+	}
+}
+
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.item {
+	padding: 12px 16px;
+	border-bottom: 1px solid rgb(255 255 255 / 5%);
+	cursor: pointer;
+	transition: background 0.12s ease;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&:hover {
+		background: rgb(255 255 255 / 4%);
+	}
+
+	&.unread {
+		background: rgb(122 162 255 / 6%);
+
+		&:hover {
+			background: rgb(122 162 255 / 10%);
+		}
+	}
+}
+
+.itemTitle {
+	font-size: 14px;
+	font-weight: 600;
+	color: #fff;
+	margin-bottom: 4px;
+}
+
+.itemSubtitle {
+	font-size: 13px;
+	color: #b0b0c5;
+	line-height: 1.4;
+	margin-bottom: 6px;
+}
+
+.itemDate {
+	font-size: 11px;
+	color: #6e6e8a;
+}
+
+.empty {
+	padding: 32px 16px;
+	text-align: center;
+	color: #6e6e8a;
+	font-size: 13px;
+}
+
+.friendActions {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.friendAcceptBtn {
+	flex: 1;
+	padding: 6px 0;
+	background: #7aa2ff;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.15s ease;
+
+	&:hover {
+		background: #5a82e0;
+	}
+}
+
+.friendDeclineBtn {
+	flex: 1;
+	padding: 6px 0;
+	background: transparent;
+	color: #b0b0c5;
+	border: 1px solid rgb(255 255 255 / 15%);
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background: rgb(255 255 255 / 6%);
+		color: #fff;
+	}
+}
+
+.friendHandled {
+	margin-top: 8px;
+	font-size: 12px;
+	color: #6e6e8a;
+}

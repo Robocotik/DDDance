@@ -1,0 +1,278 @@
+.page {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: calc(100vh - 80px);
+	padding: 100px 16px 64px;
+}
+
+.inner {
+	width: min(1100px, 100%);
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
+.pageTitle {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 36px;
+	color: #fff;
+	margin: 0;
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+
+.controls {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.searchInput {
+	flex: 1;
+	min-width: 200px;
+	padding: 12px 18px;
+	background: rgb(47 47 138 / 30%);
+	border: 1px solid rgb(148 34 142 / 40%);
+	border-radius: 12px;
+	color: #fff;
+	font-size: 15px;
+	font-family: Comfortaa Variable, sans-serif;
+	outline: none;
+	transition: border-color 0.2s;
+
+	&::placeholder {
+		color: rgb(255 255 255 / 35%);
+	}
+
+	&:focus {
+		border-color: rgb(148 34 142 / 80%);
+	}
+}
+
+.sortGroup {
+	display: flex;
+	gap: 8px;
+}
+
+.sortBtn {
+	padding: 10px 18px;
+	background: rgb(47 47 138 / 30%);
+	border: 1px solid rgb(148 34 142 / 30%);
+	border-radius: 10px;
+	color: rgb(255 255 255 / 60%);
+	font-family: Comfortaa Variable, sans-serif;
+	font-size: 14px;
+	cursor: pointer;
+	transition:
+		background 0.2s,
+		color 0.2s,
+		border-color 0.2s;
+
+	&:hover {
+		background: rgb(47 47 138 / 50%);
+		color: #fff;
+	}
+}
+
+.sortBtnActive {
+	background: #94228e;
+	border-color: #94228e;
+	color: #fff;
+
+	&:hover {
+		background: #b02aaa;
+	}
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 16px;
+}
+
+// ── Dance card ────────────────────────────────────────────────────────────────
+
+.card {
+	position: relative;
+	border-radius: 16px;
+	overflow: hidden;
+	background: rgb(47 47 138 / 20%);
+	border: 1px solid rgb(148 34 142 / 25%);
+	cursor: pointer;
+	transition:
+		transform 0.2s,
+		border-color 0.2s;
+	aspect-ratio: 9 / 16;
+
+	&:hover {
+		transform: translateY(-4px);
+		border-color: rgb(148 34 142 / 60%);
+
+		.cardOverlay {
+			opacity: 1;
+		}
+	}
+}
+
+.cardVideo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.cardOverlay {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgb(0 0 0 / 80%) 0%, transparent 50%);
+	opacity: 0.7;
+	transition: opacity 0.2s;
+}
+
+.cardBody {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cardTop {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 4px;
+}
+
+.cardTitle {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 15px;
+	color: #fff;
+	flex: 1;
+	word-break: break-word;
+}
+
+.difficultyBadge {
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	flex-shrink: 0;
+}
+
+.cardStats {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.cardStatsCommunity {
+	padding-top: 5px;
+	border-top: 1px solid rgb(255 255 255 / 10%);
+}
+
+.cardStat {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	color: rgb(255 255 255 / 70%);
+}
+
+.cardStatIcon {
+	font-size: 13px;
+}
+
+// ── Empty / error states ──────────────────────────────────────────────────────
+
+.emptyState {
+	grid-column: 1 / -1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 64px 24px;
+	text-align: center;
+}
+
+.emptyStateIcon {
+	font-size: 48px;
+}
+
+.emptyStateTitle {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 22px;
+	color: rgb(255 255 255 / 60%);
+	margin: 0;
+}
+
+.emptyStateHint {
+	font-size: 14px;
+	color: rgb(255 255 255 / 35%);
+	margin: 0;
+}
+
+.loadingWrapper {
+	display: flex;
+	justify-content: center;
+	padding: 64px 0;
+}
+
+.loadMoreWrapper {
+	display: flex;
+	justify-content: center;
+	padding: 16px 0 8px;
+}
+
+.loadMoreBtn {
+	padding: 12px 40px;
+	background: rgb(47 47 138 / 40%);
+	border: 1px solid rgb(148 34 142 / 40%);
+	border-radius: 12px;
+	color: #fff;
+	font-family: Comfortaa Variable, sans-serif;
+	font-size: 15px;
+	cursor: pointer;
+	transition:
+		background 0.2s,
+		border-color 0.2s;
+
+	&:hover:not(:disabled) {
+		background: rgb(47 47 138 / 65%);
+		border-color: rgb(148 34 142 / 70%);
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 640px) {
+	.pageTitle {
+		font-size: 26px;
+	}
+
+	.controls {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.sortGroup {
+		justify-content: center;
+	}
+
+	.grid {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	}
+}

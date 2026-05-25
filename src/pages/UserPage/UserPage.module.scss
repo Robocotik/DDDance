@@ -1,11 +1,670 @@
 .page {
+	min-height: calc(100vh - 80px);
+	padding: 80px 16px 64px;
 	display: flex;
-	flex-direction: column;
-	gap: 7rem;
+	justify-content: center;
 }
 
-@media (max-width: 768px) {
-	.page {
-		gap: 5rem;
+.inner {
+	width: min(1100px, 100%);
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+}
+
+.errorBlock {
+	margin: auto;
+	padding: 24px 32px;
+	border-radius: 16px;
+	background: rgb(255 255 255 / 6%);
+	border: 0.5px solid rgb(255 255 255 / 12%);
+	color: rgb(255 255 255 / 75%);
+	font-family: var(--font-main);
+}
+
+// ── Profile header ────────────────────────────────────────────────────────────
+
+.profileHeader {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	padding: 0 24px;
+}
+
+.avatarWrap {
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 12%);
+	flex-shrink: 0;
+}
+
+.avatar {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.identity {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.login {
+	margin: 0;
+	font-family: var(--font-title);
+	font-size: var(--font-size-40);
+	color: var(--color-text);
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.identitySub {
+	margin: 0;
+	font-size: 13px;
+	color: rgb(255 255 255 / 50%);
+}
+
+.editBtn {
+	background: rgb(255 255 255 / 8%);
+	border: 0.5px solid rgb(255 255 255 / 18%);
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: 14px;
+	padding: 10px 18px;
+	border-radius: 22px;
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s;
+	flex-shrink: 0;
+
+	&:hover {
+		background: rgb(255 255 255 / 14%);
+		border-color: rgb(148 34 142 / 60%);
 	}
 }
+
+// ── Header actions ────────────────────────────────────────────────────────────
+
+.headerActions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.copyLinkBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: transparent;
+	border: 0.5px solid rgb(255 255 255 / 18%);
+	color: rgb(255 255 255 / 60%);
+	font-family: var(--font-main);
+	font-size: 13px;
+	padding: 10px 14px;
+	border-radius: 22px;
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s, color 0.2s;
+	white-space: nowrap;
+
+	&:hover {
+		background: rgb(255 255 255 / 6%);
+		color: #fff;
+		border-color: rgb(255 255 255 / 30%);
+	}
+}
+
+// ── Friend button ─────────────────────────────────────────────────────────────
+
+.friendBtn {
+	background: rgb(255 255 255 / 8%);
+	border: 0.5px solid rgb(255 255 255 / 18%);
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: 14px;
+	padding: 10px 18px;
+	border-radius: 22px;
+	cursor: pointer;
+	transition: background 0.2s, border-color 0.2s;
+	flex-shrink: 0;
+
+	&:hover {
+		background: rgb(255 255 255 / 14%);
+		border-color: rgb(122 162 255 / 60%);
+	}
+
+	&.friendBtnActive {
+		background: rgb(122 162 255 / 12%);
+		border-color: rgb(122 162 255 / 40%);
+		color: #7aa2ff;
+	}
+
+	&.friendBtnPending {
+		opacity: 0.7;
+		cursor: default;
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+}
+
+// Ответ на входящую заявку прямо со страницы профиля.
+.friendRespondGroup {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.friendRespondHint {
+	font-size: 12px;
+	color: rgb(255 255 255 / 60%);
+}
+
+.friendRespondActions {
+	display: flex;
+	gap: 8px;
+}
+
+.friendAcceptBtn {
+	background: rgb(91 224 160 / 18%);
+	border-color: rgb(91 224 160 / 45%);
+	color: #5be0a0;
+
+	&:hover {
+		background: rgb(91 224 160 / 28%);
+		border-color: rgb(91 224 160 / 70%);
+	}
+}
+
+.friendDeclineBtn {
+	background: rgb(255 107 107 / 14%);
+	border-color: rgb(255 107 107 / 40%);
+	color: #ff6b6b;
+
+	&:hover {
+		background: rgb(255 107 107 / 22%);
+		border-color: rgb(255 107 107 / 65%);
+	}
+}
+
+// ── Friends list ──────────────────────────────────────────────────────────────
+
+.friendsList {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.friendCard {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 16px;
+	background: rgb(255 255 255 / 4%);
+	border: 0.5px solid rgb(255 255 255 / 10%);
+	border-radius: 12px;
+	transition: background 0.15s;
+	cursor: pointer;
+	text-decoration: none;
+
+	&:hover {
+		background: rgb(255 255 255 / 8%);
+	}
+}
+
+.friendAvatar {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 10%);
+}
+
+.friendInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.friendLogin {
+	font-size: 15px;
+	font-weight: 600;
+	color: #fff;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.friendSince {
+	font-size: 12px;
+	color: rgb(255 255 255 / 40%);
+	margin-top: 2px;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+.tabsNav {
+	display: flex;
+	gap: 4px;
+	padding: 0 24px;
+	border-bottom: 1px solid rgb(255 255 255 / 8%);
+	overflow-x: auto;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar { display: none; }
+}
+
+.tab {
+	background: transparent;
+	border: none;
+	color: rgb(255 255 255 / 50%);
+	font-family: var(--font-main);
+	font-size: 14px;
+	padding: 12px 18px;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	transition: color 0.2s, border-color 0.2s;
+
+	&:hover { color: rgb(255 255 255 / 85%); }
+}
+
+.tabActive {
+	color: #fff;
+	border-bottom-color: #ff3c78;
+}
+
+.tabCount {
+	background: rgb(255 255 255 / 8%);
+	color: rgb(255 255 255 / 70%);
+	font-size: 11px;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-family: var(--font-main);
+}
+
+// ── Tab content ───────────────────────────────────────────────────────────────
+
+.tabContent {
+	padding: 0 24px;
+}
+
+.tabEmpty {
+	padding: 32px 0;
+	font-size: 14px;
+	color: rgb(255 255 255 / 40%);
+	text-align: center;
+}
+
+.cardGrid {
+	display: grid;
+	// Один размер ячейки для всех карточек: SavedDanceCard, HistoryItem,
+	// LikedItem, UploadedDanceCard. У всех aspect-ratio 9/16 → высоты тоже
+	// совпадают автоматически.
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 16px;
+}
+
+// Обёртка для устаревших карточек (HistoryItem, LikedItem) — нужна чтобы
+// размер их картинки не ломал grid-сетку. width: 100% растянет карточку
+// до ширины ячейки, aspect-ratio внутри карточки сделает остальное.
+.legacyCardWrap {
+	width: 100%;
+}
+
+// ── Uploaded dances ───────────────────────────────────────────────────────────
+
+.uploadedList {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.uploadedCard {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: rgb(255 255 255 / 4%);
+	border: 0.5px solid rgb(255 255 255 / 10%);
+	border-radius: 12px;
+	overflow: hidden;
+	transition: background 0.15s;
+
+	&:hover {
+		background: rgb(255 255 255 / 7%);
+	}
+}
+
+.uploadedCardLink {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 16px;
+	text-decoration: none;
+}
+
+.uploadedCardInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.uploadedEditRow {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 8px;
+	padding: 10px 16px;
+}
+
+.uploadedDifficultyEdit {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.uploadedDifficultyEditLabel {
+	font-size: 12px;
+	color: rgb(255 255 255 / 55%);
+}
+
+.uploadedDifficultyOption {
+	padding: 4px 10px;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 16%);
+	border-radius: 999px;
+	color: rgb(255 255 255 / 70%);
+	font-size: 12px;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+	&:hover {
+		background: rgb(255 255 255 / 12%);
+		color: #fff;
+	}
+}
+
+.uploadedDifficultyOptionActive {
+	background: rgb(255 255 255 / 16%);
+	border-color: rgb(255 255 255 / 55%);
+	color: #fff;
+}
+
+.uploadedEditActions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+.uploadedEditInput {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 10px;
+	border: 1px solid rgb(255 255 255 / 25%);
+	border-radius: 8px;
+	background: rgb(255 255 255 / 8%);
+	color: #fff;
+	font-size: 14px;
+}
+
+.uploadedRenameBtn {
+	flex-shrink: 0;
+	padding: 8px 12px;
+	border: none;
+	border-radius: 8px;
+	font-size: 13px;
+	cursor: pointer;
+	background: #7c5cff;
+	color: #fff;
+}
+
+.uploadedRenameCancel {
+	flex-shrink: 0;
+	padding: 8px 12px;
+	border: 1px solid rgb(255 255 255 / 20%);
+	border-radius: 8px;
+	font-size: 13px;
+	cursor: pointer;
+	background: transparent;
+	color: #fff;
+}
+
+.uploadedTitleRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.uploadedTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: #fff;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+.uploadedMeta {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-wrap: wrap;
+	font-size: 12px;
+	color: rgb(255 255 255 / 40%);
+	margin-top: 2px;
+}
+
+.uploadedMetaStats {
+	color: rgb(255 255 255 / 55%);
+}
+
+.uploadedStatus {
+	font-size: 12px;
+	padding: 3px 10px;
+	border-radius: 10px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.uploadedStatusPublished {
+	background: rgb(72 199 142 / 15%);
+	color: #48c78e;
+}
+
+.uploadedStatusPrivate {
+	background: rgb(255 255 255 / 8%);
+	color: rgb(255 255 255 / 45%);
+}
+
+.uploadedStatusProcessing {
+	background: rgb(70 130 255 / 18%);
+	color: #6ea9ff;
+}
+
+.uploadedStatusPending {
+	background: rgb(255 209 102 / 18%);
+	color: #ffd166;
+}
+
+.uploadedStatusRejected {
+	background: rgb(255 107 107 / 18%);
+	color: #ff6b6b;
+}
+
+.lockBtn {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 14px 14px 14px 4px;
+	display: flex;
+	align-items: center;
+	transition: opacity 0.2s, color 0.2s;
+	flex-shrink: 0;
+
+	&:hover {
+		opacity: 0.75;
+	}
+}
+
+.lockPrivate {
+	color: rgb(255 255 255 / 45%);
+}
+
+.lockPublished {
+	color: #48c78e;
+}
+
+.deleteBtn {
+	color: rgb(255 255 255 / 45%);
+	transition: color 0.15s;
+
+	&:hover {
+		color: #ff6b6b;
+		opacity: 1;
+	}
+}
+
+// ── Visibility confirm dialog ─────────────────────────────────────────────────
+
+.visibilityOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(8, 9, 34, 0.7);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1100;
+	padding: 16px;
+}
+
+.visibilityCard {
+	background: var(--color-menu-bg);
+	border-radius: 16px;
+	padding: 24px 28px;
+	max-width: 380px;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.visibilityTitle {
+	margin: 0;
+	font-family: var(--font-main);
+	font-size: var(--font-size-20);
+	color: var(--color-text);
+}
+
+.visibilitySub {
+	margin: 0;
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	color: var(--color-text);
+	opacity: 0.65;
+	line-height: 1.5;
+}
+
+.visibilityActions {
+	display: flex;
+	gap: 10px;
+	margin-top: 4px;
+}
+
+.visibilityOkBtn {
+	flex: 1;
+	padding: 10px 16px;
+	background: var(--color-gradient);
+	border: none;
+	border-radius: 10px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	cursor: pointer;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+.visibilityDangerBtn {
+	background: #ff6b6b;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+.visibilityCancelBtn {
+	padding: 10px 16px;
+	background: transparent;
+	border: 1px solid rgb(255 255 255 / 20%);
+	border-radius: 10px;
+	color: var(--color-text);
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 1;
+	}
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+	.profileHeader {
+		padding: 0 16px;
+		gap: 16px;
+	}
+
+	.avatarWrap {
+		width: 84px;
+		height: 84px;
+	}
+
+	.editBtn {
+		padding: 8px 12px;
+		font-size: 12px;
+	}
+
+	.tabsNav {
+		padding: 0 16px;
+	}
+
+	.tabContent {
+		padding: 0 16px;
+	}
+
+	.cardGrid {
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+		gap: 12px;
+	}
+}
+
+// «Мои попытки» теперь отрисовывается через SavedDanceCard — отдельные
+// row-стили больше не нужны.

@@ -7,23 +7,29 @@ import Title from '../Title/Title';
 
 import styles from './Error.module.scss';
 
-const ErrorScreen: React.FC = () => {
-	const navigate = useNavigate();
+interface ErrorScreenProps {
+	title?: string;
+	description?: string;
+	actions?: React.ReactNode;
+}
 
-	const handleGoHome = () => {
-		navigate('/');
-	};
+const ErrorScreen: React.FC<ErrorScreenProps> = ({
+	title = 'Упс, что-то пошло не так',
+	description = 'Мы уже работаем над этим',
+	actions,
+}) => {
+	const navigate = useNavigate();
 
 	return (
 		<div className={styles.root}>
 			<div className={styles.inner}>
-				<Title className={styles.title}>Упс, что-то пошло не так</Title>
-				<Paragraph className={styles.paragraph}>
-					Мы уже работаем над этим
-				</Paragraph>
-				<Button className={styles.button} onClick={handleGoHome}>
-					Вернуться на главную
-				</Button>
+				<Title className={styles.title}>{title}</Title>
+				<Paragraph className={styles.paragraph}>{description}</Paragraph>
+				{actions ?? (
+					<Button className={styles.button} onClick={() => navigate('/')}>
+						Вернуться на главную
+					</Button>
+				)}
 			</div>
 		</div>
 	);

@@ -1,0 +1,74 @@
+.popup {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	z-index: 1000;
+	width: 320px;
+	max-width: calc(100vw - 40px);
+	padding: 20px 22px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 16px;
+	background: #231b48;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+	animation: ctaIn 0.25s ease-out;
+}
+
+.close {
+	position: absolute;
+	top: 8px;
+	right: 12px;
+	border: none;
+	background: transparent;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: #fff;
+	}
+}
+
+.title {
+	margin: 0 0 8px;
+	padding-right: 16px;
+	font-size: 17px;
+	font-weight: 700;
+}
+
+.desc {
+	margin: 0 0 16px;
+	font-size: 13px;
+	line-height: 1.5;
+	opacity: 0.8;
+}
+
+.btn {
+	width: 100%;
+	padding: 10px 16px;
+	border: none;
+	border-radius: 999px;
+	background: #7c5cff;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+
+	&:hover {
+		opacity: 0.85;
+	}
+}
+
+@keyframes ctaIn {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

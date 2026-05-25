@@ -6,6 +6,9 @@ import historyReducer, {
 import type { LessonState } from './features/lesson/reducers';
 import videoReducer from './features/lesson/reducers';
 import likesReducer from './features/likes/likesSlice';
+import notificationsReducer, {
+	type NotificationsState,
+} from './features/notifications/notificationsSlice';
 import type { TrendsState } from './features/trends/reducers';
 import trendsReducer from './features/trends/reducers';
 import type { UploadState } from './features/upload/uploadSlice';
@@ -20,6 +23,7 @@ export const store = configureStore({
 		history: historyReducer,
 		likes: likesReducer,
 		upload: uploadReducer,
+		notifications: notificationsReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({ thunk: false }).concat(thunk),
@@ -32,6 +36,7 @@ export interface RootState {
 	history: HistoryState;
 	likes: ReturnType<typeof likesReducer>;
 	upload: UploadState;
+	notifications: NotificationsState;
 }
 
 export type AppDispatch = typeof store.dispatch;

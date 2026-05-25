@@ -6,12 +6,19 @@ export type LikeItem = {
 	history_id: string;
 	dance_id: string;
 	created_at: string;
+	// name — пользовательская метка из истории, dance_title — fallback на оригинал.
 	name: string;
+	dance_title?: string;
 };
 
 export type LikesResponse = {
 	likes: LikeItem[];
-	count: number;
+};
+
+export type LikeResponse = {
+	dance_id: string;
+	liked: boolean;
+	likes_count: number;
 };
 
 export const getLikes = async (): Promise<LikesResponse> => {
@@ -19,13 +26,7 @@ export const getLikes = async (): Promise<LikesResponse> => {
 	return response.data;
 };
 
-export const toggleLike = async (danceId: string): Promise<void> => {
-	await http.post(`/users/dance/${danceId}/like`);
-};
-
-export const updateLikeName = async (
-	historyId: string,
-	newName: string,
-): Promise<void> => {
-	await http.put(`/users/history/${historyId}`, { name: newName });
+export const toggleLike = async (danceId: string): Promise<LikeResponse> => {
+	const response = await http.post<LikeResponse>(`/users/dance/${danceId}/like`);
+	return response.data;
 };

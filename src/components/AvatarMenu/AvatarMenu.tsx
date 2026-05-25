@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { LogoutMenuIcon } from '../icons/ProfileMenu/LogoutMenuIcon';
 import { UserMenuIcon } from '../icons/ProfileMenu/UserMenuIcon';
-import { defaultAvatarURL } from '../UserInfo/UserInfo';
+import { avatarUrl } from '../UserInfo/UserInfo';
 import styles from './AvatarMenu.module.scss';
 
 type AvatarMenuProps = {
@@ -24,7 +24,11 @@ export const AvatarMenu = ({ user }: AvatarMenuProps) => {
 
 	return (
 		<div className={styles.avatarMenuWrapper}>
-			<img src={defaultAvatarURL} alt={user.login} className={styles.avatar} />
+			<img
+				src={avatarUrl(user.avatar, user.updated_at)}
+				alt={user.login}
+				className={styles.avatar}
+			/>
 			<div className={styles.avatarMenu}>
 				<button
 					type="button"

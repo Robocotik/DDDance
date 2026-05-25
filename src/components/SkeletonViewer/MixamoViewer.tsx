@@ -398,8 +398,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 								</>
 							) : (
 								<>
-									<div className={styles.errorText}>Ошибка загрузки</div>
-									<div className={styles.subText}>{characterLoadError}</div>
+									<div className={styles.errorText}>Не удалось загрузить персонажа</div>
 									<button
 										onClick={() => window.location.reload()}
 										className={styles.retryButton}
@@ -412,7 +411,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					</div>
 				)}
 				<div className={styles.statusIndicator}>
-					{error && <span className={styles.statusError}>{error}</span>}
+					{error && <span className={styles.statusError}>Ошибка воспроизведения</span>}
 				</div>
 				<div ref={containerRef} className={styles.canvasContainer} />
 			</div>

@@ -6,6 +6,7 @@ export interface LessonState {
 	resultLoading: boolean;
 	result: UploadLessonResult | null;
 	resultError: string | null;
+	moderationPending: boolean;
 	segmentsLoading: boolean;
 	segments: SegmentsResult | null;
 	segmentsError: string | null;
@@ -15,6 +16,7 @@ const initialState: LessonState = {
 	resultLoading: false,
 	result: null,
 	resultError: null,
+	moderationPending: false,
 	segmentsLoading: false,
 	segments: null,
 	segmentsError: null,
@@ -49,6 +51,13 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 				resultError: payload.error,
 			};
 
+		case LessonActionTypes.LESSON_MODERATION_PENDING:
+			return {
+				...state,
+				resultLoading: false,
+				moderationPending: true,
+			};
+
 		case LessonActionTypes.SEGMENTS_LOADING:
 			return { ...state, segmentsLoading: true, segmentsError: null };
 
@@ -65,6 +74,22 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 				...state,
 				segmentsLoading: false,
 				segmentsError: payload.error,
+			};
+
+		case LessonActionTypes.LESSON_PATCH_LAST_ATTEMPT:
+			// Точечный апдейт last_attempt_id без перезагрузки урока — нужен,
+			// чтобы кнопка «Моя последняя попытка» обновилась после compare
+			// без перемонтирования LessonLayout (которое сбросило бы видео).
+			if (!state.result || state.result.dance_id !== payload.danceId) {
+				return state;
+			}
+			return {
+				...state,
+				result: {
+					...state.result,
+					last_attempt_id: payload.attemptId,
+					last_attempt_score: payload.score,
+				},
 			};
 
 		case LessonActionTypes.CLEAR_LESSON:

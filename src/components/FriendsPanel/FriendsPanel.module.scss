@@ -1,0 +1,146 @@
+.wrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+
+.friendsBtn {
+	position: relative;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 6px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	color: rgb(255 255 255 / 80%);
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: rgb(255 255 255 / 8%);
+		color: #fff;
+	}
+}
+
+.badge {
+	position: absolute;
+	top: -2px;
+	right: -2px;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	background: #7aa2ff;
+	color: #fff;
+	border-radius: 9px;
+	font-size: 11px;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	pointer-events: none;
+}
+
+.panel {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	width: min(300px, 90vw);
+	max-height: 420px;
+	overflow-y: auto;
+	background: #1a1a2e;
+	border: 1px solid rgb(255 255 255 / 10%);
+	border-radius: 12px;
+	box-shadow: 0 10px 40px rgb(0 0 0 / 40%);
+	z-index: 1000;
+}
+
+.panelHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 16px;
+	border-bottom: 1px solid rgb(255 255 255 / 8%);
+	position: sticky;
+	top: 0;
+	background: #1a1a2e;
+	z-index: 1;
+}
+
+.panelTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: #fff;
+}
+
+.refreshBtn {
+	background: transparent;
+	border: none;
+	color: #7aa2ff;
+	cursor: pointer;
+	font-size: 16px;
+	padding: 4px 8px;
+	border-radius: 6px;
+	line-height: 1;
+	transition: background 0.15s ease;
+
+	&:hover {
+		background: rgb(122 162 255 / 10%);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+.list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 16px;
+	border-bottom: 1px solid rgb(255 255 255 / 5%);
+	cursor: pointer;
+	transition: background 0.12s ease;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&:hover {
+		background: rgb(255 255 255 / 5%);
+	}
+}
+
+.avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+	background: rgb(255 255 255 / 6%);
+	border: 1px solid rgb(255 255 255 / 10%);
+}
+
+.login {
+	font-size: 14px;
+	color: #fff;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.empty {
+	padding: 28px 16px;
+	text-align: center;
+	color: #6e6e8a;
+	font-size: 13px;
+}

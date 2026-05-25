@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Icon from '../Icon/Icon';
 import styles from './CameraRecorder.module.scss';
 
 type RecorderState = 'idle' | 'countdown' | 'recording' | 'done';
@@ -94,7 +95,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 					);
 				} else if (err.name === 'NotAllowedError') {
 					setError(
-						'Доступ к камере запрещён. Нажмите на 🔒 в адресной строке и разрешите доступ.',
+						'Доступ к камере запрещён. Нажмите на иконку замка в адресной строке и разрешите доступ.',
 					);
 				} else if (err.name === 'NotReadableError') {
 					setError(
@@ -264,12 +265,12 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 			<div className={styles.controls}>
 				{state === 'idle' && !error && (
 					<button className={styles.startBtn} onClick={startCountdown}>
-						▶ Начать запись
+						<Icon name="play" size="1em" alt="" /> Начать запись
 					</button>
 				)}
 				{state === 'recording' && (
 					<button className={styles.stopBtn} onClick={stopRecording}>
-						⏹ Остановить
+						<Icon name="stop" size="1em" alt="" /> Остановить
 					</button>
 				)}
 				{state === 'done' && (

@@ -4,6 +4,11 @@ import actionTypes from './actionTypes';
 export interface VideoItem {
 	id: string;
 	url: string;
+	title?: string;
+	attempt_count?: number;
+	avg_score?: number;
+	view_count?: number;
+	like_count?: number;
 }
 
 export interface TrendVideos {

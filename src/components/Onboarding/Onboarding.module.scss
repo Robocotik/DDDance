@@ -1,0 +1,252 @@
+// ── Overlay ───────────────────────────────────────────────────────────────────
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+	display: grid;
+	grid-template-columns: 420px 1fr;
+	background: var(--color-dark, #080922);
+	animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+// ── Left panel ────────────────────────────────────────────────────────────────
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	padding: 48px 40px 40px;
+	background: linear-gradient(160deg, #1c1c65 0%, #0f103f 100%);
+	border-right: 1px solid rgb(148 34 142 / 25%);
+	position: relative;
+	overflow: hidden;
+}
+
+.panel::before {
+	content: '';
+	position: absolute;
+	bottom: -100px;
+	left: -60px;
+	width: 320px;
+	height: 320px;
+	background: radial-gradient(circle, rgb(148 34 142 / 20%) 0%, transparent 70%);
+	pointer-events: none;
+}
+
+.logo {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 28px;
+	color: #94228e;
+	margin: 0 0 48px;
+}
+
+.stepCounter {
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	color: rgb(255 255 255 / 35%);
+	text-transform: uppercase;
+	margin-bottom: 16px;
+}
+
+.stepContent {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	animation: slideUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes slideUp {
+	from { opacity: 0; transform: translateY(16px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.stepTitle {
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 36px;
+	color: #fff;
+	margin: 0 0 16px;
+	line-height: 1.1;
+}
+
+.stepDesc {
+	font-size: 15px;
+	color: rgb(255 255 255 / 60%);
+	line-height: 1.6;
+	margin: 0;
+	flex: 1;
+}
+
+// ── Dots ──────────────────────────────────────────────────────────────────────
+
+.dots {
+	display: flex;
+	gap: 8px;
+	margin: 32px 0 28px;
+}
+
+.dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: rgb(255 255 255 / 20%);
+	cursor: pointer;
+	transition: width 0.25s ease, background 0.25s ease;
+	border: none;
+	padding: 0;
+}
+
+.dotActive {
+	width: 28px;
+	border-radius: 4px;
+	background: #94228e;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.skipBtn {
+	background: none;
+	border: none;
+	color: rgb(255 255 255 / 30%);
+	font-size: 14px;
+	font-family: Comfortaa Variable, sans-serif;
+	cursor: pointer;
+	padding: 0;
+	transition: color 0.2s;
+
+	&:hover { color: rgb(255 255 255 / 55%); }
+}
+
+.nextBtn {
+	flex: 1;
+	padding: 14px 24px;
+	background: linear-gradient(to right, #94228e, #2957a3);
+	border: none;
+	border-radius: 14px;
+	color: #fff;
+	font-family: NauryzRedKeds, sans-serif;
+	font-size: 20px;
+	cursor: pointer;
+	transition: opacity 0.2s, transform 0.15s;
+
+	&:hover { opacity: 0.88; transform: translateY(-1px); }
+	&:active { transform: translateY(0); }
+}
+
+// ── Right media panel ─────────────────────────────────────────────────────────
+
+.mediaPanelWrap {
+	position: relative;
+	overflow: hidden;
+	background: #060718;
+}
+
+.mediaSlide {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	animation: mediaIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes mediaIn {
+	from { opacity: 0; transform: scale(0.97); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+.mediaImg {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.mediaPlaceholder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	color: rgb(255 255 255 / 20%);
+	font-size: 14px;
+	font-family: Comfortaa Variable, sans-serif;
+	text-align: center;
+	padding: 32px;
+}
+
+.mediaPlaceholderIcon {
+	font-size: 72px;
+	opacity: 0.3;
+}
+
+// Sub-carousel for step-2 multi-image
+.subCarousel {
+	position: absolute;
+	inset: 0;
+}
+
+.subSlide {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	animation: mediaIn 0.35s ease;
+}
+
+.subDots {
+	position: absolute;
+	bottom: 16px;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+	z-index: 2;
+}
+
+.subDot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: rgb(255 255 255 / 30%);
+	transition: background 0.2s;
+}
+
+.subDotActive {
+	background: #fff;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 900px) {
+	.overlay {
+		grid-template-columns: 1fr;
+		grid-template-rows: auto 1fr;
+	}
+
+	.panel {
+		border-right: none;
+		border-bottom: 1px solid rgb(148 34 142 / 25%);
+		padding: 28px 24px 24px;
+	}
+
+	.logo { margin-bottom: 20px; }
+
+	.stepTitle { font-size: 26px; }
+
+	.mediaPanelWrap { min-height: 45vh; }
+
+	.dots { margin: 16px 0 14px; }
+}

@@ -1,9 +1,4 @@
-import {
-	getAuthToken,
-	getCsrfTokenFromCookies,
-	getJwtFromCookies,
-	setAuthToken,
-} from '@/helpers/authToken';
+import { getCsrfTokenFromCookies } from '@/helpers/authToken';
 import axios from 'axios';
 
 const http = axios.create({
@@ -14,32 +9,14 @@ const http = axios.create({
 	},
 });
 
+// Аутентификация — через HttpOnly-куку JWT (шлётся автоматически благодаря
+// withCredentials). Здесь добавляем только CSRF-токен.
 http.interceptors.request.use((config) => {
-	const token = getAuthToken() ?? getJwtFromCookies();
 	const csrfToken = getCsrfTokenFromCookies();
-
-	if (token) {
-		config.headers.Authorization = token.startsWith('Bearer ')
-			? token
-			: `Bearer ${token}`;
-	}
-
 	if (csrfToken) {
 		config.headers['X-Csrf-Token'] = csrfToken;
 	}
-
 	return config;
 });
-
-http.interceptors.response.use(
-	(response) => {
-		const authHeader = response.headers['authorization'];
-		if (typeof authHeader === 'string' && authHeader.length > 0) {
-			setAuthToken(authHeader);
-		}
-		return response;
-	},
-	(error) => Promise.reject(error),
-);
 
 export default http;

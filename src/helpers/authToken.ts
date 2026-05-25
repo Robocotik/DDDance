@@ -1,4 +1,3 @@
-const AUTH_TOKEN_KEY = 'dddance_auth_token';
 const isBrowser = typeof window !== 'undefined';
 
 const getCookieValue = (key: string) => {
@@ -7,14 +6,10 @@ const getCookieValue = (key: string) => {
 		.split('; ')
 		.find((cookie) => cookie.startsWith(`${key}=`));
 	if (!cookieRow) return null;
-	return decodeURIComponent(cookieRow.split('=')[1] ?? '');
+	return decodeURIComponent(cookieRow.slice(cookieRow.indexOf('=') + 1));
 };
 
-export const getAuthToken = () =>
-	isBrowser ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
-export const setAuthToken = (token: string) =>
-	isBrowser && localStorage.setItem(AUTH_TOKEN_KEY, token);
-export const clearAuthToken = () =>
-	isBrowser && localStorage.removeItem(AUTH_TOKEN_KEY);
-export const getJwtFromCookies = () => getCookieValue('DDFilmsJWT');
+// JWT хранится в HttpOnly-куке DDFilmsJWT и отправляется браузером
+// автоматически (withCredentials). Из JS он намеренно недоступен.
+// CSRF-токен — не HttpOnly, его читаем и шлём заголовком X-Csrf-Token.
 export const getCsrfTokenFromCookies = () => getCookieValue('DDFilmsCSRF');

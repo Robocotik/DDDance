@@ -1,6 +1,8 @@
 import { registerUser } from '@/api/auth/register';
 import { Auth } from '@/components/Auth/Auth';
+import Title from '@/components/Title/Title';
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
 
 type BubbleConfig = {
@@ -36,6 +38,7 @@ const bubbles: BubbleConfig[] = [
 ];
 
 export const RegisterPage: React.FC = () => {
+	const navigate = useNavigate();
 	const [mouse, setMouse] = useState({ x: -9999, y: -9999 });
 
 	const raisedBubbleIds = useMemo(() => {
@@ -67,6 +70,9 @@ export const RegisterPage: React.FC = () => {
 			onMouseMove={(event) => setMouse({ x: event.clientX, y: event.clientY })}
 			onMouseLeave={() => setMouse({ x: -9999, y: -9999 })}
 		>
+			<Title level="2" className={styles.logo} onClick={() => navigate('/')}>
+				DDDance
+			</Title>
 			<div className={styles.bubblesLayer} aria-hidden="true">
 				{bubbles.map((bubble) => (
 					<img
