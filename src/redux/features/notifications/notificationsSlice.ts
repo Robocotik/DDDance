@@ -1,4 +1,5 @@
 import {
+	clearAllNotifications,
 	getNotifications,
 	markAllNotificationsRead,
 	markNotificationRead,
@@ -57,6 +58,12 @@ const slice = createSlice({
 			});
 			state.unreadCount = 0;
 		},
+		// Локально удаляем все уведомления — для optimistic UI clearAll.
+		clearAll: (state) => {
+			state.items = [];
+			state.unreadCount = 0;
+			state.loaded = true;
+		},
 		clear: () => initialState,
 	},
 });
@@ -67,6 +74,7 @@ export const {
 	fetchError,
 	markRead,
 	markAllRead,
+	clearAll,
 	clear,
 } = slice.actions;
 
@@ -108,3 +116,14 @@ export const markAllNotificationsAsRead = () => async (dispatch: AppDispatch) =>
 		/* ignore */
 	}
 };
+
+export const clearAllNotificationsThunk =
+	() => async (dispatch: AppDispatch) => {
+		dispatch(clearAll());
+		try {
+			await clearAllNotifications();
+		} catch {
+			// Если упадёт — перезагрузим список, чтобы привести state в соответствие с БД.
+			dispatch(fetchNotifications());
+		}
+	};

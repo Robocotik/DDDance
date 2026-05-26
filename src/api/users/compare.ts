@@ -169,6 +169,11 @@ export type TaskStatusResponse = {
 	progress: number;
 	result?: CompareResponse | LoadDanceResult;
 	error?: string;
+	// Бэк ставит true когда танец не прошёл модерацию ПОСЛЕ старта обработки
+	// (модерация внутри Celery-воркера, а не на этапе initial upload-202).
+	// Фронт должен показать причину, а не попап «введите название».
+	moderation_failed?: boolean;
+	moderation_reason?: string;
 };
 
 export type LoadDanceResult = {

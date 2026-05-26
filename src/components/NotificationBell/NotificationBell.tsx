@@ -1,5 +1,6 @@
 import { respondFriendRequest } from '@/api/users/friends';
 import {
+	clearAllNotificationsThunk,
 	fetchNotifications,
 	markAllNotificationsAsRead,
 	markNotificationAsRead,
@@ -134,6 +135,12 @@ const NotificationBell: FC = () => {
 		dispatch(markAllNotificationsAsRead());
 	}, [dispatch]);
 
+	const handleClearAll = useCallback(() => {
+		if (items.length === 0) return;
+		if (!window.confirm('Удалить все уведомления?')) return;
+		dispatch(clearAllNotificationsThunk());
+	}, [dispatch, items.length]);
+
 	return (
 		<div className={styles.wrapper} ref={wrapperRef}>
 			<button
@@ -153,16 +160,37 @@ const NotificationBell: FC = () => {
 			{open && (
 				<div className={styles.panel}>
 					<div className={styles.panelHeader}>
-						<span className={styles.panelTitle}>Уведомления</span>
-						{unreadCount > 0 && (
-							<button
-								type="button"
-								className={styles.markAllBtn}
-								onClick={handleMarkAllRead}
-							>
-								Прочитать все
-							</button>
-						)}
+						<span className={styles.panelTitle}>
+							Уведомления
+							{items.length > 0 && (
+								<span className={styles.panelCount}>
+									{unreadCount > 0
+										? `${unreadCount} из ${items.length}`
+										: items.length}
+								</span>
+							)}
+						</span>
+						<div className={styles.panelActions}>
+							{unreadCount > 0 && (
+								<button
+									type="button"
+									className={styles.markAllBtn}
+									onClick={handleMarkAllRead}
+								>
+									Прочитать все
+								</button>
+							)}
+							{items.length > 0 && (
+								<button
+									type="button"
+									className={styles.clearAllBtn}
+									onClick={handleClearAll}
+									title="Удалить все уведомления"
+								>
+									Очистить
+								</button>
+							)}
+						</div>
 					</div>
 
 					{loading && items.length === 0 && (

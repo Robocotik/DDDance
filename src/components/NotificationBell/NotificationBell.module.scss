@@ -67,9 +67,24 @@
 }
 
 .panelTitle {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
 	font-size: 15px;
 	font-weight: 600;
 	color: #fff;
+}
+
+.panelCount {
+	font-size: 12px;
+	font-weight: 500;
+	color: rgb(255 255 255 / 45%);
+	font-variant-numeric: tabular-nums;
+}
+
+.panelActions {
+	display: flex;
+	gap: 4px;
 }
 
 .markAllBtn {
@@ -83,6 +98,20 @@
 
 	&:hover {
 		background: rgb(122 162 255 / 10%);
+	}
+}
+
+.clearAllBtn {
+	background: transparent;
+	border: none;
+	color: #ff6b6b;
+	cursor: pointer;
+	font-size: 12px;
+	padding: 4px 8px;
+	border-radius: 6px;
+
+	&:hover {
+		background: rgb(255 107 107 / 12%);
 	}
 }
 

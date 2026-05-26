@@ -38,6 +38,10 @@ export const markAllNotificationsRead = async (): Promise<void> => {
 	await http.post('/notifications/read-all');
 };
 
+export const clearAllNotifications = async (): Promise<void> => {
+	await http.delete('/notifications');
+};
+
 export const claimUploads = async (danceIds: string[]): Promise<void> => {
 	if (danceIds.length === 0) return;
 	await http.post('/uploads/claim', { dance_ids: danceIds });

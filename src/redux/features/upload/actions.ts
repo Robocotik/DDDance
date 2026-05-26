@@ -185,6 +185,15 @@ export const startPolling =
 
 				if (status.status === 'failed') {
 					clearInFlightTask();
+					// Сначала проверяем модерационный отказ: воркер закончил,
+					// но танец забракован. Раньше попадал в обычный taskFailed
+					// и на фронте показывался либо «Что-то пошло не так», либо
+					// (хуже) ProcessingDonePopup с предложением «опубликовать»
+					// несуществующего танца.
+					if (status.moderation_failed) {
+						dispatch(moderationRejected(status.moderation_reason ?? ''));
+						return;
+					}
 					dispatch(taskFailed(status.error ?? 'Ошибка обработки'));
 					return;
 				}

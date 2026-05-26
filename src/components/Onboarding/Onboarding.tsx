@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Icon from '../Icon/Icon';
 import styles from './Onboarding.module.scss';
 
 const STORAGE_KEY = 'dddance_onboarding_done';
