@@ -2,7 +2,7 @@ import { checkAuth } from '@/api/auth/check';
 import { logout } from '@/api/auth/logout';
 import { updateProfile, type UpdateProfilePayload } from '@/api/users/profile';
 import { getAuthErrorMessage } from '@/helpers/getAuthErrorMessage';
-import { clearVkAuthUser, getVkAuthUser } from '@/helpers/vkIdSession';
+import { clearVkAuthUser } from '@/helpers/vkIdSession';
 import type { AppDispatch } from '@/redux/store';
 import { clearUser, setError, setLoading, setUser } from './userSlice';
 
@@ -13,13 +13,11 @@ export const checkAuthStatus = () => async (dispatch: AppDispatch) => {
 		const user = await checkAuth();
 		dispatch(setUser(user));
 	} catch (error) {
-		const vkUser = getVkAuthUser();
-
-		if (vkUser) {
-			dispatch(setUser(vkUser));
-			return;
-		}
-
+		// /auth/check упал → реальной сессии нет. Раньше тут подставлялся
+		// закэшированный VK-user из localStorage, и юзер «отображался
+		// зарегистрированным», хотя cookie была мертва — все запросы
+		// возвращали 401. Чистим всё.
+		clearVkAuthUser();
 		dispatch(clearUser());
 	}
 };
