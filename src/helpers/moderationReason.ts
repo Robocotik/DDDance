@@ -1,5 +1,3 @@
-// Машиночитаемые причины непройденной модерации (приходят от ML-сервиса)
-// и их человекочитаемые подписи.
 const REASON_LABELS: Record<string, string> = {
 	no_person: 'в кадре не обнаружен человек',
 	multiple_persons: 'в кадре несколько людей',
@@ -8,7 +6,6 @@ const REASON_LABELS: Record<string, string> = {
 	other: 'не удалось проверить видео',
 };
 
-// Короткая подпись причины, либо пустая строка, если причина неизвестна.
 export const moderationReasonLabel = (reason?: string): string => {
 	if (!reason) {
 		return '';
@@ -17,7 +14,6 @@ export const moderationReasonLabel = (reason?: string): string => {
 	return REASON_LABELS[reason] ?? reason;
 };
 
-// Полная фраза для показа пользователю.
 export const formatModerationRejection = (reason?: string): string => {
 	const label = moderationReasonLabel(reason);
 

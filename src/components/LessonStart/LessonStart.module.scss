@@ -89,6 +89,29 @@
 	flex-shrink: 0;
 }
 
+.duelBox {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px;
+	border-radius: 12px;
+	background: rgb(148 34 142 / 18%);
+	border: 1px solid rgb(148 34 142 / 45%);
+}
+
+.duelLabel {
+	color: rgb(255 255 255 / 88%);
+	font-size: 14px;
+	line-height: 1.4;
+	font-family: sans-serif;
+}
+
+.duelButton {
+	width: 100%;
+	min-height: 56px;
+	padding: 0 20px;
+}
+
 .startButton {
 	width: 100%;
 	min-height: 68px;

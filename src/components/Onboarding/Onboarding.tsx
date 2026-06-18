@@ -3,14 +3,13 @@ import styles from './Onboarding.module.scss';
 
 const STORAGE_KEY = 'dddance_onboarding_done';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const hasSeenOnboarding = (): boolean =>
 	localStorage.getItem(STORAGE_KEY) === 'true';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const markOnboardingDone = (): void =>
 	localStorage.setItem(STORAGE_KEY, 'true');
-
-// ── Media ─────────────────────────────────────────────────────────────────────
-// Drop your GIF / JPG / MP4 files into public/onboarding/ and they'll appear here.
 
 interface SingleMedia {
 	kind: 'single';
@@ -64,8 +63,6 @@ const STEPS: Step[] = [
 	},
 ];
 
-// ── Sub-carousel for step with multiple images ─────────────────────────────────
-
 const SubCarousel: React.FC<{ slides: { src: string; alt: string }[] }> = ({
 	slides,
 }) => {
@@ -76,6 +73,7 @@ const SubCarousel: React.FC<{ slides: { src: string; alt: string }[] }> = ({
 			() => setActive((p) => (p + 1) % slides.length),
 			2500,
 		);
+
 		return () => clearInterval(id);
 	}, [slides.length]);
 
@@ -100,8 +98,6 @@ const SubCarousel: React.FC<{ slides: { src: string; alt: string }[] }> = ({
 	);
 };
 
-// ── Media panel ───────────────────────────────────────────────────────────────
-
 const MediaPanel: React.FC<{ media: StepMedia; stepIndex: number }> = ({
 	media,
 	stepIndex,
@@ -116,8 +112,6 @@ const MediaPanel: React.FC<{ media: StepMedia; stepIndex: number }> = ({
 		</div>
 	</div>
 );
-
-// ── Main component ─────────────────────────────────────────────────────────────
 
 interface OnboardingProps {
 	onDone: () => void;
@@ -139,7 +133,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onDone }) => {
 
 	return (
 		<div className={styles.overlay}>
-			{/* Left: text + navigation */}
+			{}
 			<div className={styles.panel}>
 				<div className={styles.logo}>DDDance</div>
 
@@ -168,18 +162,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ onDone }) => {
 						Пропустить
 					</button>
 					<button className={styles.nextBtn} onClick={handleNext}>
-						{isLast ? (
-							<>
-								 Попробовать
-							</>
-						) : (
-							'Далее →'
-						)}
+						{isLast ? <>Попробовать</> : 'Далее →'}
 					</button>
 				</div>
 			</div>
 
-			{/* Right: media */}
+			{}
 			<MediaPanel media={current.media} stepIndex={step} />
 		</div>
 	);

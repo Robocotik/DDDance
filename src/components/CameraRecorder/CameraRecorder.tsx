@@ -29,7 +29,10 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 
 	useEffect(() => {
 		const video = referenceRef.current;
-		if (!video) return;
+
+		if (!video) {
+			return;
+		}
 
 		const handleEnded = () => {
 			stopRecording();
@@ -65,6 +68,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 				}
 
 				streamRef.current = stream;
+
 				if (cameraRef.current) {
 					cameraRef.current.srcObject = stream;
 				}
@@ -74,6 +78,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 						const audioStream = await navigator.mediaDevices.getUserMedia({
 							audio: true,
 						});
+
 						if (!cancelled) {
 							audioStream
 								.getTracks()
@@ -81,10 +86,12 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 						} else {
 							audioStream.getTracks().forEach((t) => t.stop());
 						}
-					} catch (audioErr) {}
+					} catch {}
 				}
 			} catch (err: any) {
-				if (cancelled) return;
+				if (cancelled) {
+					return;
+				}
 
 				if (
 					err.name === 'NotFoundError' ||
@@ -111,16 +118,24 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 
 		return () => {
 			cancelled = true;
-			if (canvasRafRef.current) cancelAnimationFrame(canvasRafRef.current);
+
+			if (canvasRafRef.current) {
+				cancelAnimationFrame(canvasRafRef.current);
+			}
+
 			streamRef.current?.getTracks().forEach((t) => t.stop());
 		};
 	}, []);
 
 	useEffect(() => {
-		if (state !== 'recording') return;
+		if (state !== 'recording') {
+			return;
+		}
+
 		const interval = setInterval(() => {
 			setRecordingTime((t) => t + 1);
 		}, 1000);
+
 		return () => clearInterval(interval);
 	}, [state]);
 
@@ -132,6 +147,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 		const interval = setInterval(() => {
 			count--;
 			setCountdown(count);
+
 			if (count === 0) {
 				clearInterval(interval);
 				startRecording();
@@ -140,7 +156,9 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 	};
 
 	const startRecording = () => {
-		if (!streamRef.current) return;
+		if (!streamRef.current) {
+			return;
+		}
 
 		chunksRef.current = [];
 		setRecordingTime(0);
@@ -156,6 +174,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 		const ctx = canvas.getContext('2d')!;
 
 		const sourceVideo = cameraRef.current!;
+
 		const drawFrame = () => {
 			if (recorderRef.current?.state === 'recording') {
 				ctx.save();
@@ -180,7 +199,9 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 		});
 
 		recorder.ondataavailable = (e) => {
-			if (e.data.size > 0) chunksRef.current.push(e.data);
+			if (e.data.size > 0) {
+				chunksRef.current.push(e.data);
+			}
 		};
 
 		recorder.onstop = () => {
@@ -210,6 +231,7 @@ const CameraRecorder: React.FC<CameraRecorderProps> = ({
 		const m = Math.floor(sec / 60)
 			.toString()
 			.padStart(2, '0');
+
 		const s = (sec % 60).toString().padStart(2, '0');
 		return `${m}:${s}`;
 	};

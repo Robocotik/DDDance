@@ -11,11 +11,20 @@ export interface DanceAuthor {
 
 export type LessonDifficulty = 'easy' | 'medium' | 'hard';
 
+export interface SegmentInfo {
+	index: number;
+	start_time: number;
+	end_time: number;
+	description?: string;
+}
+
 export interface UploadLessonResult {
 	dance_id: string;
 	duration_sec: number;
 	full_glb_key: string;
 	glb_keys: string[];
+	keyframes_url?: string;
+	segments?: SegmentInfo[];
 	num_frames: number;
 	num_segments: number;
 	num_segments_rendered: number;
@@ -26,12 +35,10 @@ export interface UploadLessonResult {
 	is_liked?: boolean;
 	author?: DanceAuthor;
 	difficulty?: LessonDifficulty;
-	// true — сложность посчитана по оценкам пользователей, false/undefined — задана автором.
 	difficulty_by_users?: boolean;
-	// Последняя попытка ТЕКУЩЕГО пользователя на этом танце — для кнопки
-	// «Моя последняя попытка» на LessonPage. Анонимам приходит undefined.
 	last_attempt_id?: string;
 	last_attempt_score?: number;
+	unique_viewers_approx?: number;
 }
 
 export interface ModerationPendingResponse {
@@ -40,28 +47,31 @@ export interface ModerationPendingResponse {
 	dance_id?: string;
 }
 
-const isModerationPending = (status: number, data: unknown): data is ModerationPendingResponse =>
+const isModerationPending = (
+	status: number,
+	data: unknown,
+): data is ModerationPendingResponse =>
 	status === 202 &&
 	typeof data === 'object' &&
 	data !== null &&
 	(data as { error_code?: string }).error_code === 'MODERATION_PENDING';
 
-// Ключ в localStorage, куда фронт складывает dance_id анонимных загрузок.
-// При регистрации это значение отправляется на /uploads/claim и очищается.
 const PENDING_UPLOADS_KEY = 'pending_anonymous_uploads';
 
 const savePendingUpload = (danceId: string | undefined): void => {
-	if (!danceId) return;
+	if (!danceId) {
+		return;
+	}
+
 	try {
 		const raw = localStorage.getItem(PENDING_UPLOADS_KEY);
 		const list: string[] = raw ? JSON.parse(raw) : [];
+
 		if (!list.includes(danceId)) {
 			list.push(danceId);
 			localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify(list));
 		}
-	} catch {
-		/* localStorage может быть недоступен (приватный режим, квота) — игнор */
-	}
+	} catch {}
 };
 
 export const getPendingAnonymousUploads = (): string[] => {
@@ -76,9 +86,7 @@ export const getPendingAnonymousUploads = (): string[] => {
 export const clearPendingAnonymousUploads = (): void => {
 	try {
 		localStorage.removeItem(PENDING_UPLOADS_KEY);
-	} catch {
-		/* ignore */
-	}
+	} catch {}
 };
 
 const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка';
@@ -90,9 +98,6 @@ const clearLessonAction = () => {
 	};
 };
 
-// Точечно обновить last_attempt_id у уже загруженного урока. Используется
-// после успешного compare, чтобы кнопка «Моя последняя попытка» сразу
-// начала указывать на свежий attempt_id без перезагрузки урока.
 const patchLessonLastAttemptAction = (
 	danceId: string,
 	attemptId: string,
@@ -131,15 +136,14 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 		const formData = new FormData();
 		formData.append('dance', file);
 
-		const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
-			'/users/load',
-			formData,
-			{
-				headers: {
-					'Content-Type': 'multipart/form-data',
-				},
+		const response = await http.post<
+			UploadLessonResult | ModerationPendingResponse
+		>('/users/load', formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
 			},
-		);
+			timeout: 300_000,
+		});
 
 		if (isModerationPending(response.status, response.data)) {
 			savePendingUpload(response.data.dance_id);
@@ -148,10 +152,10 @@ const uploadLessonByVideoAction = (file: File) => async (dispatch: any) => {
 		}
 
 		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
-	} catch (error: any) {
-		const errorMessage = 'Что-то пошло не так, но мы это уже чиним';
-
-		dispatch(returnLessonErrorAction(errorMessage));
+	} catch {
+		dispatch(
+			returnLessonErrorAction('Что-то пошло не так, но мы это уже чиним'),
+		);
 	}
 };
 
@@ -192,10 +196,9 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 	dispatch(setLessonLoadingAction());
 
 	try {
-		const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
-			'/users/loadByURL',
-			{ url },
-		);
+		const response = await http.post<
+			UploadLessonResult | ModerationPendingResponse
+		>('/users/loadByURL', { url });
 
 		if (isModerationPending(response.status, response.data)) {
 			savePendingUpload(response.data.dance_id);
@@ -204,17 +207,17 @@ const uploadLessonByLinkAction = (url: string) => async (dispatch: any) => {
 		}
 
 		dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
-	} catch (error: any) {
-		const errorMessage =
-			'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор';
-
-		dispatch(returnLessonErrorAction(errorMessage));
+	} catch {
+		dispatch(
+			returnLessonErrorAction(
+				'Что-то пошло не так! Попробуйте скачать видео и отправить на разбор',
+			),
+		);
 	}
 };
 
 const uploadLessonByTrimAction =
-	(file: File, startSec: number, endSec: number) =>
-	async (dispatch: any) => {
+	(file: File, startSec: number, endSec: number) => async (dispatch: any) => {
 		dispatch(setLessonLoadingAction());
 
 		try {
@@ -223,13 +226,12 @@ const uploadLessonByTrimAction =
 			formData.append('start_sec', String(startSec));
 			formData.append('end_sec', String(endSec));
 
-			const response = await http.post<UploadLessonResult | ModerationPendingResponse>(
-				'/users/load/trim',
-				formData,
-				{
-					headers: { 'Content-Type': 'multipart/form-data' },
-				},
-			);
+			const response = await http.post<
+				UploadLessonResult | ModerationPendingResponse
+			>('/users/load/trim', formData, {
+				headers: { 'Content-Type': 'multipart/form-data' },
+				timeout: 300_000,
+			});
 
 			if (isModerationPending(response.status, response.data)) {
 				savePendingUpload(response.data.dance_id);
@@ -238,7 +240,7 @@ const uploadLessonByTrimAction =
 			}
 
 			dispatch(returnLessonLoadedAction(response.data as UploadLessonResult));
-		} catch (error: any) {
+		} catch {
 			dispatch(returnLessonErrorAction('Не удалось обработать видео'));
 		}
 	};
@@ -250,6 +252,7 @@ export interface SegmentData {
 	end_frame: number;
 	llm_description: string;
 	features: string;
+	choreographerDescription?: string;
 }
 
 export interface SegmentsResult {
@@ -297,6 +300,7 @@ const uploadSegmentsAction = (segmentsKey: string) => async (dispatch: any) => {
 		const errorMessage =
 			error?.message ||
 			(typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+
 		dispatch(returnSegmentsErrorAction(errorMessage));
 	}
 };

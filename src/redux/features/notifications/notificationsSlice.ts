@@ -47,6 +47,7 @@ const slice = createSlice({
 		},
 		markRead: (state, action: PayloadAction<number>) => {
 			const n = state.items.find((x) => x.id === action.payload);
+
 			if (n && !n.is_read) {
 				n.is_read = true;
 				state.unreadCount = Math.max(0, state.unreadCount - 1);
@@ -56,9 +57,9 @@ const slice = createSlice({
 			state.items.forEach((n) => {
 				n.is_read = true;
 			});
+
 			state.unreadCount = 0;
 		},
-		// Локально удаляем все уведомления — для optimistic UI clearAll.
 		clearAll: (state) => {
 			state.items = [];
 			state.unreadCount = 0;
@@ -82,6 +83,7 @@ export default slice.reducer;
 
 export const fetchNotifications = () => async (dispatch: AppDispatch) => {
 	dispatch(fetchStart());
+
 	try {
 		const data = await getNotifications();
 		dispatch(
@@ -90,40 +92,40 @@ export const fetchNotifications = () => async (dispatch: AppDispatch) => {
 				unreadCount: data.unread_count,
 			}),
 		);
-	} catch (err: any) {
-		dispatch(fetchError(err?.message ?? 'Не удалось загрузить уведомления'));
+	} catch (err: unknown) {
+		dispatch(
+			fetchError(
+				err instanceof Error ? err.message : 'Не удалось загрузить уведомления',
+			),
+		);
 	}
 };
 
 export const markNotificationAsRead =
 	(id: number) => async (dispatch: AppDispatch) => {
-		// Оптимистичное обновление: чтобы счётчик мгновенно реагировал.
-		// Если запрос упадёт — следующее открытие колокольчика всё равно
-		// перезагрузит состояние с бэкенда.
 		dispatch(markRead(id));
+
 		try {
 			await markNotificationRead(id);
-		} catch {
-			/* ignore */
-		}
+		} catch {}
 	};
 
-export const markAllNotificationsAsRead = () => async (dispatch: AppDispatch) => {
-	dispatch(markAllRead());
-	try {
-		await markAllNotificationsRead();
-	} catch {
-		/* ignore */
-	}
-};
+export const markAllNotificationsAsRead =
+	() => async (dispatch: AppDispatch) => {
+		dispatch(markAllRead());
+
+		try {
+			await markAllNotificationsRead();
+		} catch {}
+	};
 
 export const clearAllNotificationsThunk =
 	() => async (dispatch: AppDispatch) => {
 		dispatch(clearAll());
+
 		try {
 			await clearAllNotifications();
 		} catch {
-			// Если упадёт — перезагрузим список, чтобы привести state в соответствие с БД.
 			dispatch(fetchNotifications());
 		}
 	};

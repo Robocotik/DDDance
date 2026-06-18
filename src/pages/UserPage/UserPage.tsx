@@ -1,19 +1,29 @@
 import {
-	getPublicProfile,
-	getUserAttempts,
-	saveAttemptToProfile,
-	unsaveAttemptFromProfile,
-	type PublicProfileResponse,
-	type SavedAttemptItem,
-	type UserAttemptItem,
-} from '@/api/users/profile';
+	getUserAchievements,
+	type AchievementsWithMeta,
+	type UserAchievement,
+} from '@/api/achievements';
 import {
-	sendFriendRequest,
+	getFriendsByUserId,
 	removeFriend,
 	respondFriendRequest,
-	getFriendsByUserId,
+	sendFriendRequest,
 	type Friend,
 } from '@/api/users/friends';
+import {
+	getCreatorAnalytics,
+	getMostImprovedDance,
+	getPublicProfile,
+	getTelegramLinkCode,
+	getUserAttempts,
+	saveAttemptToProfile,
+	type CreatorAnalytics,
+	type MostImprovedDance,
+	type PublicProfileResponse,
+	type SavedAttemptItem,
+	type TelegramLinkCode,
+	type UserAttemptItem,
+} from '@/api/users/profile';
 import {
 	deleteDance,
 	getUploadedDances,
@@ -22,16 +32,22 @@ import {
 	unpublishDance,
 	type UploadedDance,
 } from '@/api/users/uploadedDances';
+import AchievementBadge from '@/components/AchievementBadge/AchievementBadge';
+import ActivityHeatmap from '@/components/ActivityHeatmap/ActivityHeatmap';
+import CreatorDashboard from '@/components/CreatorDashboard/CreatorDashboard';
+import DuelChallenge from '@/components/DuelChallenge/DuelChallenge';
 import EditProfileModal from '@/components/EditProfileModal/EditProfileModal';
+import ErrorScreen from '@/components/Error/Error';
 import HistoryItemCard from '@/components/HistoryItem/HistoryItem';
 import LikedItemCard from '@/components/LikedItem/LikedItem';
-import ErrorScreen from '@/components/Error/Error';
 import Loading from '@/components/Loading/Loading';
 import PersonalTopSection from '@/components/PersonalTopSection/PersonalTopSection';
+import ProfileStatsBanner from '@/components/ProfileStatsBanner/ProfileStatsBanner';
 import SavedDanceCard from '@/components/SavedDanceCard/SavedDanceCard';
 import UploadedDanceCard from '@/components/UploadedDanceCard/UploadedDanceCard';
-import { S3_ADDRESS } from '@/consts/urls';
+import VerticalVideo from '@/components/VerticalVideo/VerticalVideo';
 import type { Difficulty } from '@/consts/danceDifficulty';
+import { S3_ADDRESS } from '@/consts/urls';
 import { fetchHistory } from '@/redux/features/history/actions';
 import {
 	selectHistoryItems,
@@ -47,7 +63,13 @@ import {
 	selectUser,
 } from '@/redux/features/user/selectors';
 import type { AppDispatch } from '@/redux/store';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import styles from './UserPage.module.scss';
@@ -61,14 +83,15 @@ const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
 	{ value: 'hard', label: 'Сложный' },
 ];
 
-// Статусы, лейблы и плюрализация теперь живут внутри UploadedDanceCard —
-// здесь оставлен только функционал, относящийся к шапке профиля и модалкам.
-
 const avatarUrl = (avatar: string, updatedAt: string): string => {
-	if (!avatar) return DEFAULT_AVATAR;
+	if (!avatar) {
+		return DEFAULT_AVATAR;
+	}
+
 	if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
 		return avatar;
 	}
+
 	const base = (S3_ADDRESS || '').replace(/\/+$/, '');
 	const bust = encodeURIComponent(updatedAt || '');
 	return `${base}/${avatar}?u=${bust}`;
@@ -87,10 +110,33 @@ const formatDate = (iso: string): string => {
 	}
 };
 
-type TabKey = 'history' | 'likes' | 'saved' | 'friends' | 'uploaded' | 'attempts';
+type TabKey =
+	| 'history'
+	| 'likes'
+	| 'saved'
+	| 'friends'
+	| 'uploaded'
+	| 'achievements'
+	| 'analytics';
 
-// pending_sent — заявку отправил Я, жду ответа.
-// pending_received — заявку отправил собеседник, мне отвечать.
+const pluralizeDelta = (delta: number): string => {
+	const d = Math.round(delta);
+
+	if (d >= 10 && d <= 14) {
+		return 'баллов';
+	}
+
+	if (d % 10 === 1) {
+		return 'балл';
+	}
+
+	if (d % 10 >= 2 && d % 10 <= 4) {
+		return 'балла';
+	}
+
+	return 'баллов';
+};
+
 type FriendButtonState =
 	| 'none'
 	| 'pending_sent'
@@ -117,8 +163,17 @@ const UserPage: React.FC = () => {
 
 	const [friends, setFriends] = useState<Friend[]>([]);
 	const [friendsLoading, setFriendsLoading] = useState(false);
-	const [friendBtnState, setFriendBtnState] = useState<FriendButtonState>('none');
+	const [friendBtnState, setFriendBtnState] =
+		useState<FriendButtonState>('none');
+
 	const [linkCopied, setLinkCopied] = useState(false);
+
+	const [telegramLink, setTelegramLink] = useState<TelegramLinkCode | null>(
+		null,
+	);
+
+	const [telegramLoading, setTelegramLoading] = useState(false);
+	const [telegramCopied, setTelegramCopied] = useState(false);
 
 	const [uploadedDances, setUploadedDances] = useState<UploadedDance[]>([]);
 	const [uploadedLoading, setUploadedLoading] = useState(false);
@@ -127,28 +182,69 @@ const UserPage: React.FC = () => {
 	const [visibilityConfirm, setVisibilityConfirm] = useState<{
 		dance: UploadedDance;
 	} | null>(null);
+
 	const [deleteConfirm, setDeleteConfirm] = useState<{
 		dance: UploadedDance;
 	} | null>(null);
+
 	const [renamingId, setRenamingId] = useState<string | null>(null);
 	const [renameValue, setRenameValue] = useState('');
 	const [editingDifficulty, setEditingDifficulty] =
 		useState<Difficulty>('medium');
 
+	const [achievements, setAchievements] = useState<UserAchievement[]>([]);
+	const [achievementsMeta, setAchievementsMeta] = useState<Omit<
+		AchievementsWithMeta,
+		'achievements'
+	> | null>(null);
+
+	const [achievementsLoading, setAchievementsLoading] = useState(false);
+	const [achievementToast, setAchievementToast] = useState<UserAchievement[]>(
+		[],
+	);
+
+	const toastShownRef = useRef(false);
+	const achievementToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
+
+	const linkCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(
+		() => () => {
+			clearTimeout(achievementToastTimerRef.current ?? undefined);
+			clearTimeout(linkCopiedTimerRef.current ?? undefined);
+		},
+		[],
+	);
+
+	const [duelChallengeOpen, setDuelChallengeOpen] = useState(false);
+	const [mostImproved, setMostImproved] = useState<MostImprovedDance | null>(
+		null,
+	);
+
+	const [creatorAnalytics, setCreatorAnalytics] =
+		useState<CreatorAnalytics | null>(null);
+
+	const [creatorAnalyticsLoading, setCreatorAnalyticsLoading] = useState(false);
+
 	const isOwn = !!(me && profileId && me.id === profileId);
 
 	const loadProfile = useCallback(async () => {
-		if (!profileId) return;
+		if (!profileId) {
+			return;
+		}
+
 		setProfileLoading(true);
 		setProfileError(null);
+
 		try {
 			const data = await getPublicProfile(profileId);
 			setProfile(data);
-			// Derive initial friend button state from profile.
-			// is_sender различает «я отправил» и «мне отправили» — без него
-			// входящая заявка выглядела как «Заявка отправлена» (исходящая).
+
 			if (!data.is_own_profile && data.friendship_status) {
 				const fs = data.friendship_status;
+
 				if (fs.status === 'accepted') {
 					setFriendBtnState('accepted');
 				} else if (fs.status === 'pending') {
@@ -176,8 +272,12 @@ const UserPage: React.FC = () => {
 	}, [dispatch, isOwn]);
 
 	const loadFriends = useCallback(async () => {
-		if (!profileId) return;
+		if (!profileId) {
+			return;
+		}
+
 		setFriendsLoading(true);
+
 		try {
 			const data = await getFriendsByUserId(profileId);
 			setFriends(data ?? []);
@@ -194,132 +294,13 @@ const UserPage: React.FC = () => {
 		}
 	}, [activeTab, loadFriends]);
 
-	const handleRemoveSaved = useCallback(
-		async (attemptId: string) => {
-			if (!isOwn || !profile) return;
-			const optimistic = profile.saved_attempts.filter(
-				(s) => s.user_dance_id !== attemptId,
-			);
-			setProfile({ ...profile, saved_attempts: optimistic });
-			try {
-				await unsaveAttemptFromProfile(attemptId);
-			} catch {
-				loadProfile();
-			}
-		},
-		[isOwn, profile, loadProfile],
-	);
-
-	// Замочек на «Мои танцы»: тогл приватности. Бэкенд UPSERT'ит saved_attempts
-	// по attempt_id, поэтому повторный save с обновлённым is_private просто
-	// переключит флаг — score/user_name/has_video переотправляем как есть.
-	const handleTogglePrivacy = useCallback(
-		async (attemptId: string, makePrivate: boolean) => {
-			if (!isOwn || !profile) return;
-			const item = profile.saved_attempts.find(
-				(s) => s.user_dance_id === attemptId,
-			);
-			if (!item) return;
-			// Optimistic: меняем флаг локально.
-			setProfile({
-				...profile,
-				saved_attempts: profile.saved_attempts.map((s) =>
-					s.user_dance_id === attemptId
-						? { ...s, is_private: makePrivate }
-						: s,
-				),
-			});
-			try {
-				await saveAttemptToProfile(attemptId, item.dance_id, {
-					includeVideo: item.has_video,
-					userName: item.user_name,
-					isPrivate: makePrivate,
-					score: item.score,
-				});
-			} catch {
-				loadProfile();
-			}
-		},
-		[isOwn, profile, loadProfile],
-	);
-
-	const handleSendFriendRequest = useCallback(async () => {
-		if (!profileId || friendBtnState === 'loading') return;
-		setFriendBtnState('loading');
-		try {
-			await sendFriendRequest(profileId);
-			setFriendBtnState('pending_sent');
-		} catch {
-			setFriendBtnState('none');
-		}
-	}, [profileId, friendBtnState]);
-
-	// Ответ на ВХОДЯЩУЮ заявку прямо со страницы профиля.
-	const handleRespondFriendRequest = useCallback(
-		async (accept: boolean) => {
-			const fs = profile?.friendship_status;
-			if (!fs || !fs.friendship_id) return;
-			setFriendBtnState('loading');
-			try {
-				await respondFriendRequest(fs.friendship_id, accept);
-				setFriendBtnState(accept ? 'accepted' : 'none');
-				// После принятия пере-fetch'имся, чтобы friends_count в шапке
-				// и список «Друзья» актуализировались.
-				if (accept) {
-					loadProfile();
-				}
-			} catch {
-				setFriendBtnState('pending_received');
-			}
-		},
-		[profile, loadProfile],
-	);
-
-	// «Удалить из друзей» — двухэтапно: открыть подтверждение, потом удалить.
-	const [removeFriendConfirm, setRemoveFriendConfirm] = useState(false);
-	const handleRemoveFriendClick = useCallback(() => {
-		if (friendBtnState === 'loading') return;
-		setRemoveFriendConfirm(true);
-	}, [friendBtnState]);
-
-	const handleRemoveFriendConfirmed = useCallback(async () => {
-		if (!profileId) return;
-		setRemoveFriendConfirm(false);
-		setFriendBtnState('loading');
-		try {
-			await removeFriend(profileId);
-			setFriendBtnState('none');
-			setFriends((prev) => prev.filter((f) => f.user_id !== profileId));
-		} catch {
-			setFriendBtnState('accepted');
-		}
-	}, [profileId]);
-
-	const loadUploadedDances = useCallback(async () => {
-		if (!isOwn) return;
-		setUploadedLoading(true);
-		try {
-			const data = await getUploadedDances();
-			setUploadedDances(data ?? []);
-		} catch {
-			setUploadedDances([]);
-		} finally {
-			setUploadedLoading(false);
-		}
-	}, [isOwn]);
-
-	// Грузим загруженные танцы сразу при заходе в свой профиль — чтобы
-	// бейдж-счётчик «Загруженные N» на вкладке показывал реальное число
-	// до клика по вкладке.
-	useEffect(() => {
-		if (isOwn) {
-			loadUploadedDances();
-		}
-	}, [loadUploadedDances, isOwn]);
-
 	const loadAttempts = useCallback(async () => {
-		if (!isOwn) return;
+		if (!isOwn) {
+			return;
+		}
+
 		setAttemptsLoading(true);
+
 		try {
 			const data = await getUserAttempts();
 			setAttempts(data ?? []);
@@ -331,32 +312,276 @@ const UserPage: React.FC = () => {
 	}, [isOwn]);
 
 	useEffect(() => {
-		if (isOwn) loadAttempts();
+		if (isOwn) {
+			loadAttempts();
+		}
 	}, [isOwn, loadAttempts]);
 
-	const handleToggleVisibility = useCallback(
-		async (dance: UploadedDance) => {
-			const isPublic = dance.status === 'published';
-			try {
-				if (isPublic) {
-					await unpublishDance(dance.dance_id);
-				} else {
-					await publishDance(dance.dance_id);
-				}
-				setUploadedDances((prev) =>
-					prev.map((d) =>
-						d.dance_id === dance.dance_id
-							? { ...d, status: isPublic ? 'private' : 'published' }
-							: d,
-					),
-				);
-			} catch {
-				// оставляем текущий статус
+	const handleToggleAttemptOpen = useCallback(
+		async (attemptId: string, makePrivate: boolean) => {
+			if (!isOwn) {
+				return;
 			}
-			setVisibilityConfirm(null);
+
+			const a = attempts.find((x) => x.attempt_id === attemptId);
+
+			if (!a) {
+				return;
+			}
+
+			setAttempts((prev) =>
+				prev.map((x) =>
+					x.attempt_id === attemptId
+						? { ...x, is_open: !makePrivate, is_saved: true }
+						: x,
+				),
+			);
+
+			try {
+				await saveAttemptToProfile(attemptId, a.dance_id, {
+					includeVideo: true,
+					userName: a.user_name,
+					isPrivate: makePrivate,
+					score: a.score,
+				});
+			} catch {
+				loadAttempts();
+			}
 		},
-		[],
+		[isOwn, attempts, loadAttempts],
 	);
+
+	const handleRenameAttempt = useCallback(
+		async (attemptId: string, name: string) => {
+			if (!isOwn) {
+				return;
+			}
+
+			const a = attempts.find((x) => x.attempt_id === attemptId);
+
+			if (!a) {
+				return;
+			}
+
+			const trimmed = name.trim();
+
+			setAttempts((prev) =>
+				prev.map((x) =>
+					x.attempt_id === attemptId
+						? { ...x, user_name: trimmed, is_saved: true }
+						: x,
+				),
+			);
+
+			try {
+				await saveAttemptToProfile(attemptId, a.dance_id, {
+					includeVideo: true,
+					userName: trimmed,
+					isPrivate: !a.is_open,
+					score: a.score,
+				});
+			} catch {
+				loadAttempts();
+			}
+		},
+		[isOwn, attempts, loadAttempts],
+	);
+
+	const handleSendFriendRequest = useCallback(async () => {
+		if (!profileId || friendBtnState === 'loading') {
+			return;
+		}
+
+		setFriendBtnState('loading');
+
+		try {
+			await sendFriendRequest(profileId);
+			setFriendBtnState('pending_sent');
+		} catch {
+			setFriendBtnState('none');
+		}
+	}, [profileId, friendBtnState]);
+
+	const handleRespondFriendRequest = useCallback(
+		async (accept: boolean) => {
+			const fs = profile?.friendship_status;
+
+			if (!fs || !fs.friendship_id) {
+				return;
+			}
+
+			setFriendBtnState('loading');
+
+			try {
+				await respondFriendRequest(fs.friendship_id, accept);
+				setFriendBtnState(accept ? 'accepted' : 'none');
+
+				if (accept) {
+					loadProfile();
+				}
+			} catch {
+				setFriendBtnState('pending_received');
+			}
+		},
+		[profile, loadProfile],
+	);
+
+	const [removeFriendConfirm, setRemoveFriendConfirm] = useState(false);
+	const handleRemoveFriendClick = useCallback(() => {
+		if (friendBtnState === 'loading') {
+			return;
+		}
+
+		setRemoveFriendConfirm(true);
+	}, [friendBtnState]);
+
+	const handleRemoveFriendConfirmed = useCallback(async () => {
+		if (!profileId) {
+			return;
+		}
+
+		setRemoveFriendConfirm(false);
+		setFriendBtnState('loading');
+
+		try {
+			await removeFriend(profileId);
+			setFriendBtnState('none');
+			setFriends((prev) => prev.filter((f) => f.user_id !== profileId));
+		} catch {
+			setFriendBtnState('accepted');
+		}
+	}, [profileId]);
+
+	const loadUploadedDances = useCallback(async () => {
+		if (!isOwn) {
+			return;
+		}
+
+		setUploadedLoading(true);
+
+		try {
+			const data = await getUploadedDances();
+			setUploadedDances(data ?? []);
+		} catch {
+			setUploadedDances([]);
+		} finally {
+			setUploadedLoading(false);
+		}
+	}, [isOwn]);
+
+	useEffect(() => {
+		if (isOwn) {
+			loadUploadedDances();
+		}
+	}, [loadUploadedDances, isOwn]);
+
+	useEffect(() => {
+		if (!isOwn) {
+			return;
+		}
+
+		getMostImprovedDance()
+			.then(setMostImproved)
+			.catch(() => setMostImproved(null));
+	}, [isOwn]);
+
+	const loadAchievements = useCallback(async () => {
+		if (!profileId) {
+			return;
+		}
+
+		setAchievementsLoading(true);
+
+		try {
+			const data = await getUserAchievements(profileId);
+			const list = data?.achievements ?? [];
+			setAchievements(list);
+			setAchievementsMeta({
+				unlocked_count: data?.unlocked_count ?? 0,
+				total_count: data?.total_count ?? 0,
+				percentile: data?.percentile ?? 0,
+			});
+
+			if (isOwn && !toastShownRef.current) {
+				toastShownRef.current = true;
+				const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+				const fresh = list.filter(
+					(a) =>
+						a.unlocked &&
+						a.unlocked_at &&
+						new Date(a.unlocked_at).getTime() > cutoff,
+				);
+
+				if (fresh.length > 0) {
+					setAchievementToast(fresh);
+					achievementToastTimerRef.current = setTimeout(
+						() => setAchievementToast([]),
+						4000,
+					);
+				}
+			}
+		} catch {
+			setAchievements([]);
+			setAchievementsMeta(null);
+		} finally {
+			setAchievementsLoading(false);
+		}
+	}, [profileId, isOwn]);
+
+	useEffect(() => {
+		if (activeTab === 'achievements') {
+			loadAchievements();
+		}
+	}, [activeTab, loadAchievements]);
+
+	useEffect(() => {
+		if (activeTab !== 'analytics' || !isOwn || creatorAnalytics) {
+			return;
+		}
+
+		const controller = new AbortController();
+		setCreatorAnalyticsLoading(true);
+		getCreatorAnalytics(controller.signal)
+			.then((data) => {
+				if (!controller.signal.aborted) {
+					setCreatorAnalytics(data);
+				}
+			})
+			.catch(() => {
+				if (!controller.signal.aborted) {
+					setCreatorAnalytics(null);
+				}
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) {
+					setCreatorAnalyticsLoading(false);
+				}
+			});
+
+		return () => controller.abort();
+	}, [activeTab, isOwn, creatorAnalytics]);
+
+	const handleToggleVisibility = useCallback(async (dance: UploadedDance) => {
+		const isPublic = dance.status === 'published';
+
+		try {
+			if (isPublic) {
+				await unpublishDance(dance.dance_id);
+			} else {
+				await publishDance(dance.dance_id);
+			}
+
+			setUploadedDances((prev) =>
+				prev.map((d) =>
+					d.dance_id === dance.dance_id
+						? { ...d, status: isPublic ? 'private' : 'published' }
+						: d,
+				),
+			);
+		} catch {}
+
+		setVisibilityConfirm(null);
+	}, []);
 
 	const handleDeleteDance = useCallback(async (dance: UploadedDance) => {
 		try {
@@ -364,15 +589,11 @@ const UserPage: React.FC = () => {
 			setUploadedDances((prev) =>
 				prev.filter((d) => d.dance_id !== dance.dance_id),
 			);
-		} catch {
-			// Бэкенд логирует; UI не падает — танец просто останется в списке.
-		}
+		} catch {}
+
 		setDeleteConfirm(null);
 	}, []);
 
-	// Переименование загруженного танца. Доступно только во вкладке «Загруженные»
-	// собственного профиля; на бэкенде SetDanceName дополнительно проверяет,
-	// что текущий пользователь — загрузивший этот танец.
 	const handleRenameSubmit = async (dance: UploadedDance) => {
 		const trimmed = renameValue.trim();
 		const titleChanged = !!trimmed && trimmed !== dance.title;
@@ -384,10 +605,8 @@ const UserPage: React.FC = () => {
 			return;
 		}
 
-		// Если название не трогали — отправим прежнее (бэкенд не разрешает пустое).
-		// Сложность — только когда поменялась, чтобы рейтинг по оценкам
-		// пользователей не «откатывался» к выбору автора без нужды.
 		const nextTitle = titleChanged ? trimmed : dance.title;
+
 		try {
 			await setDanceName(
 				dance.dance_id,
@@ -395,6 +614,7 @@ const UserPage: React.FC = () => {
 				dance.status === 'published',
 				difficultyChanged ? editingDifficulty : undefined,
 			);
+
 			setUploadedDances((prev) =>
 				prev.map((d) =>
 					d.dance_id === dance.dance_id
@@ -411,9 +631,8 @@ const UserPage: React.FC = () => {
 						: d,
 				),
 			);
-		} catch {
-			/* оставляем прежние значения */
-		}
+		} catch {}
+
 		setRenamingId(null);
 	};
 
@@ -421,9 +640,23 @@ const UserPage: React.FC = () => {
 		const url = `${window.location.origin}/profile/${profileId}`;
 		navigator.clipboard.writeText(url).then(() => {
 			setLinkCopied(true);
-			setTimeout(() => setLinkCopied(false), 2000);
+			linkCopiedTimerRef.current = setTimeout(() => setLinkCopied(false), 2000);
 		});
 	}, [profileId]);
+
+	const handleConnectTelegram = useCallback(async () => {
+		setTelegramLoading(true);
+		setTelegramCopied(false);
+
+		try {
+			const link = await getTelegramLinkCode();
+			setTelegramLink(link);
+		} catch {
+			setTelegramLink(null);
+		} finally {
+			setTelegramLoading(false);
+		}
+	}, []);
 
 	const headerUser = useMemo(() => {
 		if (isOwn && me) {
@@ -433,6 +666,7 @@ const UserPage: React.FC = () => {
 				updatedAt: me.updated_at,
 			};
 		}
+
 		if (profile) {
 			return {
 				login: profile.user.login,
@@ -440,6 +674,7 @@ const UserPage: React.FC = () => {
 				updatedAt: profile.user.updated_at,
 			};
 		}
+
 		return null;
 	}, [isOwn, me, profile]);
 
@@ -468,20 +703,30 @@ const UserPage: React.FC = () => {
 
 	const tabs: { key: TabKey; label: string; count?: number }[] = isOwn
 		? [
-				{ key: 'saved', label: 'Мои танцы', count: saved.length },
-				{ key: 'attempts', label: 'Мои попытки', count: attempts.length },
+				{ key: 'saved', label: 'Мои танцы', count: attempts.length },
 				{ key: 'friends', label: 'Друзья', count: friendsCount },
 				{ key: 'history', label: 'История', count: historyItems.length },
 				{ key: 'likes', label: 'Понравившиеся', count: likedItems.length },
 				{ key: 'uploaded', label: 'Загруженные', count: uploadedDances.length },
+				{ key: 'achievements', label: 'Достижения' },
+				{ key: 'analytics', label: 'Аналитика' },
 			]
 		: [
 				{ key: 'saved', label: 'Танцы', count: saved.length },
+				{
+					key: 'uploaded',
+					label: 'Загруженные',
+					count: profile.uploaded_dances?.length ?? 0,
+				},
 				{ key: 'friends', label: 'Друзья', count: friendsCount },
+				{ key: 'achievements', label: 'Достижения' },
 			];
 
 	const renderFriendButton = () => {
-		if (isOwn || !me) return null;
+		if (isOwn || !me) {
+			return null;
+		}
+
 		if (friendBtnState === 'accepted') {
 			return (
 				<button
@@ -493,6 +738,7 @@ const UserPage: React.FC = () => {
 				</button>
 			);
 		}
+
 		if (friendBtnState === 'pending_sent') {
 			return (
 				<button
@@ -503,6 +749,7 @@ const UserPage: React.FC = () => {
 				</button>
 			);
 		}
+
 		if (friendBtnState === 'pending_received') {
 			return (
 				<div className={styles.friendRespondGroup}>
@@ -526,6 +773,7 @@ const UserPage: React.FC = () => {
 				</div>
 			);
 		}
+
 		return (
 			<button
 				className={styles.friendBtn}
@@ -537,25 +785,69 @@ const UserPage: React.FC = () => {
 		);
 	};
 
+	// eslint-disable-next-line sonarjs/cognitive-complexity
 	const renderTabContent = () => {
 		if (activeTab === 'saved') {
+			if (isOwn) {
+				if (attemptsLoading && attempts.length === 0) {
+					return <p className={styles.tabEmpty}>Загрузка...</p>;
+				}
+
+				if (attempts.length === 0) {
+					return (
+						<p className={styles.tabEmpty}>
+							Здесь будут все твои попытки. Сравни танец, чтобы записать первую
+						</p>
+					);
+				}
+
+				return (
+					<div className={styles.cardGrid}>
+						{attempts.map((a) => {
+							const cardItem: SavedAttemptItem = {
+								user_dance_id: a.attempt_id,
+								dance_id: a.dance_id,
+								dance_title: a.dance_title,
+								user_name: a.user_name,
+								is_private: !a.is_open,
+								score: a.score,
+								saved_at: a.created_at,
+								reference_video_key: `users/${profileId}/${a.attempt_id}/video.mp4`,
+								user_animation_key: '',
+								user_skeleton_key: '',
+								has_video: true,
+							};
+
+							return (
+								<SavedDanceCard
+									key={a.attempt_id}
+									item={cardItem}
+									onTogglePrivacy={handleToggleAttemptOpen}
+									onRename={handleRenameAttempt}
+								/>
+							);
+						})}
+					</div>
+				);
+			}
+
 			if (saved.length === 0) {
 				return (
 					<p className={styles.tabEmpty}>
-						{isOwn
-							? 'Здесь будут танцы, которые ты добавишь в профиль со страницы результата'
-							: 'У этого пользователя пока нет опубликованных танцев'}
+						У этого пользователя пока нет открытых танцев
 					</p>
 				);
 			}
+
 			return (
 				<div className={styles.cardGrid}>
 					{saved.map((item) => (
 						<SavedDanceCard
 							key={item.user_dance_id}
-							item={item}
-							onRemove={isOwn ? handleRemoveSaved : undefined}
-							onTogglePrivacy={isOwn ? handleTogglePrivacy : undefined}
+							item={{
+								...item,
+								reference_video_key: `users/${profileId}/${item.user_dance_id}/video.mp4`,
+							}}
 						/>
 					))}
 				</div>
@@ -563,14 +855,20 @@ const UserPage: React.FC = () => {
 		}
 
 		if (activeTab === 'friends') {
-			if (friendsLoading) return <p className={styles.tabEmpty}>Загрузка...</p>;
+			if (friendsLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
 			if (friends.length === 0) {
 				return (
 					<p className={styles.tabEmpty}>
-						{isOwn ? 'У вас пока нет друзей' : 'У этого пользователя пока нет друзей'}
+						{isOwn
+							? 'У вас пока нет друзей'
+							: 'У этого пользователя пока нет друзей'}
 					</p>
 				);
 			}
+
 			return (
 				<div className={styles.friendsList}>
 					{friends.map((f) => (
@@ -590,6 +888,11 @@ const UserPage: React.FC = () => {
 									Друзья с {formatDate(f.friended_at)}
 								</div>
 							</div>
+							{f.active_duel_id && (
+								<span className={styles.duelBadge} title="В дуэли">
+									⚔️
+								</span>
+							)}
 						</Link>
 					))}
 				</div>
@@ -597,10 +900,14 @@ const UserPage: React.FC = () => {
 		}
 
 		if (activeTab === 'history') {
-			if (historyLoading) return <p className={styles.tabEmpty}>Загрузка...</p>;
+			if (historyLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
 			if (historyItems.length === 0) {
 				return <p className={styles.tabEmpty}>История пуста</p>;
 			}
+
 			return (
 				<div className={styles.cardGrid}>
 					{historyItems.map((item) => (
@@ -613,10 +920,14 @@ const UserPage: React.FC = () => {
 		}
 
 		if (activeTab === 'likes') {
-			if (likesLoading) return <p className={styles.tabEmpty}>Загрузка...</p>;
+			if (likesLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
 			if (likedItems.length === 0) {
 				return <p className={styles.tabEmpty}>Нет понравившихся танцев</p>;
 			}
+
 			return (
 				<div className={styles.cardGrid}>
 					{likedItems.map((item) => (
@@ -628,54 +939,47 @@ const UserPage: React.FC = () => {
 			);
 		}
 
-		if (activeTab === 'attempts') {
-			if (attemptsLoading) return <p className={styles.tabEmpty}>Загрузка...</p>;
-			if (attempts.length === 0) {
+		if (activeTab === 'uploaded') {
+			if (!isOwn) {
+				const uploaded = profile.uploaded_dances ?? [];
+
+				if (uploaded.length === 0) {
+					return (
+						<p className={styles.tabEmpty}>
+							У этого пользователя пока нет загруженных танцев
+						</p>
+					);
+				}
+
 				return (
-					<p className={styles.tabEmpty}>
-						Здесь будут все твои попытки. Сравни танец, чтобы записать первую
-					</p>
+					<div className={styles.cardGrid}>
+						{uploaded.map((d) => (
+							<VerticalVideo
+								key={d.dance_id}
+								video={{
+									id: d.dance_id,
+									url: d.video_path,
+									title: d.title,
+									attempt_count: d.attempt_count,
+									view_count: d.view_count,
+									like_count: d.like_count,
+								}}
+							/>
+						))}
+					</div>
 				);
 			}
-			return (
-				<div className={styles.cardGrid}>
-					{attempts.map((a) => {
-						// UserAttemptItem → SavedAttemptItem-shape: SavedDanceCard
-						// строит preview-видео из reference_video_key, поэтому
-						// собираем его из dance_id. Поля user_animation_key /
-						// skeleton/has_video не нужны для отображения карточки.
-						const cardItem = {
-							user_dance_id: a.attempt_id,
-							dance_id: a.dance_id,
-							dance_title: a.dance_title,
-							user_name: '',
-							is_private: false,
-							score: a.score,
-							saved_at: a.created_at,
-							reference_video_key: `results/${a.dance_id}/video.mp4`,
-							user_animation_key: '',
-							user_skeleton_key: '',
-							has_video: false,
-						};
-						return (
-							<SavedDanceCard
-								key={a.attempt_id}
-								item={cardItem}
-								showSavedBadge={a.is_saved}
-							/>
-						);
-					})}
-				</div>
-			);
-		}
 
-		if (activeTab === 'uploaded') {
-			if (uploadedLoading) return <p className={styles.tabEmpty}>Загрузка...</p>;
+			if (uploadedLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
 			if (uploadedDances.length === 0) {
 				return (
 					<p className={styles.tabEmpty}>У вас пока нет загруженных танцев</p>
 				);
 			}
+
 			return (
 				<div className={styles.cardGrid}>
 					{uploadedDances.map((dance) => (
@@ -694,6 +998,59 @@ const UserPage: React.FC = () => {
 					))}
 				</div>
 			);
+		}
+
+		if (activeTab === 'achievements') {
+			if (achievementsLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
+			if (achievements.length === 0) {
+				return <p className={styles.tabEmpty}>Нет данных о достижениях</p>;
+			}
+
+			const unlocked = achievements
+				.filter((a) => a.unlocked)
+				.sort(
+					(a, b) =>
+						new Date(b.unlocked_at ?? 0).getTime() -
+						new Date(a.unlocked_at ?? 0).getTime(),
+				);
+
+			const locked = achievements.filter((a) => !a.unlocked);
+			return (
+				<>
+					<div className={styles.achievementsGrid}>
+						{[...unlocked, ...locked].map((a) => (
+							<AchievementBadge key={a.id} achievement={a} />
+						))}
+					</div>
+					{achievementsMeta && (
+						<p className={styles.achievementsPercentile}>
+							{achievementsMeta.unlocked_count} из{' '}
+							{achievementsMeta.total_count}
+							{achievementsMeta.percentile > 0 && (
+								<>
+									{' '}
+									· лучше {Math.round(achievementsMeta.percentile)}% участников
+								</>
+							)}
+						</p>
+					)}
+				</>
+			);
+		}
+
+		if (activeTab === 'analytics') {
+			if (creatorAnalyticsLoading) {
+				return <p className={styles.tabEmpty}>Загрузка...</p>;
+			}
+
+			if (!creatorAnalytics) {
+				return <p className={styles.tabEmpty}>Нет данных аналитики</p>;
+			}
+
+			return <CreatorDashboard data={creatorAnalytics} />;
 		}
 
 		return null;
@@ -716,6 +1073,7 @@ const UserPage: React.FC = () => {
 							Сохранённых танцев: {saved.length}
 							{friendsCount > 0 && ` · Друзей: ${friendsCount}`}
 						</p>
+						{profile?.stats && <ProfileStatsBanner stats={profile.stats} />}
 					</div>
 					<div className={styles.headerActions}>
 						<button
@@ -725,30 +1083,89 @@ const UserPage: React.FC = () => {
 						>
 							{linkCopied ? (
 								<>
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+									<svg
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2.5"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										aria-hidden="true"
+									>
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
 									Скопировано
 								</>
 							) : (
 								<>
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+									<svg
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										aria-hidden="true"
+									>
+										<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+										<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+									</svg>
 									Поделиться
 								</>
 							)}
 						</button>
 						{isOwn ? (
-							<button
-								className={styles.editBtn}
-								onClick={() => setEditing(true)}
-							>
-								Редактировать
-							</button>
+							<>
+								<button
+									className={styles.editBtn}
+									onClick={() => setEditing(true)}
+								>
+									Редактировать
+								</button>
+								<button
+									className={styles.editBtn}
+									onClick={handleConnectTelegram}
+									disabled={telegramLoading}
+									title="Привязать аккаунт к Telegram-боту"
+								>
+									{telegramLoading ? '...' : 'Привязать Telegram'}
+								</button>
+							</>
 						) : (
-							renderFriendButton()
+							<>
+								{renderFriendButton()}
+								{me && (
+									<button
+										className={styles.duelBtn}
+										onClick={() => setDuelChallengeOpen(true)}
+									>
+										Бросить вызов
+									</button>
+								)}
+							</>
 						)}
 					</div>
 				</header>
 
 				<PersonalTopSection items={profile.personal_top} isOwn={isOwn} />
+
+				<ActivityHeatmap userId={profile.user.id} />
+
+				{mostImproved && (
+					<div className={styles.mostImproved}>
+						<span className={styles.mostImprovedIcon}>📈</span>
+						<span className={styles.mostImprovedText}>
+							Наибольший прогресс:&nbsp;
+							<strong>{mostImproved.title}</strong>
+							&nbsp;+{Math.round(mostImproved.delta)}&nbsp;
+							{pluralizeDelta(mostImproved.delta)}
+						</span>
+					</div>
+				)}
 
 				<nav className={styles.tabsNav}>
 					{tabs.map((t) => (
@@ -792,7 +1209,9 @@ const UserPage: React.FC = () => {
 								className={styles.visibilityOkBtn}
 								onClick={() => handleToggleVisibility(visibilityConfirm.dance)}
 							>
-								{visibilityConfirm.dance.status === 'published' ? 'Скрыть' : 'Опубликовать'}
+								{visibilityConfirm.dance.status === 'published'
+									? 'Скрыть'
+									: 'Опубликовать'}
 							</button>
 							<button
 								className={styles.visibilityCancelBtn}
@@ -874,7 +1293,10 @@ const UserPage: React.FC = () => {
 			{renamingId &&
 				(() => {
 					const dance = uploadedDances.find((d) => d.dance_id === renamingId);
-					if (!dance) return null;
+
+					if (!dance) {
+						return null;
+					}
 
 					return (
 						<div
@@ -894,8 +1316,13 @@ const UserPage: React.FC = () => {
 									placeholder="Название танца"
 									onChange={(e) => setRenameValue(e.target.value)}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter') handleRenameSubmit(dance);
-										if (e.key === 'Escape') setRenamingId(null);
+										if (e.key === 'Enter') {
+											handleRenameSubmit(dance);
+										}
+
+										if (e.key === 'Escape') {
+											setRenamingId(null);
+										}
 									}}
 								/>
 								<div className={styles.uploadedDifficultyEdit}>
@@ -942,6 +1369,83 @@ const UserPage: React.FC = () => {
 					onClose={() => setEditing(false)}
 					onSaved={loadProfile}
 				/>
+			)}
+
+			{telegramLink && (
+				<div
+					className={styles.visibilityOverlay}
+					onClick={() => setTelegramLink(null)}
+				>
+					<div
+						className={styles.visibilityCard}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<p className={styles.visibilityTitle}>Привязка Telegram</p>
+						<p className={styles.visibilitySub}>
+							Открой бота и пришли этот код (или нажми «Открыть в Telegram»).
+							Код действует 10 минут.
+						</p>
+						<p
+							style={{
+								fontSize: '1.6rem',
+								fontWeight: 700,
+								letterSpacing: '0.15em',
+								textAlign: 'center',
+								margin: '10px 0',
+								color: '#c084fc',
+							}}
+						>
+							{telegramLink.code}
+						</p>
+						<div className={styles.visibilityActions}>
+							{telegramLink.deep_link && (
+								<a
+									className={styles.visibilityOkBtn}
+									href={telegramLink.deep_link}
+									target="_blank"
+									rel="noopener noreferrer"
+									style={{ textDecoration: 'none', textAlign: 'center' }}
+								>
+									Открыть в Telegram
+								</a>
+							)}
+							<button
+								className={styles.visibilityCancelBtn}
+								onClick={() =>
+									navigator.clipboard
+										.writeText(telegramLink.code)
+										.then(() => setTelegramCopied(true))
+								}
+							>
+								{telegramCopied ? 'Скопировано' : 'Копировать код'}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{duelChallengeOpen && !isOwn && profile && me && (
+				<DuelChallenge
+					opponentId={profile.user.id}
+					opponentLogin={profile.user.login}
+					onClose={() => setDuelChallengeOpen(false)}
+				/>
+			)}
+
+			{achievementToast.length > 0 && (
+				<div className={styles.achievementToastWrap}>
+					{achievementToast.map((a) => (
+						<div key={a.id} className={styles.achievementToastItem}>
+							<span className={styles.achievementToastIcon}>🏅</span>
+							<div className={styles.achievementToastText}>
+								<span className={styles.achievementToastLabel}>
+									Новое достижение
+								</span>
+								<span className={styles.achievementToastTitle}>{a.title}</span>
+							</div>
+						</div>
+					))}
+				</div>
 			)}
 		</div>
 	);

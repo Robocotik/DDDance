@@ -1,7 +1,7 @@
 .overlay {
 	position: fixed;
 	inset: 0;
-	background: rgba(8, 9, 34, 0.7);
+	background: rgb(8 9 34 / 70%);
 	display: flex;
 	align-items: flex-end;
 	justify-content: center;
@@ -14,6 +14,7 @@
 	from {
 		opacity: 0;
 	}
+
 	to {
 		opacity: 1;
 	}
@@ -28,7 +29,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 8px 32px rgb(0 0 0 / 40%);
 	animation: slideUp 0.3s ease;
 }
 
@@ -37,6 +38,7 @@
 		transform: translateY(20px);
 		opacity: 0;
 	}
+
 	to {
 		transform: translateY(0);
 		opacity: 1;

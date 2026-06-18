@@ -6,15 +6,20 @@ import styles from './PersonalTopSection.module.scss';
 
 interface PersonalTopSectionProps {
 	items: PersonalTopItem[];
-	// true — это собственный профиль пользователя; иначе — чужой.
 	isOwn?: boolean;
 }
 
 const RANK_LABELS = ['I', 'II', 'III'];
 
 const scoreColor = (score: number): string => {
-	if (score >= 75) return '#6fff9e';
-	if (score >= 50) return '#ffd166';
+	if (score >= 75) {
+		return '#6fff9e';
+	}
+
+	if (score >= 50) {
+		return '#ffd166';
+	}
+
 	return '#ff6b6b';
 };
 
@@ -25,9 +30,6 @@ const PersonalTopSection: React.FC<PersonalTopSectionProps> = ({
 	const navigate = useNavigate();
 	const s3 = (S3_ADDRESS || '').replace(/\/+$/, '');
 
-	// Защита от мусорных строк: личный топ строится по dance_attempts,
-	// у старых записей до миграции attempt_id может быть NULL → undefined
-	// на фронте → /compare/undefined. Просто пропускаем такие.
 	const safeItems = items.filter((it) => !!it.user_dance_id);
 
 	if (safeItems.length === 0) {
@@ -53,7 +55,9 @@ const PersonalTopSection: React.FC<PersonalTopSectionProps> = ({
 						className={`${styles.card} ${idx === 0 ? styles.cardGold : ''}`}
 						onClick={() => navigate(`/compare/${item.user_dance_id}`)}
 					>
-						<span className={styles.rank}>{RANK_LABELS[idx] ?? `${idx + 1}`}</span>
+						<span className={styles.rank}>
+							{RANK_LABELS[idx] ?? `${idx + 1}`}
+						</span>
 						<video
 							className={styles.thumb}
 							src={`${s3}/results/${item.dance_id}/video.mp4`}
@@ -67,7 +71,7 @@ const PersonalTopSection: React.FC<PersonalTopSectionProps> = ({
 						/>
 						<div className={styles.info}>
 							<span className={styles.name}>
-								{item.dance_title || 'Танец'}
+								{item.user_name || 'Без названия'}
 							</span>
 							<span className={styles.date}>
 								{new Date(item.achieved_at).toLocaleDateString('ru-RU', {

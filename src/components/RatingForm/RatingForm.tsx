@@ -105,6 +105,7 @@ export const RatingForm: React.FC<RatingFormProps> = ({
 		coordination: 3,
 		repeatability: 3,
 	});
+
 	const [submitting, setSubmitting] = useState(false);
 	const [aggregated, setAggregated] = useState<RateResponse | null>(null);
 
@@ -112,18 +113,11 @@ export const RatingForm: React.FC<RatingFormProps> = ({
 	const hasSentRef = useRef(false);
 	const aggregatedRef = useRef<RateResponse | null>(null);
 
-	useEffect(() => {
-		if (danceId && pendingValuesRef.current && !hasSentRef.current) {
-			sendRatingToBackend(pendingValuesRef.current);
-		}
-	}, [danceId]);
-
-	const handleChange = (key: keyof RatingValues, value: number) => {
-		setValues((prev) => ({ ...prev, [key]: value }));
-	};
-
 	const sendRatingToBackend = async (ratingValues: RatingValues) => {
-		if (hasSentRef.current) return;
+		if (hasSentRef.current) {
+			return;
+		}
+
 		hasSentRef.current = true;
 
 		try {
@@ -134,12 +128,24 @@ export const RatingForm: React.FC<RatingFormProps> = ({
 				coordination: ratingValues.coordination * 2,
 				repeatability: ratingValues.repeatability * 2,
 			});
+
 			setAggregated(result);
 			aggregatedRef.current = result;
-		} catch (err) {
+		} catch {
 			setSubmitting(false);
 			hasSentRef.current = false;
 		}
+	};
+
+	useEffect(() => {
+		if (danceId && pendingValuesRef.current && !hasSentRef.current) {
+			sendRatingToBackend(pendingValuesRef.current);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [danceId]);
+
+	const handleChange = (key: keyof RatingValues, value: number) => {
+		setValues((prev) => ({ ...prev, [key]: value }));
 	};
 
 	const handleSubmit = () => {

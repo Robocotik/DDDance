@@ -15,47 +15,10 @@
 	transition: transform 0.3s ease;
 	outline: none;
 
-	&:hover {
-		transform: translateY(-1px);
-	}
-
-	&:hover::after {
-		opacity: 1;
-		animation: shine 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
-
 	&:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
-
-		&:hover {
-			transform: none;
-		}
-
-		&::after {
-			display: none;
-		}
 	}
-}
-
-.btn::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		rgb(255 255 255 / 0%) 0%,
-		rgb(255 255 255 / 20%) 25%,
-		rgb(255 255 255 / 40%) 50%,
-		rgb(255 255 255 / 20%) 75%,
-		rgb(255 255 255 / 0%) 100%
-	);
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.3s ease;
 }
 
 .sizel {
@@ -68,16 +31,6 @@
 
 .sizes {
 	font-size: var(--font-size-16);
-}
-
-@keyframes shine {
-	0% {
-		left: -100%;
-	}
-
-	100% {
-		left: 200%;
-	}
 }
 
 @media (max-width: 768px) {

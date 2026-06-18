@@ -3,9 +3,43 @@ import { getDancesCatalog } from '@/api/dances/catalog';
 import Icon from '@/components/Icon/Icon';
 import Loading from '@/components/Loading/Loading';
 import { S3_ADDRESS } from '@/consts/urls';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CatalogPage.module.scss';
+
+type DurationFilter = 'all' | '<1' | '1-3' | '3+';
+
+const DURATION_FILTER_OPTIONS: { value: DurationFilter; label: string }[] = [
+	{ value: 'all', label: 'Любая' },
+	{ value: '<1', label: '< 1 мин' },
+	{ value: '1-3', label: '1–3 мин' },
+	{ value: '3+', label: '3+ мин' },
+];
+
+function formatDuration(sec: number): string {
+	const m = Math.floor(sec / 60);
+	const s = sec % 60;
+	return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function matchesDurationFilter(
+	sec: number | undefined,
+	filter: DurationFilter,
+): boolean {
+	if (filter === 'all' || sec === undefined || sec === 0) {
+		return true;
+	}
+
+	if (filter === '<1') {
+		return sec < 60;
+	}
+
+	if (filter === '1-3') {
+		return sec >= 60 && sec <= 180;
+	}
+
+	return sec > 180;
+}
 
 const SORT_OPTIONS: { value: CatalogSort; label: string; icon: string }[] = [
 	{ value: 'popular', label: 'Популярное', icon: 'fire' },
@@ -37,16 +71,21 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const wrapperRef = useRef<HTMLDivElement>(null);
 
-	const videoSrc = dance.url
-		? dance.url.startsWith('http')
+	let videoSrc: string | undefined;
+
+	if (dance.url) {
+		videoSrc = dance.url.startsWith('http')
 			? dance.url
-			: S3_ADDRESS + dance.url
-		: undefined;
+			: S3_ADDRESS + dance.url;
+	}
 
 	useEffect(() => {
 		const wrapper = wrapperRef.current;
 		const video = videoRef.current;
-		if (!wrapper || !video) return;
+
+		if (!wrapper || !video) {
+			return;
+		}
 
 		const observer = new IntersectionObserver(
 			([entry]) => {
@@ -58,6 +97,7 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 			},
 			{ threshold: 0.25 },
 		);
+
 		observer.observe(wrapper);
 		return () => observer.disconnect();
 	}, []);
@@ -111,29 +151,39 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 					<div className={styles.cardStats}>
 						{dance.attempt_count !== undefined && (
 							<span className={styles.cardStat}>
-								<Icon name="clapper" size="1em" alt="Попыток" /> {dance.attempt_count}
+								<Icon name="clapper" size="1em" alt="Попыток" />{' '}
+								{dance.attempt_count}
 							</span>
 						)}
 						{dance.avg_score !== undefined && (
 							<span className={styles.cardStat}>
-								<Icon name="star" size="1em" alt="Очков" /> {Math.round(dance.avg_score)}%
+								<Icon name="star" size="1em" alt="Очков" />{' '}
+								{Math.round(dance.avg_score)}%
 							</span>
 						)}
 					</div>
 				)}
-				{(dance.like_count !== undefined ||
-					dance.view_count !== undefined) && (
+				{(dance.like_count !== undefined || dance.view_count !== undefined) && (
 					<div className={`${styles.cardStats} ${styles.cardStatsCommunity}`}>
 						{dance.like_count !== undefined && (
 							<span className={styles.cardStat}>
-								<Icon name="heart-filled" size="1em" alt="Лайков" /> {dance.like_count}
+								<Icon name="heart-filled" size="1em" alt="Лайков" />{' '}
+								{dance.like_count}
 							</span>
 						)}
 						{dance.view_count !== undefined && (
 							<span className={styles.cardStat}>
-								<Icon name="eye" size="1em" alt="Просмотров" /> {dance.view_count}
+								<Icon name="eye" size="1em" alt="Просмотров" />{' '}
+								{dance.view_count}
 							</span>
 						)}
+					</div>
+				)}
+				{dance.duration_sec !== undefined && dance.duration_sec > 0 && (
+					<div className={styles.cardStats}>
+						<span className={styles.cardStat}>
+							⏱ {formatDuration(dance.duration_sec)}
+						</span>
 					</div>
 				)}
 			</div>
@@ -150,9 +200,14 @@ const CatalogPage: React.FC = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState('');
 	const [sort, setSort] = useState<CatalogSort>('popular');
+	const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const searchRef = useRef(search);
+	useLayoutEffect(() => {
+		searchRef.current = search;
+	});
 
 	const fetchDances = (
 		searchValue: string,
@@ -167,7 +222,12 @@ const CatalogPage: React.FC = () => {
 			setError(null);
 		}
 
-		getDancesCatalog({ search: searchValue || undefined, sort: sortValue, page: pageNum, limit: PAGE_LIMIT })
+		getDancesCatalog({
+			search: searchValue || undefined,
+			sort: sortValue,
+			page: pageNum,
+			limit: PAGE_LIMIT,
+		})
 			.then((data) => {
 				setDances((prev) => (append ? [...prev, ...data.dances] : data.dances));
 				setHasMore(data.pagination.has_more);
@@ -185,13 +245,24 @@ const CatalogPage: React.FC = () => {
 
 	useEffect(() => {
 		setPage(1);
-		fetchDances(search, sort, 1, false);
+		fetchDances(searchRef.current, sort, 1, false);
 	}, [sort]);
+
+	useEffect(
+		() => () => {
+			clearTimeout(debounceRef.current ?? undefined);
+		},
+		[],
+	);
 
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearch(value);
-		if (debounceRef.current) clearTimeout(debounceRef.current);
+
+		if (debounceRef.current) {
+			clearTimeout(debounceRef.current);
+		}
+
 		debounceRef.current = setTimeout(() => {
 			setPage(1);
 			fetchDances(value, sort, 1, false);
@@ -228,6 +299,17 @@ const CatalogPage: React.FC = () => {
 							</button>
 						))}
 					</div>
+					<div className={styles.sortGroup}>
+						{DURATION_FILTER_OPTIONS.map((opt) => (
+							<button
+								key={opt.value}
+								className={`${styles.sortBtn} ${durationFilter === opt.value ? styles.sortBtnActive : ''}`}
+								onClick={() => setDurationFilter(opt.value)}
+							>
+								{opt.label}
+							</button>
+						))}
+					</div>
 				</div>
 
 				{loading && (
@@ -240,7 +322,9 @@ const CatalogPage: React.FC = () => {
 					<div className={styles.grid}>
 						<div className={styles.emptyState}>
 							<p className={styles.emptyStateTitle}>Что-то пошло не так</p>
-							<p className={styles.emptyStateHint}>Не удалось загрузить список танцев. Попробуйте позже.</p>
+							<p className={styles.emptyStateHint}>
+								Не удалось загрузить список танцев. Попробуйте позже.
+							</p>
 						</div>
 					</div>
 				)}
@@ -261,9 +345,13 @@ const CatalogPage: React.FC = () => {
 				{!loading && !error && dances.length > 0 && (
 					<>
 						<div className={styles.grid}>
-							{dances.map((dance) => (
-								<DanceCard key={dance.id} dance={dance} />
-							))}
+							{dances
+								.filter((d) =>
+									matchesDurationFilter(d.duration_sec, durationFilter),
+								)
+								.map((dance) => (
+									<DanceCard key={dance.id} dance={dance} />
+								))}
 						</div>
 
 						{hasMore && (

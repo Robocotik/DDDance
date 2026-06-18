@@ -44,7 +44,9 @@ export const getTimeline = async (
 	}
 };
 
-export const getKeyframes = async (danceId: string): Promise<Keyframes | null> => {
+export const getKeyframes = async (
+	danceId: string,
+): Promise<Keyframes | null> => {
 	try {
 		const response = await http.get<Keyframes>(`/dances/${danceId}/keyframes`);
 
@@ -78,6 +80,7 @@ export const getLeaderboard = async (
 	const response = await http.get<LeaderboardResponse>(
 		`/dances/${danceId}/leaderboard`,
 	);
+
 	return response.data;
 };
 
@@ -94,12 +97,44 @@ export const getDanceStats = async (danceId: string): Promise<DanceStats> => {
 	return response.data;
 };
 
-/**
- * Идемпотентно засчитывает просмотр урока. Дедуп — на бэке по
- * (dance_id, viewer_id). viewer_id для авторизованных = user.id,
- * для анонимов — UUID из cookie `DDDanceDeviceID` (бэк ставит сам).
- * `withCredentials: true` важен, чтобы cookie долетела до сервера.
- */
 export const recordDanceView = async (danceId: string): Promise<void> => {
-	await http.post(`/dances/${danceId}/view`, undefined, { withCredentials: true });
+	await http.post(`/dances/${danceId}/view`, undefined, {
+		withCredentials: true,
+	});
+};
+
+export const updateSegmentDescription = async (
+	danceId: string,
+	segmentIndex: number,
+	description: string,
+): Promise<void> => {
+	await http.put(`/dances/${danceId}/segments/${segmentIndex}/description`, {
+		description,
+	});
+};
+
+export const getDanceSegmentDescriptions = async (
+	danceId: string,
+): Promise<Record<number, string>> => {
+	const response = await http.get<Record<number, string>>(
+		`/dances/${danceId}/segments/descriptions`,
+	);
+
+	return response.data;
+};
+
+export interface FriendScore {
+	friend_login: string;
+	avatar_url: string;
+	best_score: number;
+}
+
+export const getFriendsScores = async (
+	danceId: string,
+): Promise<FriendScore[]> => {
+	const response = await http.get<FriendScore[]>(
+		`/dances/${danceId}/friends-scores`,
+	);
+
+	return response.data;
 };

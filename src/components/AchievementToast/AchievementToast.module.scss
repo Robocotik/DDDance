@@ -1,0 +1,91 @@
+.toast {
+	position: fixed;
+	bottom: 150px;
+	right: 16px;
+	z-index: 1200;
+	background: var(--color-menu-bg);
+	border: 1px solid rgb(245 197 66 / 55%);
+	border-radius: 14px;
+	padding: 14px 16px;
+	max-width: 320px;
+	width: calc(100vw - 32px);
+	box-shadow: 0 8px 32px rgb(0 0 0 / 45%);
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	animation: slideIn 0.3s ease;
+
+	@media (min-width: 480px) {
+		width: 320px;
+	}
+}
+
+@keyframes slideIn {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.icon {
+	font-size: 24px;
+	flex-shrink: 0;
+	line-height: 1.1;
+}
+
+.text {
+	flex: 1;
+	min-width: 0;
+}
+
+.kicker {
+	font-family: var(--font-main);
+	font-size: var(--font-size-12, 12px);
+	color: #f5c542;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin: 0 0 2px;
+}
+
+.title {
+	font-family: var(--font-main);
+	font-size: var(--font-size-16);
+	color: var(--color-text);
+	font-weight: 700;
+	margin: 0 0 2px;
+}
+
+.sub {
+	font-family: var(--font-main);
+	font-size: var(--font-size-14);
+	color: rgb(239 238 234 / 70%);
+	margin: 0;
+	line-height: 1.35;
+}
+
+.btnClose {
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	background: rgb(255 255 255 / 10%);
+	color: var(--color-text);
+	font-size: 18px;
+	line-height: 1;
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	transition: background 0.15s;
+
+	&:hover {
+		background: rgb(255 255 255 / 20%);
+	}
+}

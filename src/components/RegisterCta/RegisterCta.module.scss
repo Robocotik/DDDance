@@ -6,10 +6,10 @@
 	width: 320px;
 	max-width: calc(100vw - 40px);
 	padding: 20px 22px;
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	border: 1px solid rgb(255 255 255 / 12%);
 	border-radius: 16px;
 	background: #231b48;
-	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
 	animation: ctaIn 0.25s ease-out;
 }
 
@@ -19,7 +19,7 @@
 	right: 12px;
 	border: none;
 	background: transparent;
-	color: rgba(255, 255, 255, 0.6);
+	color: rgb(255 255 255 / 60%);
 	font-size: 22px;
 	line-height: 1;
 	cursor: pointer;

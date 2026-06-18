@@ -1,17 +1,19 @@
-import type { CompareResponse, LoadDanceResult, TaskStatus } from '@/api/users/compare';
+import type {
+	CompareResponse,
+	LoadDanceResult,
+	TaskStatus,
+} from '@/api/users/compare';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type TaskType = 'upload' | 'compare';
 
 export interface UploadState {
-	// Старые поля — сохранены для обратной совместимости с LessonPage
 	isUploading: boolean;
 	isProcessing: boolean;
 	userDanceId: string | null;
 	error: string | null;
 	referenceDanceId: string | null;
 	showRating: boolean;
-	// Поля асинхронной задачи
 	taskId: string | null;
 	taskType: TaskType | null;
 	taskStatus: TaskStatus;
@@ -19,7 +21,6 @@ export interface UploadState {
 	stageName: string;
 	danceId: string | null;
 	videoKey: string | null;
-	// Результат готов — показать popup
 	resultReady: boolean;
 	moderationFailed: boolean;
 	moderationReason: string | null;
@@ -52,7 +53,6 @@ const uploadSlice = createSlice({
 	name: 'upload',
 	initialState,
 	reducers: {
-		// Вызывается перед HTTP-запросом загрузки видео (до получения task_id)
 		videoUploading: (_state, action: PayloadAction<{ taskType: TaskType }>) => {
 			return {
 				...initialState,
@@ -63,7 +63,6 @@ const uploadSlice = createSlice({
 				progress: 0,
 			};
 		},
-		// Вызывается сразу после получения task_id от сервера (202)
 		taskEnqueued: (
 			_state,
 			action: PayloadAction<{
@@ -75,8 +74,15 @@ const uploadSlice = createSlice({
 				videoKey?: string;
 			}>,
 		) => {
-			const { taskId, taskType, danceId, userDanceId, referenceDanceId, videoKey } =
-				action.payload;
+			const {
+				taskId,
+				taskType,
+				danceId,
+				userDanceId,
+				referenceDanceId,
+				videoKey,
+			} = action.payload;
+
 			return {
 				...initialState,
 				isUploading: false,
@@ -92,17 +98,19 @@ const uploadSlice = createSlice({
 				videoKey: videoKey ?? null,
 			};
 		},
-		// Обновление прогресса при поллинге
 		taskProgressUpdated: (
 			state,
-			action: PayloadAction<{ progress: number; stageName: string; taskStatus: TaskStatus }>,
+			action: PayloadAction<{
+				progress: number;
+				stageName: string;
+				taskStatus: TaskStatus;
+			}>,
 		) => {
 			state.progress = action.payload.progress;
 			state.stageName = action.payload.stageName;
 			state.taskStatus = action.payload.taskStatus;
 			state.isProcessing = true;
 		},
-		// Задача успешно завершена
 		taskCompleted: (
 			state,
 			action: PayloadAction<{
@@ -115,10 +123,12 @@ const uploadSlice = createSlice({
 			state.progress = 100;
 			state.stageName = 'Готово';
 			state.resultReady = true;
+
 			if (action.payload.compareResult) {
 				state.compareResult = action.payload.compareResult;
 				state.userDanceId = action.payload.compareResult.user_dance_id ?? null;
 			}
+
 			if (action.payload.uploadResult) {
 				state.uploadResult = action.payload.uploadResult;
 				state.danceId = action.payload.uploadResult.dance_id ?? null;
@@ -126,11 +136,8 @@ const uploadSlice = createSlice({
 		},
 		taskFailed: (state, action: PayloadAction<string>) => {
 			const err = action.payload ?? '';
-			const isModerationError =
-				/moderat/i.test(err) || /модерац/i.test(err);
-			// Сбрасываем оба флага: если ошибка пришла на этапе загрузки видео
-			// (POST упал до получения task_id), активен именно isUploading —
-			// без его сброса прогресс-бар «зависает».
+			const isModerationError = /moderat/i.test(err) || /модерац/i.test(err);
+
 			state.isUploading = false;
 			state.isProcessing = false;
 			state.taskStatus = 'failed';
@@ -138,8 +145,6 @@ const uploadSlice = createSlice({
 			state.resultReady = false;
 			state.moderationFailed = isModerationError;
 		},
-		// Видео не прошло премодерацию (ответ 202 MODERATION_PENDING).
-		// reason — машиночитаемая причина от ML-сервиса.
 		moderationRejected: (state, action: PayloadAction<string>) => {
 			state.isUploading = false;
 			state.isProcessing = false;
@@ -148,13 +153,11 @@ const uploadSlice = createSlice({
 			state.moderationFailed = true;
 			state.moderationReason = action.payload || null;
 		},
-		// Пользователь открыл результат (popup закрыт / навигация произошла)
 		resultAcknowledged: (state) => {
 			state.resultReady = false;
 			state.moderationFailed = false;
 			state.moderationReason = null;
 		},
-		// Устаревшие редьюсеры — оставлены для совместимости
 		startUpload: (_state, action: PayloadAction<string>) => {
 			return {
 				...initialState,

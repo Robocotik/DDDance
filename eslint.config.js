@@ -102,6 +102,7 @@ export default defineConfig([
 		rules: {
 			...Rules,
 			'no-console': 'off',
+			'no-empty': ['error', { allowEmptyCatch: true }],
 			'@typescript-eslint/no-empty-object-type': 'off',
 			'@typescript-eslint/no-this-alias': 'off',
 			'@typescript-eslint/no-unused-vars': [

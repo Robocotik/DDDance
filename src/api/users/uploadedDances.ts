@@ -15,7 +15,6 @@ export interface UploadedDance {
 	video_path: string;
 	uploaded_at: string;
 	difficulty?: Difficulty;
-	// true — сложность посчитана по оценкам пользователей, false — задана автором
 	difficulty_by_users?: boolean;
 	attempt_count?: number;
 	avg_score?: number;
@@ -34,15 +33,15 @@ export const setDanceName = async (
 	publish: boolean,
 	difficulty?: string,
 ): Promise<void> => {
-	// difficulty не передаём при простом переименовании — иначе бэкенд
-	// нормализовал бы пустую строку в "medium" и затёр выбор автора.
 	const body: { title: string; publish: boolean; difficulty?: string } = {
 		title,
 		publish,
 	};
+
 	if (difficulty) {
 		body.difficulty = difficulty;
 	}
+
 	await http.post(`/users/dance/${danceId}/name`, body);
 };
 

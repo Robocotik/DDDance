@@ -17,7 +17,9 @@ const LikeButton: React.FC<LikeButtonProps> = ({ danceId }) => {
 	const isLikedSelector = useMemo(() => selectIsLiked(danceId), [danceId]);
 	const isLiked = useSelector(isLikedSelector);
 
-	if (!isAuthenticated) return null;
+	if (!isAuthenticated) {
+		return null;
+	}
 
 	const handleClick = (e: React.MouseEvent) => {
 		e.stopPropagation();

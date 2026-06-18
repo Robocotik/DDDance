@@ -20,20 +20,18 @@ import { Input } from '../common/Input/Input';
 import { VkIdAuthButton } from '../VkIdAuthButton/VkIdAuthButton';
 import styles from './Auth.module.css';
 
-// Закрепить за пользователем dance_id, которые он загружал анонимно.
-// Сетевая ошибка не блокирует логин: dance_id остаются в localStorage
-// и будут переотправлены при следующей авторизации.
 const claimPendingUploads = async (): Promise<void> => {
-	// После входа анонимный прогресс в шапке больше не нужен.
 	clearAnonProgress();
 	const ids = getPendingAnonymousUploads();
-	if (ids.length === 0) return;
+
+	if (ids.length === 0) {
+		return;
+	}
+
 	try {
 		await claimUploads(ids);
 		clearPendingAnonymousUploads();
-	} catch {
-		/* оставляем в localStorage для следующей попытки */
-	}
+	} catch {}
 };
 
 type AuthProps = {
@@ -56,11 +54,11 @@ export const Auth: FC<AuthProps> = ({
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	// Куда вернуться после успешной авторизации. Используется, чтобы пользователь
-	// не «терял» страницу сравнения, если ушёл регистрироваться из неё.
 	const returnToParam = searchParams.get('returnTo');
 	const safeReturnTo =
-		returnToParam && returnToParam.startsWith('/') && !returnToParam.startsWith('//')
+		returnToParam &&
+		returnToParam.startsWith('/') &&
+		!returnToParam.startsWith('//')
 			? returnToParam
 			: null;
 
@@ -74,6 +72,7 @@ export const Auth: FC<AuthProps> = ({
 	const redirectClick = safeReturnTo
 		? `${redirectPath}?returnTo=${encodeURIComponent(safeReturnTo)}`
 		: redirectPath;
+
 	const redirectText = isRegistration
 		? 'Уже зарегистрированы?'
 		: 'У меня нет аккаунта';
@@ -189,7 +188,9 @@ export const Auth: FC<AuthProps> = ({
 							onChange={(e) => onChange(e, setRepeatPassword)}
 						/>
 					)}
-					<p className={styles.error} aria-live="polite">{error}</p>
+					<p className={styles.error} aria-live="polite">
+						{error}
+					</p>
 				</div>
 				{isRegistration && (
 					<label className={styles.rulesConsent}>

@@ -24,6 +24,27 @@
 	gap: 20px;
 }
 
+.achievementsBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 10px;
+	border-radius: 999px;
+	border: 1px solid rgb(245 197 66 / 45%);
+	background: rgb(245 197 66 / 12%);
+	color: #f5c542;
+	font-family: 'Comfortaa Variable', sans-serif;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.15s;
+
+	&:hover {
+		background: rgb(245 197 66 / 22%);
+	}
+}
+
 .logo {
 	color: var(--color-accent);
 	font-size: var(--font-size-30);
@@ -34,7 +55,7 @@
 .nav {
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: 32px;
 	flex: 1;
 	justify-content: center;
 }
@@ -45,10 +66,34 @@
 	transition:
 		transform 0.2s ease,
 		opacity 0.2s ease;
+}
 
-	&:hover {
-		transform: translateY(-2px);
-	}
+.navLinkActive {
+	color: var(--color-accent);
+}
+
+.navDuelsWrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+
+.navBadge {
+	position: absolute;
+	top: -8px;
+	right: -14px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	border-radius: 8px;
+	background: #94228e;
+	color: #fff;
+	font-size: 10px;
+	font-family: 'Comfortaa Variable', sans-serif;
+	font-weight: 700;
+	line-height: 16px;
+	text-align: center;
+	pointer-events: none;
 }
 
 .register {
@@ -66,10 +111,6 @@
 }
 
 .userLogin:hover,
-.register:hover {
-	transform: translateY(-2px);
-}
-
 .userLogin:active,
 .register:active {
 	transform: translateY(0);
@@ -93,5 +134,23 @@
 
 	.register {
 		display: none;
+	}
+
+	.nav {
+		gap: 10px;
+	}
+
+	.navLink {
+		font-size: 13px;
+	}
+}
+
+@media (max-width: 480px) {
+	.nav {
+		gap: 6px;
+	}
+
+	.navLink {
+		font-size: 12px;
 	}
 }

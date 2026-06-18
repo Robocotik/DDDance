@@ -35,6 +35,7 @@ const InTrends: React.FC = () => {
 
 	useEffect(() => {
 		dispatch(trendActions.getTrendVideosAction());
+
 		return () => {
 			dispatch(trendActions.clearTrendsAction());
 		};
@@ -43,37 +44,53 @@ const InTrends: React.FC = () => {
 	useEffect(() => {
 		const animate = () => {
 			const track = trackRef.current;
+
 			if (track && !isUserInteracting.current) {
 				track.scrollLeft += AUTO_SCROLL_SPEED;
 				const half = track.scrollWidth / 2;
+
 				if (track.scrollLeft >= half) {
 					track.scrollLeft -= half;
 				}
 			}
+
 			rafRef.current = requestAnimationFrame(animate);
 		};
 
 		rafRef.current = requestAnimationFrame(animate);
+
 		return () => {
 			cancelAnimationFrame(rafRef.current);
-			if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+
+			if (resumeTimerRef.current) {
+				clearTimeout(resumeTimerRef.current);
+			}
 		};
 	}, []);
 
 	const pauseInteraction = () => {
 		isUserInteracting.current = true;
-		if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+
+		if (resumeTimerRef.current) {
+			clearTimeout(resumeTimerRef.current);
+		}
 	};
 
 	const scheduleResume = () => {
-		if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+		if (resumeTimerRef.current) {
+			clearTimeout(resumeTimerRef.current);
+		}
+
 		resumeTimerRef.current = setTimeout(() => {
 			isUserInteracting.current = false;
 		}, RESUME_DELAY);
 	};
 
 	const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (!trackRef.current) return;
+		if (!trackRef.current) {
+			return;
+		}
+
 		isDragging.current = true;
 		hasDragged.current = false;
 		pauseInteraction();
@@ -83,18 +100,32 @@ const InTrends: React.FC = () => {
 	};
 
 	const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (!isDragging.current || !trackRef.current) return;
+		if (!isDragging.current || !trackRef.current) {
+			return;
+		}
+
 		e.preventDefault();
 		const x = e.pageX - trackRef.current.getBoundingClientRect().left;
 		const delta = x - startX.current;
-		if (Math.abs(delta) > DRAG_THRESHOLD) hasDragged.current = true;
+
+		if (Math.abs(delta) > DRAG_THRESHOLD) {
+			hasDragged.current = true;
+		}
+
 		trackRef.current.scrollLeft = scrollLeft.current - delta * 1.2;
 	};
 
 	const onMouseUp = () => {
-		if (!isDragging.current) return;
+		if (!isDragging.current) {
+			return;
+		}
+
 		isDragging.current = false;
-		if (trackRef.current) trackRef.current.style.cursor = '';
+
+		if (trackRef.current) {
+			trackRef.current.style.cursor = '';
+		}
+
 		scheduleResume();
 	};
 
@@ -106,18 +137,32 @@ const InTrends: React.FC = () => {
 	};
 
 	const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-		if (!trackRef.current) return;
+		if (!trackRef.current) {
+			return;
+		}
+
 		hasDragged.current = false;
 		pauseInteraction();
-		startX.current = e.touches[0].pageX - trackRef.current.getBoundingClientRect().left;
+		startX.current =
+			e.touches[0].pageX - trackRef.current.getBoundingClientRect().left;
+
 		scrollLeft.current = trackRef.current.scrollLeft;
 	};
 
 	const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-		if (!trackRef.current) return;
-		const x = e.touches[0].pageX - trackRef.current.getBoundingClientRect().left;
+		if (!trackRef.current) {
+			return;
+		}
+
+		const x =
+			e.touches[0].pageX - trackRef.current.getBoundingClientRect().left;
+
 		const delta = x - startX.current;
-		if (Math.abs(delta) > DRAG_THRESHOLD) hasDragged.current = true;
+
+		if (Math.abs(delta) > DRAG_THRESHOLD) {
+			hasDragged.current = true;
+		}
+
 		trackRef.current.scrollLeft = scrollLeft.current - delta;
 	};
 

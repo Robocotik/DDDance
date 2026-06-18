@@ -112,6 +112,7 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 								.filter(Boolean)
 								.join(' ')
 								.trim();
+
 							const login =
 								(user.email ?? user.phone ?? fullName) ||
 								`vk_${tokenResult.user_id}`;
@@ -120,6 +121,7 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 								const response = await http.post('/auth/vk', {
 									access_token: accessToken,
 								});
+
 								onAuthenticatedRef.current?.(response.data);
 							} catch (signInError: any) {
 								if (signInError?.response?.status === 412) {
@@ -127,6 +129,7 @@ export const VkIdAuthButton: FC<VkIdAuthButtonProps> = ({
 										access_token: accessToken,
 										login: login,
 									});
+
 									onAuthenticatedRef.current?.(response.data);
 								} else {
 									throw signInError;

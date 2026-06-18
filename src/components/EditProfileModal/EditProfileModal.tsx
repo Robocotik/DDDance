@@ -32,6 +32,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 			setAvatarPreview(null);
 			return;
 		}
+
 		const url = URL.createObjectURL(avatar);
 		setAvatarPreview(url);
 		return () => URL.revokeObjectURL(url);
@@ -45,32 +46,42 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
 	const handlePickFile = (file: File | null) => {
 		setError(null);
+
 		if (!file) {
 			setAvatar(null);
 			return;
 		}
+
 		if (!ALLOWED_TYPES.includes(file.type)) {
 			setError('Поддерживаются только JPEG, PNG и WebP.');
 			return;
 		}
+
 		if (file.size > MAX_AVATAR_BYTES) {
 			setError('Файл больше 5 МБ.');
 			return;
 		}
+
 		setAvatar(file);
 	};
 
 	const trimmedLogin = login.trim();
 	const loginChanged = trimmedLogin !== currentLogin;
 	const canSubmit =
-		!submitting && (loginChanged || avatar !== null) && trimmedLogin.length >= 6;
+		!submitting &&
+		(loginChanged || avatar !== null) &&
+		trimmedLogin.length >= 6;
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!canSubmit) return;
+
+		if (!canSubmit) {
+			return;
+		}
 
 		setSubmitting(true);
 		setError(null);
+
 		try {
 			await dispatch(
 				updateUserProfile({
@@ -78,6 +89,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 					avatar: avatar ?? undefined,
 				}),
 			);
+
 			onSaved?.();
 			onClose();
 		} catch (err) {
@@ -87,9 +99,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 				'response' in err &&
 				typeof (err as { response?: { status?: number } }).response?.status ===
 					'number';
+
 			const status = isAxiosErr
 				? (err as { response: { status: number } }).response.status
 				: 500;
+
 			if (status === 400) {
 				setError('Этот логин занят или не подходит. Попробуй другой.');
 			} else if (status === 401) {
@@ -170,7 +184,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 							maxLength={15}
 							autoComplete="off"
 						/>
-						<span className={styles.fieldHint}>6–15 символов, латиница/цифры</span>
+						<span className={styles.fieldHint}>
+							6–15 символов, латиница/цифры
+						</span>
 					</label>
 
 					{error && <p className={styles.error}>{error}</p>}

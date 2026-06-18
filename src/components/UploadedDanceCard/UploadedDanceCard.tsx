@@ -38,24 +38,22 @@ const UploadedDanceCard: React.FC<UploadedDanceCardProps> = ({
 	const videoSrc = `${(S3_ADDRESS || '').replace(/\/+$/, '')}/results/${dance.dance_id}/video.mp4`;
 
 	const handleOpen = (): void => {
-		// На неготовых статусах урок всё равно покажет понятный экран
-		// (обрабатывается / на модерации / отклонён) — поэтому переход
-		// разрешён всегда, дальнейшее решит LessonPage.
 		navigate(`/lesson/${dance.dance_id}?segment=full`);
 	};
 
 	const stop = (e: React.MouseEvent): void => e.stopPropagation();
 
-	const statusClass =
-		dance.status === 'published'
-			? styles.statusPublished
-			: dance.status === 'private'
-				? styles.statusPrivate
-				: dance.status === 'rejected'
-					? styles.statusRejected
-					: dance.status === 'pending'
-						? styles.statusPending
-						: styles.statusProcessing;
+	let statusClass = styles.statusProcessing;
+
+	if (dance.status === 'published') {
+		statusClass = styles.statusPublished;
+	} else if (dance.status === 'private') {
+		statusClass = styles.statusPrivate;
+	} else if (dance.status === 'rejected') {
+		statusClass = styles.statusRejected;
+	} else if (dance.status === 'pending') {
+		statusClass = styles.statusPending;
+	}
 
 	return (
 		<div
@@ -114,9 +112,7 @@ const UploadedDanceCard: React.FC<UploadedDanceCardProps> = ({
 					<button
 						type="button"
 						className={`${styles.actionBtn} ${
-							dance.status === 'published'
-								? styles.actionBtnPublished
-								: ''
+							dance.status === 'published' ? styles.actionBtnPublished : ''
 						}`}
 						onClick={(e) => {
 							stop(e);

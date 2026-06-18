@@ -1,21 +1,44 @@
 import type { LeaderboardEntry, LeaderboardResponse } from '@/api/dances';
-import { getLeaderboard } from '@/api/dances';
-import type { CompareResponse, RateResponse, SegmentDiagnostic } from '@/api/users/compare';
+import {
+	getFriendsScores,
+	getLeaderboard,
+	type FriendScore,
+} from '@/api/dances';
+import {
+	getActiveDuelsForDance,
+	submitAttemptToDuels,
+	type ActiveDuelForDance,
+} from '@/api/duels';
+import type { RecommendDance } from '@/api/recommend';
+import { getSimilarDances } from '@/api/recommend';
+import type {
+	CompareResponse,
+	RateResponse,
+	SegmentDiagnostic,
+} from '@/api/users/compare';
 import { getCompareResult, getRating } from '@/api/users/compare';
-import { saveAttemptToProfile, unsaveAttemptFromProfile } from '@/api/users/profile';
+import {
+	getDanceProgress,
+	saveAttemptToProfile,
+	unsaveAttemptFromProfile,
+	type DanceProgressEntry,
+} from '@/api/users/profile';
 import Button from '@/components/Button/Button';
 import CheckYourself from '@/components/CheckYourself/CheckYourself';
 import CompareViewer from '@/components/CompareViewer/CompareViewer';
 import ErrorScreen from '@/components/Error/Error';
 import Loading from '@/components/Loading/Loading';
+import NotDetectedWarning from '@/components/NotDetectedWarning/NotDetectedWarning';
 import PlaybackOverlay from '@/components/PlaybackOverlay/PlaybackOverlay';
-import SaveToProfileDialog, {
-	type SaveOptions,
-} from '@/components/SaveToProfileDialog/SaveToProfileDialog';
 import {
 	AggregatedResults,
 	RatingForm,
 } from '@/components/RatingForm/RatingForm';
+import SaveToProfileDialog, {
+	type SaveOptions,
+} from '@/components/SaveToProfileDialog/SaveToProfileDialog';
+import ScoreSparkline from '@/components/ScoreSparkline/ScoreSparkline';
+import SimilarDances from '@/components/SimilarDances/SimilarDances';
 import { S3_ADDRESS } from '@/consts/urls';
 import { uploadAndCompare } from '@/redux/features/upload/actions';
 import {
@@ -29,53 +52,61 @@ import {
 import { resetUpload } from '@/redux/features/upload/uploadSlice';
 import { selectIsUserAuthenticated } from '@/redux/features/user/selectors';
 import type { AppDispatch } from '@/redux/store';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './ComparePage.module.scss';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const JOINT_BONE_NAMES = [
+	'LeftArm',
+	'RightArm',
+	'LeftForeArm',
+	'RightForeArm',
+	'LeftUpLeg',
+	'RightUpLeg',
+	'LeftLeg',
+	'RightLeg',
+] as const;
 
 const metricColor = (v: number) => {
-	if (v >= 75) return '#5be0a0';
-	if (v >= 40) return '#f5c542';
+	if (v >= 75) {
+		return '#5be0a0';
+	}
+
+	if (v >= 40) {
+		return '#f5c542';
+	}
+
 	return '#ff6b6b';
 };
 
 const scoreMotivation = (score: number): React.ReactNode => {
-	if (score >= 80)
-		return (
-			<>
-				Ты просто огонь! Настоящий танцор в деле
-			</>
-		);
-	if (score >= 60)
-		return (
-			<>
-				Отличная работа! Ты заметно прогрессируешь
-			</>
-		);
-	if (score >= 40)
-		return (
-			<>
-				Неплохо! Ещё пара тренировок — и будет идеально
-			</>
-		);
-	if (score >= 20)
-		return (
-			<>
-				Хорошее начало! Движения становятся точнее с каждым разом
-			</>
-		);
-	return (
-		<>
-			Не сдавайся! Каждый танцор начинал с нуля — ты на верном пути
-		</>
-	);
+	if (score >= 80) {
+		return <>Ты просто огонь! Настоящий танцор в деле</>;
+	}
+
+	if (score >= 60) {
+		return <>Отличная работа! Ты заметно прогрессируешь</>;
+	}
+
+	if (score >= 40) {
+		return <>Неплохо! Ещё пара тренировок — и будет идеально</>;
+	}
+
+	if (score >= 20) {
+		return <>Хорошее начало! Движения становятся точнее с каждым разом</>;
+	}
+
+	return <>Не сдавайся! Каждый танцор начинал с нуля — ты на верном пути</>;
 };
 
-const avatarInitials = (login: string) =>
-	login.slice(0, 2).toUpperCase();
+const avatarInitials = (login: string) => login.slice(0, 2).toUpperCase();
 
 const AVATAR_COLORS = [
 	{ bg: 'rgba(245,197,66,0.2)', color: '#f5c542' },
@@ -84,8 +115,6 @@ const AVATAR_COLORS = [
 	{ bg: 'rgba(255,107,107,0.15)', color: '#ff6b6b' },
 	{ bg: 'rgba(100,180,255,0.15)', color: '#64b4ff' },
 ];
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 interface MetricRowProps {
 	iconName: string;
@@ -99,9 +128,7 @@ const MetricRow: React.FC<MetricRowProps> = ({ label, value }) => {
 	return (
 		<div className={styles.metricRow}>
 			<div className={styles.metricHeader}>
-				<span className={styles.metricName}>
-					{label}
-				</span>
+				<span className={styles.metricName}>{label}</span>
 				<span className={styles.metricVal} style={{ color }}>
 					{rounded}
 				</span>
@@ -126,9 +153,13 @@ const FEEDBACK_LABEL: Record<string, string> = {
 	early: 'Слишком рано',
 	late: 'Слишком поздно',
 	low_amplitude: 'Маленькая амплитуда',
+	not_performed: 'Не выполнен',
 };
 
-const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ segments, danceId }) => {
+const SegmentBarChart: React.FC<SegmentBarChartProps> = ({
+	segments,
+	danceId,
+}) => {
 	const navigate = useNavigate();
 
 	const handleSegmentClick = (idx: number) => {
@@ -142,11 +173,10 @@ const SegmentBarChart: React.FC<SegmentBarChartProps> = ({ segments, danceId }) 
 				{segments.map((seg) => {
 					const color = metricColor(seg.score);
 					const heightPct = Math.max(seg.score, 8);
-					const fbLabel = seg.feedback ? ` · ${FEEDBACK_LABEL[seg.feedback] ?? seg.feedback}` : '';
-					// segment_id с бэка 1-based (segment_results.append({segment_id: idx+1}))
-					// → для отображения берём как есть, для URL урока — конвертим в
-					// 0-based (LessonPage ждёт ?segment=0..N-1; раньше брали +1
-					// и из-за этого первая полоска вела на 2-й сегмент, а последняя — на finish).
+					const fbLabel = seg.feedback
+						? ` · ${FEEDBACK_LABEL[seg.feedback] ?? seg.feedback}`
+						: '';
+
 					const displayNum = seg.segment_id;
 					const segmentParam = Math.max(0, seg.segment_id - 1);
 					return (
@@ -183,20 +213,28 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
 	const userInTop = data.top.some((e) => e.is_me);
 	const userEntry = data.user_entry ?? data.top.find((e) => e.is_me);
 
+	// eslint-disable-next-line sonarjs/cognitive-complexity
 	const renderRow = (entry: LeaderboardEntry, idx: number) => {
-		const { bg, color } = AVATAR_COLORS[Math.min(idx, AVATAR_COLORS.length - 1)];
+		const { bg, color } =
+			AVATAR_COLORS[Math.min(idx, AVATAR_COLORS.length - 1)];
+
 		const clickable = !entry.is_me && !!entry.user_id;
 		const s3 = (S3_ADDRESS || '').replace(/\/+$/, '');
-		const avatarSrc = entry.avatar
-			? entry.avatar.startsWith('http')
+		let avatarSrc: string | null = null;
+
+		if (entry.avatar) {
+			avatarSrc = entry.avatar.startsWith('http')
 				? entry.avatar
-				: `${s3}/${entry.avatar}`
-			: null;
+				: `${s3}/${entry.avatar}`;
+		}
+
 		return (
 			<div
 				key={`${entry.rank}-${entry.login}`}
 				className={`${styles.lbRow} ${entry.is_me ? styles.lbRowMe : ''} ${clickable ? styles.lbRowClickable : ''}`}
-				onClick={clickable ? () => navigate(`/profile/${entry.user_id}`) : undefined}
+				onClick={
+					clickable ? () => navigate(`/profile/${entry.user_id}`) : undefined
+				}
 				role={clickable ? 'link' : undefined}
 			>
 				<div
@@ -218,7 +256,9 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
 						avatarInitials(entry.login)
 					)}
 				</div>
-				<div className={`${styles.lbName} ${entry.is_me ? styles.lbNameMe : ''}`}>
+				<div
+					className={`${styles.lbName} ${entry.is_me ? styles.lbNameMe : ''}`}
+				>
 					{entry.is_me ? 'ты' : entry.login}
 				</div>
 				<div
@@ -235,11 +275,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({ data }) => {
 		<div className={styles.leaderboardCard}>
 			<div className={styles.lbTitleRow}>
 				<span className={styles.cardSectionTitle}>Топ этого танца</span>
-				{userEntry && (
-					<span className={styles.lbBadge}>
-						Ты здесь
-					</span>
-				)}
+				{userEntry && <span className={styles.lbBadge}>Ты здесь</span>}
 			</div>
 
 			{data.top.length === 0 ? (
@@ -283,11 +319,17 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 	const navigate = useNavigate();
 	const [showForm, setShowForm] = useState(false);
 
-	const statsBlock = ratingLoading
-		? <div className={styles.ratingLoading}><Loading /></div>
-		: ratingData
-			? <AggregatedResults data={ratingData} />
-			: null;
+	let statsBlock: React.ReactNode = null;
+
+	if (ratingLoading) {
+		statsBlock = (
+			<div className={styles.ratingLoading}>
+				<Loading />
+			</div>
+		);
+	} else if (ratingData) {
+		statsBlock = <AggregatedResults data={ratingData} />;
+	}
 
 	if (!isAuthenticated) {
 		return (
@@ -296,7 +338,10 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 				{statsBlock}
 				<div className={styles.prompt}>
 					<p className={styles.promptText}>Войдите, чтобы оценить этот танец</p>
-					<button className={styles.actionBtn} onClick={() => navigate('/login')}>
+					<button
+						className={styles.actionBtn}
+						onClick={() => navigate('/login')}
+					>
 						Войти и оценить
 					</button>
 				</div>
@@ -315,7 +360,10 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 							userDanceId={userDanceId}
 							danceId={danceId}
 							onSubmit={(_, aggregated) => {
-								if (aggregated) onRated(aggregated);
+								if (aggregated) {
+									onRated(aggregated);
+								}
+
 								sessionStorage.setItem(`hasRated_${userDanceId}`, 'true');
 								onHasRatedChange();
 								setShowForm(false);
@@ -328,7 +376,10 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 						<p className={styles.promptText}>
 							Хотите оценить сложность танца или изменить оценку?
 						</p>
-						<button className={styles.actionBtn} onClick={() => setShowForm(true)}>
+						<button
+							className={styles.actionBtn}
+							onClick={() => setShowForm(true)}
+						>
 							Оценить танец
 						</button>
 					</div>
@@ -344,14 +395,14 @@ const RatingSection: React.FC<RatingSectionProps> = ({
 			{!ratingLoading && !ratingData && (
 				<div className={styles.emptyState}>
 					<p className={styles.emptyStateTitle}>Оценок пока нет</p>
-					<p className={styles.emptyStateHint}>Будь первым, кто оценит этот танец!</p>
+					<p className={styles.emptyStateHint}>
+						Будь первым, кто оценит этот танец!
+					</p>
 				</div>
 			)}
 		</div>
 	);
 };
-
-// ── Main page ─────────────────────────────────────────────────────────────────
 
 const ComparePage: React.FC = () => {
 	const { userDanceId } = useParams<{ userDanceId: string }>();
@@ -366,11 +417,11 @@ const ComparePage: React.FC = () => {
 	const uploadError = useSelector(selectUploadError);
 	const uploadCompareResult = useSelector(selectCompareResult);
 
-	// Инициализация прямо из sessionStorage — чтобы при переходе из попапа
-	// «Результат готов» (или из «Мои попытки» в той же вкладке) НЕ мелькал
-	// Loading. Параллельно ушёл и StrictMode-flicker.
 	const initialFromCache = ((): CompareResponse | null => {
-		if (!userDanceId) return null;
+		if (!userDanceId) {
+			return null;
+		}
+
 		try {
 			const stored = sessionStorage.getItem(`compare_result_${userDanceId}`);
 			return stored ? (JSON.parse(stored) as CompareResponse) : null;
@@ -378,38 +429,78 @@ const ComparePage: React.FC = () => {
 			return null;
 		}
 	})();
-	const [result, setResult] = useState<CompareResponse | null>(initialFromCache);
+
+	const [result, setResult] = useState<CompareResponse | null>(
+		initialFromCache,
+	);
+
 	const [loading, setLoading] = useState(initialFromCache === null);
 	const [error, setError] = useState<string | null>(null);
+
+	const jointHeatmap = useMemo<Record<string, number> | undefined>(() => {
+		const labels = result?.frame_labels;
+
+		if (!labels || labels.length === 0) {
+			return undefined;
+		}
+
+		const sums = new Array<number>(8).fill(0);
+		let count = 0;
+
+		for (const f of labels) {
+			if (!f.joint_errors || f.joint_errors.length < 8) {
+				continue;
+			}
+
+			for (let i = 0; i < 8; i++) {
+				sums[i] += f.joint_errors[i];
+			}
+
+			count++;
+		}
+
+		if (count === 0) {
+			return undefined;
+		}
+
+		const heatmap: Record<string, number> = {};
+
+		for (let i = 0; i < 8; i++) {
+			heatmap[JOINT_BONE_NAMES[i]] = sums[i] / count;
+		}
+
+		return heatmap;
+	}, [result?.frame_labels]);
 
 	const [ratingData, setRatingData] = useState<RateResponse | null>(null);
 	const [ratingLoading, setRatingLoading] = useState(false);
 	const [hasRated, setHasRated] = useState(false);
 	const [ratingRefreshKey, setRatingRefreshKey] = useState(0);
 
-	const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
+	const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
+		null,
+	);
 
-	// ── Load result: sessionStorage → API fallback ───────────────────────────
+	const [progressData, setProgressData] = useState<DanceProgressEntry[]>([]);
+	const [similarDances, setSimilarDances] = useState<RecommendDance[]>([]);
+	const [friendsScores, setFriendsScores] = useState<FriendScore[]>([]);
+
 	useEffect(() => {
-		if (!userDanceId) return;
+		if (!userDanceId) {
+			return;
+		}
 
 		const stored = sessionStorage.getItem(`compare_result_${userDanceId}`);
+
 		if (stored) {
 			try {
 				setResult(JSON.parse(stored));
 				setError(null);
 				setLoading(false);
 				return;
-			} catch {
-				// повреждённый кэш — идём в API
-			}
+			} catch {}
 		}
 
-		// Если для этой попытки сейчас крутится compare-таска (например, юзер
-		// сделал F5 на /compare/:id ещё до завершения поллинга), не дёргаем
-		// API — он отдаст 404, local error прорастёт в ErrorScreen после
-		// финиша поллинга. Результат прилетит через state.upload.compareResult
-		// в эффекте ниже.
 		if (
 			uploadIsProcessing &&
 			uploadTaskType === 'compare' &&
@@ -418,33 +509,30 @@ const ComparePage: React.FC = () => {
 			return;
 		}
 
-		// Кэша нет — сбрасываем экран в Loading, чтобы юзер не видел
-		// результат предыдущего attempt при навигации /compare/A → /compare/B.
 		setResult(null);
 		setLoading(true);
 		setError(null);
 
-		// Результата нет в сессии — загружаем с бэкенда (переход из профиля)
 		getCompareResult(userDanceId)
 			.then((data) => {
 				setResult(data);
-				sessionStorage.setItem(`compare_result_${userDanceId}`, JSON.stringify(data));
+				sessionStorage.setItem(
+					`compare_result_${userDanceId}`,
+					JSON.stringify(data),
+				);
 			})
 			.catch(() => {
 				setError('Результат не найден. Вернитесь и попробуйте снова.');
 			})
 			.finally(() => setLoading(false));
-		// upload-поля не в deps — они меняются во время поллинга, и нам не нужно
-		// перезапускать fetch на каждый прогресс; компонент при готовности
-		// результата получит данные через отдельный эффект ниже.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [userDanceId]);
 
-	// Когда compare-таска закончилась (фоном поллинга), state.upload.compareResult
-	// содержит готовый результат — подхватываем и сбрасываем локальную ошибку,
-	// чтобы вместо «упс» сразу показался разбор.
 	useEffect(() => {
-		if (uploadCompareResult && uploadCompareResult.user_dance_id === userDanceId) {
+		if (
+			uploadCompareResult &&
+			uploadCompareResult.user_dance_id === userDanceId
+		) {
 			setResult(uploadCompareResult);
 			setError(null);
 			setLoading(false);
@@ -453,21 +541,68 @@ const ComparePage: React.FC = () => {
 
 	useEffect(() => {
 		if (result?.dance_id) {
-			setHasRated(sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true');
+			setHasRated(
+				sessionStorage.getItem(`hasRated_${result.dance_id}`) === 'true',
+			);
 		}
 	}, [result?.dance_id]);
 
-	// ── Load leaderboard ─────────────────────────────────────────────────────
 	useEffect(() => {
-		if (!result?.dance_id) return;
+		if (!result?.dance_id) {
+			return;
+		}
+
 		getLeaderboard(result.dance_id)
 			.then(setLeaderboard)
 			.catch(() => setLeaderboard(null));
 	}, [result?.dance_id]);
 
-	// ── Load ratings ─────────────────────────────────────────────────────────
+	useEffect(() => {
+		if (!result?.dance_id) {
+			return;
+		}
+
+		getSimilarDances(result.dance_id)
+			.then(setSimilarDances)
+			.catch(() => setSimilarDances([]));
+	}, [result?.dance_id]);
+
+	useEffect(() => {
+		if (!result?.dance_id || !isAuthenticated) {
+			return;
+		}
+
+		const controller = new AbortController();
+		getDanceProgress(result.dance_id, controller.signal)
+			.then((data) => {
+				if (!controller.signal.aborted) {
+					setProgressData(data);
+				}
+			})
+			.catch(() => {
+				if (!controller.signal.aborted) {
+					setProgressData([]);
+				}
+			});
+
+		return () => controller.abort();
+	}, [result?.dance_id, isAuthenticated]);
+
+	useEffect(() => {
+		if (!result?.dance_id || !isAuthenticated) {
+			return;
+		}
+
+		getFriendsScores(result.dance_id)
+			.then(setFriendsScores)
+			.catch(() => setFriendsScores([]));
+	}, [result?.dance_id, isAuthenticated]);
+
 	const fetchRating = useCallback(() => {
-		if (!result?.dance_id) return;
+		if (!result?.dance_id) {
+			return;
+		}
+
 		setRatingLoading(true);
 		getRating(result.dance_id)
 			.then(setRatingData)
@@ -475,25 +610,38 @@ const ComparePage: React.FC = () => {
 			.finally(() => setRatingLoading(false));
 	}, [result?.dance_id]);
 
-	useEffect(() => { fetchRating(); }, [fetchRating, ratingRefreshKey]);
+	useEffect(() => {
+		fetchRating();
+	}, [fetchRating, ratingRefreshKey]);
 
-	useEffect(() => () => { dispatch(resetUpload()); }, [dispatch]);
+	useEffect(
+		() => () => {
+			dispatch(resetUpload());
+		},
+		[dispatch],
+	);
 
-	// Когда retry-загрузка завершилась — редирект на новую страницу результата.
-	// ВАЖНО: реагируем ТОЛЬКО на переход uploadUserDanceId в новое значение
-	// (т.е. свежий compare завершился). Без этого reference-сравнения был баг:
-	// при ручной навигации /compare/A → /compare/B React Router не размонтирует
-	// ComparePage, uploadUserDanceId остаётся = A (старая попытка), URL даёт B,
-	// и условие A !== B выкидывало юзера обратно на A. Loading успевал
-	// мелькнуть дважды — это и выглядело как «постоянный re-render».
 	const prevUploadUserDanceIdRef = useRef(uploadUserDanceId);
 	useEffect(() => {
 		const prev = prevUploadUserDanceIdRef.current;
 		prevUploadUserDanceIdRef.current = uploadUserDanceId;
-		if (uploadUserDanceId === prev) return;
-		if (!uploadUserDanceId) return;
-		if (uploadIsUploading || uploadIsProcessing || uploadError) return;
-		if (uploadUserDanceId === userDanceId) return;
+
+		if (uploadUserDanceId === prev) {
+			return;
+		}
+
+		if (!uploadUserDanceId) {
+			return;
+		}
+
+		if (uploadIsUploading || uploadIsProcessing || uploadError) {
+			return;
+		}
+
+		if (uploadUserDanceId === userDanceId) {
+			return;
+		}
+
 		navigate(`/compare/${uploadUserDanceId}`);
 	}, [
 		uploadUserDanceId,
@@ -504,14 +652,39 @@ const ComparePage: React.FC = () => {
 		navigate,
 	]);
 
-	// ── Derived values ───────────────────────────────────────────────────────
 	const segs = result?.segments ?? [];
 	const avg = (fn: (s: SegmentDiagnostic) => number) =>
-		segs.length > 0 ? segs.reduce((acc, s) => acc + fn(s), 0) / segs.length : result?.score ?? 0;
+		segs.length > 0
+			? segs.reduce((acc, s) => acc + fn(s), 0) / segs.length
+			: (result?.score ?? 0);
 
 	const avgTiming = avg((s) => s.timing);
 	const avgAmplitude = avg((s) => s.amplitude);
 	const avgTechnique = avg((s) => s.pose_accuracy);
+
+	const hitRate = useMemo(() => {
+		const labels = result?.frame_labels;
+
+		if (!labels || labels.length === 0) {
+			return null;
+		}
+
+		return (labels.filter((f) => f.hit).length / labels.length) * 100;
+	}, [result?.frame_labels]);
+
+	const notDetectedPct = useMemo(() => {
+		const labels = result?.frame_labels;
+
+		if (!labels || labels.length === 0) {
+			return null;
+		}
+
+		const notDetectedCount = labels.filter(
+			(f) => f.reason === 'not_detected',
+		).length;
+
+		return (notDetectedCount / labels.length) * 100;
+	}, [result?.frame_labels]);
 
 	const score = Math.round(result?.score ?? 0);
 
@@ -529,8 +702,11 @@ const ComparePage: React.FC = () => {
 
 	const handleShare = async () => {
 		const url = window.location.href;
+
 		if (navigator.share) {
-			await navigator.share({ title: 'Мой результат в DDDance', url }).catch(() => {});
+			await navigator
+				.share({ title: 'Мой результат в DDDance', url })
+				.catch(() => {});
 		} else {
 			await navigator.clipboard.writeText(url).catch(() => {});
 		}
@@ -542,13 +718,68 @@ const ComparePage: React.FC = () => {
 	const [showSaveDialog, setShowSaveDialog] = useState(false);
 	const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
+	const [activeDuels, setActiveDuels] = useState<ActiveDuelForDance[]>([]);
+	const [duelSubmitting, setDuelSubmitting] = useState(false);
+	const [duelSubmitted, setDuelSubmitted] = useState(false);
+	const [duelError, setDuelError] = useState<string | null>(null);
+	const duelSubmitInFlightRef = useRef(false);
+
+	useEffect(() => {
+		if (!isAuthenticated || !result?.dance_id) {
+			setActiveDuels([]);
+			return;
+		}
+
+		const controller = new AbortController();
+		getActiveDuelsForDance(result.dance_id, controller.signal)
+			.then(setActiveDuels)
+			.catch(() => {
+				if (!controller.signal.aborted) {
+					setActiveDuels([]);
+				}
+			});
+
+		return () => controller.abort();
+	}, [isAuthenticated, result?.dance_id]);
+
+	const handleSubmitToDuel = async () => {
+		if (!result?.dance_id || !userDanceId) {
+			return;
+		}
+
+		if (duelSubmitInFlightRef.current || duelSubmitted) {
+			return;
+		}
+
+		duelSubmitInFlightRef.current = true;
+
+		setDuelSubmitting(true);
+		setDuelError(null);
+
+		try {
+			await submitAttemptToDuels(userDanceId, result.dance_id);
+			setDuelSubmitted(true);
+			setActiveDuels([]);
+		} catch {
+			setDuelError('Не удалось отправить на дуэль. Попробуй ещё раз.');
+		} finally {
+			setDuelSubmitting(false);
+			duelSubmitInFlightRef.current = false;
+		}
+	};
+
 	const handleSaveBtnClick = () => {
-		if (!result?.dance_id) return;
+		if (!result?.dance_id) {
+			return;
+		}
+
 		setSaveError(null);
+
 		if (!isAuthenticated) {
 			setShowRegisterPrompt(true);
 			return;
 		}
+
 		if (savedToProfile) {
 			handleUnsave();
 		} else {
@@ -567,18 +798,30 @@ const ComparePage: React.FC = () => {
 	};
 
 	const handleConfirmSave = async ({ userName, isPrivate }: SaveOptions) => {
-		if (!result?.dance_id || !userDanceId) return;
+		if (!result?.dance_id || !userDanceId) {
+			return;
+		}
+
 		setSavingToProfile(true);
 		setSaveError(null);
+
 		try {
+			const segs = result.segments ?? [];
+			const avgMetric = (key: 'timing' | 'amplitude' | 'pose_accuracy') =>
+				segs.length > 0
+					? segs.reduce((s, seg) => s + (seg[key] ?? 0), 0) / segs.length
+					: undefined;
+
 			await saveAttemptToProfile(userDanceId, result.dance_id, {
 				includeVideo: !isPrivate,
 				userName,
 				isPrivate,
-				// score из текущего compare-результата — нужен, если фолбэк-запись
-				// в dance_attempts ещё не была сделана (анон → регистрация).
 				score: result.score,
+				timingScore: avgMetric('timing'),
+				amplitudeScore: avgMetric('amplitude'),
+				poseScore: avgMetric('pose_accuracy'),
 			});
+
 			setSavedToProfile(true);
 			setShowSaveDialog(false);
 		} catch {
@@ -589,9 +832,13 @@ const ComparePage: React.FC = () => {
 	};
 
 	const handleUnsave = async () => {
-		if (!userDanceId) return;
+		if (!userDanceId) {
+			return;
+		}
+
 		setSavingToProfile(true);
 		setSaveError(null);
+
 		try {
 			await unsaveAttemptFromProfile(userDanceId);
 			setSavedToProfile(false);
@@ -602,14 +849,12 @@ const ComparePage: React.FC = () => {
 		}
 	};
 
-	// Retry-флоу больше НЕ блокирует страницу Loading'ом — прогресс показывает
-	// глобальный ProcessingBanner, поппап «Результат готов» по завершении
-	// сам отведёт на новый /compare/{attempt_id}. Юзер продолжает видеть
-	// разбор текущей попытки, пока крутится новая (как на LessonPage).
-
-	// ── Render states ────────────────────────────────────────────────────────
 	if (loading) {
-		return <div className={styles.page}><Loading /></div>;
+		return (
+			<div className={styles.page}>
+				<Loading />
+			</div>
+		);
 	}
 
 	if (error || !result) {
@@ -620,20 +865,25 @@ const ComparePage: React.FC = () => {
 					error ||
 					'Результаты этой попытки не найдены. Возможно, файлы уже удалены — попробуйте записать новую попытку.'
 				}
-				actions={
-					<Button onClick={() => navigate('/')}>
-						На главную
-					</Button>
-				}
+				actions={<Button onClick={() => navigate('/')}>На главную</Button>}
 			/>
 		);
+	}
+
+	let saveButtonLabel: string;
+
+	if (savingToProfile) {
+		saveButtonLabel = 'Сохраняем...';
+	} else if (savedToProfile) {
+		saveButtonLabel = 'В профиле';
+	} else {
+		saveButtonLabel = 'Добавить в профиль';
 	}
 
 	return (
 		<div className={styles.page}>
 			<div className={styles.inner}>
-
-				{/* Header */}
+				{}
 				<div className={styles.header}>
 					<button className={styles.backBtn} onClick={handleBackToLesson}>
 						← Назад к уроку
@@ -643,15 +893,16 @@ const ComparePage: React.FC = () => {
 					</h1>
 				</div>
 
-				{/* Баннер «чужой попытки» — чтобы пользователь чётко понимал,
-				    что разбор не его. */}
+				{}
 				{result.owner && (
 					<div
 						className={styles.foreignBanner}
 						onClick={() => navigate(`/profile/${result.owner!.user_id}`)}
 						role="link"
 					>
-						<span className={styles.foreignBannerLabel}>Танец пользователя</span>
+						<span className={styles.foreignBannerLabel}>
+							Танец пользователя
+						</span>
 						<span className={styles.foreignBannerLogin}>
 							{result.owner.login}
 						</span>
@@ -661,23 +912,24 @@ const ComparePage: React.FC = () => {
 					</div>
 				)}
 
-				{/* Main grid: score + metrics */}
+				{}
 				<div className={styles.mainGrid}>
 					<div className={styles.scoreCard}>
 						<div className={styles.scoreLabel}>
-							{result.owner ? `Результат @${result.owner.login}` : 'Твой результат'}
+							{result.owner
+								? `Результат @${result.owner.login}`
+								: 'Твой результат'}
 						</div>
 						<div className={styles.scoreNumberRow}>
-							<span className={styles.scoreNumber}
+							<span
+								className={styles.scoreNumber}
 								style={{ color: metricColor(score) }}
 							>
 								{score}
 							</span>
 							<span className={styles.scoreDenom}>/100</span>
 						</div>
-						<div className={styles.scoreCaption}>
-							{scoreMotivation(score)}
-						</div>
+						<div className={styles.scoreCaption}>{scoreMotivation(score)}</div>
 						{result.dance_stats && result.dance_stats.attempt_count > 0 && (
 							<div className={styles.scorePersonal}>
 								Лучшая попытка: {Math.round(result.dance_stats.best_score)}
@@ -691,47 +943,116 @@ const ComparePage: React.FC = () => {
 						<div className={styles.metricsTitle}>Разбивка по метрикам</div>
 						<MetricRow iconName="clock" label="Тайминг" value={avgTiming} />
 						<MetricRow iconName="wave" label="Амплитуда" value={avgAmplitude} />
-						<MetricRow iconName="target" label="Точность позиции" value={avgTechnique} />
+						<MetricRow
+							iconName="target"
+							label="Точность позиции"
+							value={avgTechnique}
+						/>
+						{hitRate !== null && (
+							<MetricRow
+								iconName="rhythm"
+								label="Попадания в ритм"
+								value={hitRate}
+							/>
+						)}
 					</div>
 				</div>
 
-				{/* Segment bar chart */}
+				{}
+				{progressData.length >= 2 && (
+					<div className={styles.sparklineSection}>
+						<span className={styles.sparklineSectionTitle}>Прогресс</span>
+						<ScoreSparkline data={progressData} />
+					</div>
+				)}
+
+				{}
 				{segs.length > 0 && (
 					<SegmentBarChart segments={segs} danceId={result.dance_id} />
 				)}
 
-				{/* Разбор полёта — side-by-side плеер с canvas-overlay скелетов */}
-				{result.user_skeleton_key && (() => {
-					const s3 = (S3_ADDRESS || '').replace(/\/+$/, '');
-					return (
-						<div className={styles.frameTimelineSection}>
-							<h2 className={styles.sectionTitle}>Разбор полёта</h2>
-							<PlaybackOverlay
-								userVideoUrl={
-									result.user_video_key
-										? `${s3}/${result.user_video_key}`
-										: undefined
-								}
-								userSkeletonUrl={`${s3}/${result.user_skeleton_key}`}
-								referenceVideoUrl={`${s3}/results/${result.dance_id}/video.mp4`}
-								referenceSkeletonUrl={
-									result.reference_skeleton_key
-										? `${s3}/${result.reference_skeleton_key}`
-										: undefined
-								}
-							/>
-						</div>
-					);
-				})()}
+				{}
+				{notDetectedPct !== null && notDetectedPct > 5 && (
+					<NotDetectedWarning pct={notDetectedPct} />
+				)}
 
-				{/* Leaderboard */}
+				{}
+				{result.user_skeleton_key &&
+					(() => {
+						const s3 = (S3_ADDRESS || '').replace(/\/+$/, '');
+						return (
+							<div className={styles.frameTimelineSection}>
+								<h2 className={styles.sectionTitle}>Разбор полёта</h2>
+								<PlaybackOverlay
+									userVideoUrl={
+										result.user_video_key
+											? `${s3}/${result.user_video_key}`
+											: undefined
+									}
+									userSkeletonUrl={`${s3}/${result.user_skeleton_key}`}
+									referenceVideoUrl={`${s3}/results/${result.dance_id}/video.mp4`}
+									referenceSkeletonUrl={
+										result.reference_skeleton_key
+											? `${s3}/${result.reference_skeleton_key}`
+											: undefined
+									}
+								/>
+							</div>
+						);
+					})()}
+
+				{}
 				{leaderboard && (
 					<div className={styles.bottomGrid}>
 						<LeaderboardCard data={leaderboard} />
 					</div>
 				)}
 
-				{/* Action row */}
+				{}
+				{isAuthenticated && friendsScores.length > 0 && (
+					<div className={styles.friendsScoresCard}>
+						<h2 className={styles.sectionTitle}>Результаты друзей</h2>
+						<div className={styles.friendsScoresList}>
+							{friendsScores.map((fs) => (
+								<div key={fs.friend_login} className={styles.friendScoreRow}>
+									<img
+										src={fs.avatar_url ? `${S3_ADDRESS}/${fs.avatar_url}` : ''}
+										alt={fs.friend_login}
+										className={styles.friendScoreAvatar}
+										onError={(e) => {
+											(e.target as HTMLImageElement).style.display = 'none';
+										}}
+									/>
+									<span className={styles.friendScoreLogin}>
+										{fs.friend_login}
+									</span>
+									<span className={styles.friendScoreValue}>
+										{Math.round(fs.best_score)}
+									</span>
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
+				{!result.owner && activeDuels.length > 0 && !duelSubmitted && (
+					<div className={styles.duelBanner}>
+						<span className={styles.duelBannerIcon}>⚔️</span>
+						<div className={styles.duelBannerBody}>
+							<p className={styles.duelBannerTitle}>
+								Тебя вызвали на дуэль на этот танец!
+							</p>
+							<p className={styles.duelBannerText}>
+								{activeDuels.length > 1 ? 'Соперники' : 'Соперник'}:{' '}
+								{activeDuels.map((d) => d.opponent_login).join(', ')}. Нажми
+								«Отправить на дуэль», чтобы засчитать эту попытку в бой — иначе
+								это просто тренировка.
+							</p>
+						</div>
+					</div>
+				)}
+
+				{}
 				<div className={styles.actionRow}>
 					<button className={styles.btnPrimary} onClick={handleRetry}>
 						{result.owner ? 'Записать свою попытку' : 'Попробовать ещё раз'}
@@ -739,25 +1060,51 @@ const ComparePage: React.FC = () => {
 					<button className={styles.btnSecondary} onClick={handleShare}>
 						Поделиться результатом
 					</button>
-					{/* «Добавить в профиль» доступно только для собственной попытки —
-					    чужие попытки сохранять нельзя. */}
+					{}
 					{!result.owner && (
 						<button
 							className={`${styles.btnSecondary} ${savedToProfile ? styles.btnSecondaryActive : ''}`}
 							onClick={handleSaveBtnClick}
 							disabled={savingToProfile}
 						>
-							{savingToProfile
-								? 'Сохраняем...'
-								: savedToProfile
-									? 'В профиле'
-									: 'Добавить в профиль'}
+							{saveButtonLabel}
+						</button>
+					)}
+					{!result.owner && activeDuels.length > 0 && !duelSubmitted && (
+						<button
+							className={styles.btnDuel}
+							onClick={handleSubmitToDuel}
+							disabled={duelSubmitting}
+						>
+							{duelSubmitting
+								? 'Отправляем…'
+								: `⚔️ Отправить на дуэль (${activeDuels
+										.map((d) => d.opponent_login)
+										.join(', ')})`}
 						</button>
 					)}
 				</div>
+				{!result.owner && duelSubmitted && (
+					<div className={styles.duelDoneBanner}>
+						<span className={styles.duelBannerIcon}>✅</span>
+						<div className={styles.duelBannerBody}>
+							<p className={styles.duelBannerTitle}>
+								Попытка отправлена на дуэль!
+							</p>
+							<p className={styles.duelBannerText}>
+								{activeDuels.length > 1 ? 'Соперники' : 'Соперник'}:{' '}
+								{activeDuels.map((d) => d.opponent_login).join(', ')}. Как
+								только{' '}
+								{activeDuels.length > 1 ? 'они станцуют' : 'соперник станцует'},
+								результат боя появится в разделе «Дуэли».
+							</p>
+						</div>
+					</div>
+				)}
 				{saveError && <p className={styles.saveError}>{saveError}</p>}
+				{duelError && <p className={styles.saveError}>{duelError}</p>}
 
-				{/* Community ratings */}
+				{}
 				<RatingSection
 					isAuthenticated={isAuthenticated}
 					hasRated={hasRated}
@@ -772,18 +1119,19 @@ const ComparePage: React.FC = () => {
 					}}
 				/>
 
-				{/* 3D viewer — без покадровой оценки, просто параллельный
-					проигрыватель GLB-анимаций. */}
+				{}
 				<div className={styles.viewerSection}>
 					<h2 className={styles.sectionTitle}>Сравнение движений</h2>
 					<div className={styles.viewerWrapper}>
 						<CompareViewer
 							userGlbKey={result.user_glb_key}
 							referenceGlbKey={result.reference_glb_key}
+							userJointHeatmap={jointHeatmap}
 						/>
 					</div>
 				</div>
 
+				{similarDances.length > 0 && <SimilarDances dances={similarDances} />}
 			</div>
 
 			{showRecord && result && (
@@ -820,9 +1168,9 @@ const ComparePage: React.FC = () => {
 					>
 						<h3 className={styles.modalTitle}>Сохрани результат в профиль</h3>
 						<p className={styles.modalText}>
-							Чтобы добавить попытку в профиль и вернуться к ней позже,
-							нужна регистрация. Это бесплатно и займёт минуту —
-							твой результат не потеряется.
+							Чтобы добавить попытку в профиль и вернуться к ней позже, нужна
+							регистрация. Это бесплатно и займёт минуту — твой результат не
+							потеряется.
 						</p>
 						<div className={styles.modalActions}>
 							<button

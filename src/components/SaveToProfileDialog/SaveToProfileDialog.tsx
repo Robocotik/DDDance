@@ -37,6 +37,7 @@ const SaveToProfileDialog: React.FC<SaveToProfileDialogProps> = ({
 	const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.value;
 		setUserName(val);
+
 		if (hasBannedWords(val)) {
 			setTitleError('Название содержит недопустимые слова');
 		} else {
@@ -46,14 +47,17 @@ const SaveToProfileDialog: React.FC<SaveToProfileDialogProps> = ({
 
 	const handleSubmit = () => {
 		const trimmed = userName.trim();
+
 		if (!trimmed) {
 			setTitleError('Введи название танца');
 			return;
 		}
+
 		if (hasBannedWords(trimmed)) {
 			setTitleError('Название содержит недопустимые слова');
 			return;
 		}
+
 		onConfirm({ userName: trimmed, isPrivate });
 	};
 
@@ -63,7 +67,9 @@ const SaveToProfileDialog: React.FC<SaveToProfileDialogProps> = ({
 		<div
 			className={styles.overlay}
 			onClick={(e) => {
-				if (e.target === e.currentTarget && !submitting) onClose();
+				if (e.target === e.currentTarget && !submitting) {
+					onClose();
+				}
 			}}
 		>
 			<div className={styles.modal}>

@@ -14,6 +14,7 @@ import {
 
 export const fetchHistory = () => async (dispatch: AppDispatch) => {
 	dispatch(setHistoryLoading(true));
+
 	try {
 		const data = await getHistory();
 		dispatch(setHistoryItems(data));

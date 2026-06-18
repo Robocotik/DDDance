@@ -6,9 +6,6 @@ export type HistoryItem = {
 	id: string;
 	dance_id: string;
 	user_id: string;
-	// name — пользовательская метка (в БД дефолт 'Без названия' при создании).
-	// dance_title — оригинальный title танца. UI показывает dance_title, когда
-	// пользователь свою метку ещё не задал.
 	name: string;
 	dance_title?: string;
 	source_url: string;

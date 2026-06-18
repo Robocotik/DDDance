@@ -4,7 +4,8 @@ export type SegmentFeedback =
 	| 'on_time'
 	| 'early'
 	| 'late'
-	| 'low_amplitude';
+	| 'low_amplitude'
+	| 'not_performed';
 
 export type SegmentDiagnostic = {
 	segment_id: number;
@@ -32,12 +33,18 @@ export type CompareTip = {
 export type FrameScore = {
 	frame: number;
 	time_sec: number;
-	error: number; // 0..1, 0 = идеально, 1 = полный промах
-	/**
-	 * 8 значений 0..1 в порядке JOINT_TRIPLETS из compare.py:
-	 * [L_hip_sh_el, R_hip_sh_el, L_sh_el_wr, R_sh_el_wr,
-	 *  L_sh_hip_kn, R_sh_hip_kn, L_hip_kn_an, R_hip_kn_an]
-	 */
+	error: number;
+	joint_errors?: number[];
+};
+
+export type FrameLabel = {
+	frame_idx: number;
+	timestamp_ms: number;
+	hit: boolean;
+	reason: string;
+	timing_score: number;
+	amplitude_score: number;
+	pose_score: number;
 	joint_errors?: number[];
 };
 
@@ -56,11 +63,10 @@ export type CompareResponse = {
 		best_score: number;
 	};
 	frame_scores?: FrameScore[];
+	frame_labels?: FrameLabel[];
 	user_video_key?: string;
 	user_skeleton_key?: string;
 	reference_skeleton_key?: string;
-	// Заполнено только когда попытка принадлежит ДРУГОМУ пользователю —
-	// фронт рисует баннер «Танец пользователя X».
 	owner?: {
 		user_id: string;
 		login: string;
@@ -90,8 +96,6 @@ export const compareDance = async (
 	referenceDanceId: string,
 	options?: {
 		signal?: AbortSignal;
-		// Опциональная обрезка: бэкенд перекодирует видео в эти границы (сек),
-		// чтобы выкинуть подход к камере и отход от неё.
 		startSec?: number;
 		endSec?: number;
 	},
@@ -101,6 +105,7 @@ export const compareDance = async (
 	const filename = videoBlob.type?.includes('webm')
 		? 'recording.webm'
 		: 'recording.mp4';
+
 	const mimeType = videoBlob.type || 'video/mp4';
 
 	const file = new File([videoBlob], filename, { type: mimeType });
@@ -125,6 +130,7 @@ export const compareDance = async (
 			headers: {
 				'Content-Type': undefined,
 			},
+			timeout: 300_000,
 		},
 	);
 
@@ -142,15 +148,19 @@ export const getRating = async (danceId: string): Promise<RateResponse> => {
 	const response = await http.get<RateResponse>(
 		`/users/dance/rate?dance_id=${danceId}`,
 	);
+
 	return response.data;
 };
 
-export const getCompareResult = async (userDanceId: string): Promise<CompareResponse> => {
-	const response = await http.get<CompareResponse>(`/users/dance/${userDanceId}/result`);
+export const getCompareResult = async (
+	userDanceId: string,
+): Promise<CompareResponse> => {
+	const response = await http.get<CompareResponse>(
+		`/users/dance/${userDanceId}/result`,
+	);
+
 	return response.data;
 };
-
-// ── Async task API ────────────────────────────────────────────────────────────
 
 export type EnqueueResult = {
 	task_id: string;
@@ -169,9 +179,6 @@ export type TaskStatusResponse = {
 	progress: number;
 	result?: CompareResponse | LoadDanceResult;
 	error?: string;
-	// Бэк ставит true когда танец не прошёл модерацию ПОСЛЕ старта обработки
-	// (модерация внутри Celery-воркера, а не на этапе initial upload-202).
-	// Фронт должен показать причину, а не попап «введите название».
 	moderation_failed?: boolean;
 	moderation_reason?: string;
 };
@@ -198,12 +205,22 @@ export const getTaskStatus = async (
 	},
 ): Promise<TaskStatusResponse> => {
 	const query = new URLSearchParams({ type });
-	if (params.dance_id) query.set('dance_id', params.dance_id);
-	if (params.user_dance_id) query.set('user_dance_id', params.user_dance_id);
-	if (params.video_key) query.set('video_key', params.video_key);
+
+	if (params.dance_id) {
+		query.set('dance_id', params.dance_id);
+	}
+
+	if (params.user_dance_id) {
+		query.set('user_dance_id', params.user_dance_id);
+	}
+
+	if (params.video_key) {
+		query.set('video_key', params.video_key);
+	}
 
 	const response = await http.get<TaskStatusResponse>(
 		`/users/task/${taskId}/status?${query.toString()}`,
 	);
+
 	return response.data;
 };

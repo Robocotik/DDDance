@@ -1,0 +1,28 @@
+.banner {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.chip {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border-radius: 20px;
+	background: rgb(255 255 255 / 7%);
+	border: 1px solid rgb(255 255 255 / 12%);
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.value {
+	font-weight: 600;
+	color: #fff;
+}
+
+.label {
+	color: rgb(255 255 255 / 55%);
+	font-size: 11px;
+}

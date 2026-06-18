@@ -10,7 +10,6 @@ import styles from './DifficultyBadge.module.scss';
 
 interface DifficultyBadgeProps {
 	difficulty: Difficulty;
-	// true — посчитано по оценкам пользователей, false — выставлено автором.
 	byUsers?: boolean;
 }
 

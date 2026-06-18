@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import AchievementToast from './components/AchievementToast/AchievementToast';
+import DanceAssistant from './components/DanceAssistant/DanceAssistant';
 import Footer from './components/Footer/Footer';
 import Header from './components/Header/Header';
 import Onboarding, {
@@ -9,14 +11,22 @@ import Onboarding, {
 } from './components/Onboarding/Onboarding';
 import ProcessingBanner from './components/ProcessingBanner/ProcessingBanner';
 import ProcessingDonePopup from './components/ProcessingDonePopup/ProcessingDonePopup';
+import {
+	useAttemptReady,
+	type AchievementUnlockedPayload,
+} from './hooks/useAttemptReady';
 import { AuthPage } from './pages/AuthPage/AuthPage';
 import CatalogPage from './pages/CatalogPage/CatalogPage';
-import ComparePage from './pages/ComparePage/ComparePage';
+import DuelsPage from './pages/DuelsPage/DuelsPage';
+import FeedPage from './pages/FeedPage/FeedPage';
 import HomePage from './pages/HomePage/HomePage';
-import LessonPage from './pages/LessonPage/LessonPage';
+import PublicDuelsPage from './pages/PublicDuelsPage/PublicDuelsPage';
+import ReelsPage from './pages/ReelsPage/ReelsPage';
 import { RegisterPage } from './pages/RegisterPage/RegisterPage';
 import RulesPage from './pages/RulesPage/RulesPage';
+import TopPage from './pages/TopPage/TopPage';
 import UserPage from './pages/UserPage/UserPage';
+import { incrementUnlocked } from './redux/features/achievements/achievementsSlice';
 import { resumeInFlightTask } from './redux/features/upload/actions';
 import {
 	selectIsProcessing,
@@ -29,9 +39,9 @@ import {
 } from './redux/features/user/selectors';
 import type { AppDispatch } from './redux/store';
 
-// Сколько ждём после подтверждения «пользователь анонимный», прежде чем
-// показать онбординг. За это время авторизованный юзер успевает увидеть
-// контент, а на анонима онбординг всплывает после короткой паузы.
+const LessonPage = lazy(() => import('./pages/LessonPage/LessonPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage/ComparePage'));
+
 const ONBOARDING_DELAY_MS = 3000;
 
 function App() {
@@ -39,24 +49,31 @@ function App() {
 	const { pathname } = useLocation();
 	const isAuthRoute = pathname === '/login' || pathname === '/register';
 	const isLessonRoute = pathname.startsWith('/lesson');
+	const isReelsRoute = pathname.startsWith('/reels');
 	const [showOnboarding, setShowOnboarding] = useState(false);
+	const [achievementToast, setAchievementToast] =
+		useState<AchievementUnlockedPayload | null>(null);
+
 	const isAuthChecked = useSelector(selectIsAuthChecked);
 	const user = useSelector(selectUser);
 	const isUploading = useSelector(selectIsUploading);
 	const isProcessing = useSelector(selectIsProcessing);
 
+	const handleAchievement = useCallback(
+		(payload: AchievementUnlockedPayload) => {
+			setAchievementToast(payload);
+			dispatch(incrementUnlocked());
+		},
+		[dispatch],
+	);
+
+	useAttemptReady(user?.id, undefined, handleAchievement);
+
 	useEffect(() => {
 		dispatch(checkAuthStatus());
-		// Если до F5 шла загрузка/сравнение видео — поднимаем поллинг и
-		// прогресс-бар восстановится; по готовности сработает попап.
 		dispatch(resumeInFlightTask());
 	}, [dispatch]);
 
-	// Гард против случайной перезагрузки во время активной загрузки/сравнения.
-	// Для анона это критично: localStorage-резюм работает, но если браузер
-	// инкогнито или хранилище очищено — танец/попытка могут потеряться.
-	// beforeunload показывает нативный confirm; кастомный текст современные
-	// браузеры не показывают, но сам диалог появляется при returnValue.
 	useEffect(() => {
 		if (!isUploading && !isProcessing) {
 			return;
@@ -73,8 +90,6 @@ function App() {
 		return () => window.removeEventListener('beforeunload', handler);
 	}, [isUploading, isProcessing]);
 
-	// Онбординг — только для гостей и только после подтверждённой проверки
-	// авторизации, плюс пауза, чтобы не дёргать пользователя сразу на входе.
 	useEffect(() => {
 		if (!isAuthChecked || user || hasSeenOnboarding()) {
 			return;
@@ -106,18 +121,51 @@ function App() {
 					<Route path="/login" element={<AuthPage />} />
 					<Route path="/register" element={<RegisterPage />} />
 					<Route path="/rules" element={<RulesPage />} />
-					<Route path="/lesson/:id" element={<LessonPage />} />
-					<Route path="/lesson" element={<LessonPage />} />
 					<Route path="/profile/:id" element={<UserPage />} />
-					<Route path="/compare/:userDanceId" element={<ComparePage />} />
 					<Route path="/dances" element={<CatalogPage />} />
+					<Route path="/duels" element={<DuelsPage />} />
+					<Route path="/feed" element={<FeedPage />} />
+					<Route path="/community/duels" element={<PublicDuelsPage />} />
+					<Route path="/top" element={<TopPage />} />
+					<Route path="/reels" element={<ReelsPage />} />
+					<Route
+						path="/lesson/:id"
+						element={
+							<Suspense fallback={<div>Загрузка...</div>}>
+								<LessonPage />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/lesson"
+						element={
+							<Suspense fallback={<div>Загрузка...</div>}>
+								<LessonPage />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/compare/:userDanceId"
+						element={
+							<Suspense fallback={<div>Загрузка...</div>}>
+								<ComparePage />
+							</Suspense>
+						}
+					/>
 				</Routes>
 			</main>
 
-			{!isAuthRoute && !isLessonRoute && <Footer />}
+			{!isAuthRoute && !isLessonRoute && !isReelsRoute && <Footer />}
 
+			{achievementToast && (
+				<AchievementToast
+					payload={achievementToast}
+					onDismiss={() => setAchievementToast(null)}
+				/>
+			)}
 			<ProcessingBanner />
 			<ProcessingDonePopup />
+			{!isAuthRoute && !isLessonRoute && !isReelsRoute && <DanceAssistant />}
 		</div>
 	);
 }

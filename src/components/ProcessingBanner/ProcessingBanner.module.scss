@@ -3,10 +3,6 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
-
-	// Выше любых полноэкранных оверлеев (ComparePage fullscreenUpload: 9999,
-	// модальные диалоги: 1100). Прогресс-бар — критичный индикатор активной
-	// фоновой задачи, не должен закрываться ни загрузочным экраном, ни модалкой.
 	z-index: 10000;
 	background: var(--color-dark);
 	border-top: 1px solid var(--color-spots);

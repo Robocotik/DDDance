@@ -5,6 +5,7 @@ export interface Friend {
 	login: string;
 	avatar: string;
 	friended_at: string;
+	active_duel_id?: string;
 }
 
 export interface FriendshipStatus {

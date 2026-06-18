@@ -1,0 +1,101 @@
+.outer {
+	--reel-h: calc(100dvh - var(--header-height));
+
+	height: 100dvh;
+	padding-top: var(--header-height);
+	box-sizing: border-box;
+	overflow: hidden;
+	background: #000;
+}
+
+.scroll {
+	height: 100%;
+	overflow-y: scroll;
+	scroll-snap-type: y mandatory;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.snap {
+	scroll-snap-align: start;
+	height: var(--reel-h);
+	flex-shrink: 0;
+	position: relative;
+}
+
+.spinnerWrap {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 80px;
+	scroll-snap-align: start;
+}
+
+.spinner {
+	width: 32px;
+	height: 32px;
+	border: 3px solid rgb(255 255 255 / 20%);
+	border-top-color: #fff;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.sentinel {
+	height: 1px;
+}
+
+.tabBar {
+	position: fixed;
+	top: calc(var(--header-height) + 12px);
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 50;
+	display: flex;
+	background: rgb(0 0 0 / 50%);
+	border-radius: 20px;
+	padding: 3px;
+	backdrop-filter: blur(8px);
+	gap: 0;
+}
+
+.tabBtn {
+	padding: 6px 22px;
+	border-radius: 17px;
+	font-size: 14px;
+	font-weight: 500;
+	color: rgb(255 255 255 / 60%);
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-family: var(--font-main);
+	transition:
+		background 0.2s,
+		color 0.2s;
+	white-space: nowrap;
+}
+
+.tabBtnActive {
+	background: rgb(255 255 255 / 20%);
+	color: #fff;
+}
+
+.emptyWrap {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.emptyText {
+	font-size: 15px;
+	color: rgb(255 255 255 / 50%);
+	text-align: center;
+}

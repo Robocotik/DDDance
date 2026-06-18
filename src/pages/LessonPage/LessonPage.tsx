@@ -20,6 +20,10 @@ import {
 } from '../../redux/features/upload/uploadSlice';
 
 import { uploadAndCompare } from '@/redux/features/upload/actions';
+import {
+	getActiveDuelsForDance,
+	type ActiveDuelForDance,
+} from '../../api/duels';
 import arrowIcon from '../../assets/svg/arrow.svg';
 import Button from '../../components/Button/Button';
 import CheckYourself from '../../components/CheckYourself/CheckYourself';
@@ -47,22 +51,33 @@ import {
 	selectSegmentsLoading,
 } from '../../redux/features/lesson/selectors';
 import { fetchLikes } from '../../redux/features/likes/actions';
-import { selectIsUserAuthenticated } from '../../redux/features/user/selectors';
+import {
+	selectIsUserAuthenticated,
+	selectUser,
+} from '../../redux/features/user/selectors';
 import type { AppDispatch } from '../../redux/store';
 
-import http from '@/api/http';
-import { recordDanceView } from '@/api/dances';
+import {
+	getDanceSegmentDescriptions,
+	recordDanceView,
+	updateSegmentDescription,
+} from '@/api/dances';
 import { getDanceModerationStatus } from '@/api/dances/status';
+import http from '@/api/http';
 import Icon from '../../components/Icon/Icon';
 import styles from './LessonPage.module.scss';
 
 const VIEW_DEDUP_KEY_PREFIX = 'view_sent_';
-const VIEW_DEDUP_MIN_MS = 60 * 1000; // не чаще раза в минуту с одного устройства
+const VIEW_DEDUP_MIN_MS = 60 * 1000;
 
 function shouldSendView(danceId: string): boolean {
 	try {
 		const raw = sessionStorage.getItem(VIEW_DEDUP_KEY_PREFIX + danceId);
-		if (!raw) return true;
+
+		if (!raw) {
+			return true;
+		}
+
 		const last = parseInt(raw, 10);
 		return Number.isFinite(last) && Date.now() - last >= VIEW_DEDUP_MIN_MS;
 	} catch {
@@ -73,9 +88,7 @@ function shouldSendView(danceId: string): boolean {
 function markViewSent(danceId: string): void {
 	try {
 		sessionStorage.setItem(VIEW_DEDUP_KEY_PREFIX + danceId, String(Date.now()));
-	} catch {
-		/* sessionStorage недоступен — не страшно, бэк сам дедуплицирует */
-	}
+	} catch {}
 }
 
 const CACHE_KEY_PREFIX = 'segment_desc_';
@@ -102,22 +115,24 @@ function setCachedDescription(
 ): void {
 	try {
 		localStorage.setItem(getCacheKey(danceId, segmentIdx), description);
-	} catch {
-		return;
-	}
+	} catch {}
 }
 
-/** Текст-заглушка с бэкенда до готовности LLM-описания */
 const PENDING_SEGMENT_DESCRIPTION = /скоро будет описание сегмента/i;
 
 function formatSegmentDescriptionForDisplay(
 	text: string | null,
 ): string | null {
-	if (text === null) return null;
+	if (text === null) {
+		return null;
+	}
+
 	const trimmed = text.trim();
+
 	if (trimmed && PENDING_SEGMENT_DESCRIPTION.test(trimmed)) {
 		return 'Готовим описание сегмента';
 	}
+
 	return text;
 }
 
@@ -136,6 +151,7 @@ function useSegmentDescription(
 		}
 
 		const cached = getCachedDescription(danceId, segmentIdx);
+
 		if (cached !== null) {
 			setDescription(cached);
 			setLoading(false);
@@ -153,15 +169,15 @@ function useSegmentDescription(
 			})
 			.then((res) => {
 				const desc: string = res.data.description ?? res.data.text ?? '';
+
 				if (desc.trim() && !PENDING_SEGMENT_DESCRIPTION.test(desc.trim())) {
 					setCachedDescription(danceId, segmentIdx, desc);
 				}
+
 				setDescription(desc || null);
 			})
 			.catch((err) => {
 				if (err.name !== 'AbortError') {
-					// Подсказка генерируется LLM; если сервер описаний недоступен,
-					// показываем дружелюбное сообщение вместо тех-деталей.
 					setDescription(
 						'Подсказка к этому сегменту временно недоступна. Попробуй открыть позже.',
 					);
@@ -182,44 +198,161 @@ const GPU_ERROR_PREFIX = /^GPU сервер недоступен!/i;
 const DescriptionBlock: React.FC<{
 	description: string | null;
 	loading: boolean;
-}> = ({ description, loading }) => {
+	isOwner?: boolean;
+	onSave?: (text: string) => Promise<void>;
+}> = ({ description, loading, isOwner, onSave }) => {
 	const [dismissed, setDismissed] = useState(false);
+	const [editing, setEditing] = useState(false);
+	const [editValue, setEditValue] = useState('');
+	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
+	const showForOwner = !!(isOwner && onSave);
 
 	useEffect(() => {
+		setEditing(false);
+		setSaveError(null);
 		const txt = formatSegmentDescriptionForDisplay(description);
 		const isGpuError = txt !== null && GPU_ERROR_PREFIX.test(txt);
+
 		if (!isGpuError) {
 			setDismissed(false);
 		}
 	}, [description]);
 
 	const displayText = formatSegmentDescriptionForDisplay(description);
-	if (dismissed) return null;
-	if (!loading && !displayText) return null;
 
-	const isDismissible = displayText ? GPU_ERROR_PREFIX.test(displayText) : false;
+	if (dismissed && !showForOwner) {
+		return null;
+	}
 
-	return (
-		<div className={styles.descriptionBlock}>
-			{loading ? (
+	if (!loading && !displayText && !showForOwner) {
+		return null;
+	}
+
+	const isDismissible =
+		!showForOwner && !!displayText && GPU_ERROR_PREFIX.test(displayText);
+
+	const handleEditClick = () => {
+		setEditValue(displayText ?? '');
+		setSaveError(null);
+		setEditing(true);
+	};
+
+	const handleCancel = () => {
+		setEditing(false);
+		setSaveError(null);
+	};
+
+	const handleSave = async () => {
+		if (!onSave) {
+			return;
+		}
+
+		setSaving(true);
+		setSaveError(null);
+
+		try {
+			await onSave(editValue);
+			setEditing(false);
+		} catch {
+			setSaveError('Не удалось сохранить. Попробуй снова.');
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	if (loading) {
+		return (
+			<div className={styles.descriptionBlock}>
 				<div className={styles.descriptionShimmer}>
 					<span className={styles.shimmerDot} />
 					<span className={styles.shimmerDot} />
 					<span className={styles.shimmerDot} />
 				</div>
-			) : (
-				<>
-					<p className={styles.descriptionText}>{displayText}</p>
-					{isDismissible && (
-						<button
-							className={styles.descriptionClose}
-							onClick={() => setDismissed(true)}
-							aria-label="Закрыть"
-						>
-							×
-						</button>
+			</div>
+		);
+	}
+
+	if (editing) {
+		return (
+			<div className={styles.descriptionBlock}>
+				<div className={styles.descriptionEditArea}>
+					<textarea
+						className={styles.descriptionTextarea}
+						value={editValue}
+						onChange={(e) => setEditValue(e.target.value)}
+						maxLength={500}
+						rows={3}
+						disabled={saving}
+						placeholder="Описание сегмента (до 500 символов)"
+						autoFocus
+					/>
+					{saveError && (
+						<p className={styles.descriptionSaveError}>{saveError}</p>
 					)}
-				</>
+					<div className={styles.descriptionEditActions}>
+						<button
+							className={styles.descriptionCancelBtn}
+							onClick={handleCancel}
+							disabled={saving}
+						>
+							Отменить
+						</button>
+						<button
+							className={styles.descriptionSaveBtn}
+							onClick={handleSave}
+							disabled={saving}
+						>
+							{saving ? 'Сохраняем…' : 'Сохранить'}
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	let segmentContent: React.ReactNode = null;
+
+	if (!dismissed) {
+		if (displayText) {
+			segmentContent = <p className={styles.descriptionText}>{displayText}</p>;
+		} else if (showForOwner) {
+			segmentContent = (
+				<p className={styles.descriptionPlaceholder}>
+					Добавить описание сегмента
+				</p>
+			);
+		}
+	}
+
+	return (
+		<div className={styles.descriptionWrapper}>
+			<div className={styles.descriptionBlock}>
+				{segmentContent}
+				{isDismissible && (
+					<button
+						className={styles.descriptionClose}
+						onClick={() => setDismissed(true)}
+						aria-label="Закрыть"
+					>
+						×
+					</button>
+				)}
+			</div>
+			{showForOwner && (
+				<button
+					className={styles.descriptionEditBtn}
+					onClick={handleEditClick}
+					aria-label="Редактировать описание сегмента"
+					title="Это описание видят все — отредактируй его как хореограф"
+				>
+					<span className={styles.descriptionEditIcon} aria-hidden="true">
+						✏
+					</span>
+					<span className={styles.descriptionEditLabel}>
+						{displayText ? 'Изменить описание' : 'Добавить описание'}
+					</span>
+				</button>
 			)}
 		</div>
 	);
@@ -256,15 +389,19 @@ const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
 		useEffect(() => {
 			startRef.current = start;
 		}, [start]);
+
 		useEffect(() => {
 			endRef.current = end;
 		}, [end]);
+
 		useEffect(() => {
 			onReadyRef.current = onReady;
 		}, [onReady]);
+
 		useEffect(() => {
 			onLoopRef.current = onLoop;
 		}, [onLoop]);
+
 		useEffect(() => {
 			playbackSpeedRef.current = playbackSpeed;
 		}, [playbackSpeed]);
@@ -278,6 +415,7 @@ const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
 		useImperativeHandle(ref, () => ({
 			start: () => {
 				const video = videoRef.current;
+
 				if (video && !isSeekingRef.current) {
 					video.play().catch(() => {});
 				}
@@ -287,6 +425,7 @@ const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
 			},
 			resume: () => {
 				const video = videoRef.current;
+
 				if (video && !isSeekingRef.current) {
 					video.play().catch(() => {});
 				}
@@ -295,54 +434,61 @@ const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
 
 		useEffect(() => {
 			const video = videoRef.current;
-			if (!video || loading) return;
+
+			if (!video || loading) {
+				return;
+			}
 
 			let destroyed = false;
 			isSeekingRef.current = false;
 			isLoopingRef.current = false;
 
-			// Запуск loop-каскада: видео в начало → onLoop сбросит модель →
-			// после seeked снова стартуем оба синхронно через handleVideoReady.
 			const triggerLoop = () => {
-				if (destroyed || isSeekingRef.current) return;
+				if (destroyed || isSeekingRef.current) {
+					return;
+				}
+
 				isSeekingRef.current = true;
 				isLoopingRef.current = true;
 				onLoopRef.current();
+
 				try {
 					video.pause();
-				} catch {
-					/* play() мог быть в полёте — не страшно */
-				}
+				} catch {}
+
 				video.currentTime = startRef.current === 0 ? 0.001 : startRef.current;
 			};
 
 			const checkFrame = () => {
-				if (destroyed) return;
-				// Эффективный конец: min(заявленный end, натуральная duration минус
-				// небольшой запас). Без этого, если duration_sec из segments.json
-				// чуть больше реальной длины видео, currentTime упирается в
-				// video.duration и >= endRef никогда не выполняется → зависание.
+				if (destroyed) {
+					return;
+				}
+
 				const naturalEnd =
-					video.duration && isFinite(video.duration) ? video.duration : Infinity;
+					video.duration && isFinite(video.duration)
+						? video.duration
+						: Infinity;
+
 				const effectiveEnd = Math.min(endRef.current, naturalEnd - 0.05);
+
 				if (!isSeekingRef.current && video.currentTime >= effectiveEnd) {
 					triggerLoop();
 				}
+
 				rafRef.current = requestAnimationFrame(checkFrame);
 			};
 
 			const handleSeeked = () => {
-				if (destroyed) return;
+				if (destroyed) {
+					return;
+				}
+
 				isSeekingRef.current = false;
 				isLoopingRef.current = false;
 				video.playbackRate = playbackSpeedRef.current;
 				onReadyRef.current();
 			};
 
-			// Страховка от того, что RAF опоздает: если браузер сам поднимет
-			// событие 'ended' (currentTime достиг video.duration) — запускаем
-			// тот же loop-каскад. Иначе видео остаётся «замёрзшим» в конце,
-			// а 3D-модель продолжает танцевать → рассинхрон.
 			const handleEnded = () => {
 				triggerLoop();
 			};
@@ -358,7 +504,11 @@ const VideoClip = forwardRef<VideoClipHandle, VideoClipProps>(
 
 			return () => {
 				destroyed = true;
-				if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+
+				if (rafRef.current !== null) {
+					cancelAnimationFrame(rafRef.current);
+				}
+
 				video.removeEventListener('seeked', handleSeeked);
 				video.removeEventListener('ended', handleEnded);
 				video.pause();
@@ -400,6 +550,8 @@ interface LessonLayoutProps {
 	lastStep: number | null;
 	description: string | null;
 	descriptionLoading: boolean;
+	isOwner?: boolean;
+	onDescriptionUpdate?: (text: string) => Promise<void>;
 	preloadGlbPath?: string | null;
 	onSpeedChange: (speed: number) => void;
 	onNavigate: (segment: string) => void;
@@ -407,8 +559,6 @@ interface LessonLayoutProps {
 	onReturnFromFull: () => void;
 	onFinish: () => void;
 	onCheckYourself: () => void;
-	// Последняя попытка пользователя на этом танце (если есть). При наличии
-	// рисуем дополнительную кнопку «Моя последняя попытка → /compare/».
 	lastAttemptId?: string;
 	lastAttemptScore?: number;
 }
@@ -429,6 +579,8 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 	lastStep,
 	description,
 	descriptionLoading,
+	isOwner,
+	onDescriptionUpdate,
 	preloadGlbPath,
 	onSpeedChange,
 	onNavigate,
@@ -445,6 +597,20 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 	const modelReadyRef = useRef(false);
 	const videoReadyRef = useRef(false);
 	const [isPaused, setIsPaused] = useState(false);
+	const [activeDuels, setActiveDuels] = useState<ActiveDuelForDance[]>([]);
+
+	useEffect(() => {
+		if (!danceId) {
+			return;
+		}
+
+		const controller = new AbortController();
+		getActiveDuelsForDance(danceId, controller.signal)
+			.then(setActiveDuels)
+			.catch(() => {});
+
+		return () => controller.abort();
+	}, [danceId]);
 
 	const tryStart = () => {
 		if (modelReadyRef.current && videoReadyRef.current) {
@@ -478,6 +644,7 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 			viewerRef.current?.pause();
 			videoClipRef.current?.pause();
 		}
+
 		setIsPaused((p) => !p);
 	};
 
@@ -488,7 +655,9 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 	}, [glbPath]);
 
 	useEffect(() => {
-		if (!glbPath) return;
+		if (!glbPath) {
+			return;
+		}
 
 		const timer = setTimeout(() => {
 			if (modelReadyRef.current && !videoReadyRef.current) {
@@ -597,6 +766,8 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 					<DescriptionBlock
 						description={description}
 						loading={descriptionLoading}
+						isOwner={isOwner}
+						onSave={onDescriptionUpdate}
 					/>
 
 					<div className={styles.speedControl}>
@@ -623,12 +794,34 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 						/>
 					</div>
 
+					{activeDuels.length > 0 && (
+						<div className={styles.duelBanner}>
+							<span className={styles.duelBannerIcon}>⚔️</span>
+							<span className={styles.duelBannerText}>
+								Ты в дуэли с{' '}
+								<strong>
+									{activeDuels.map((d) => d.opponent_login).join(', ')}
+								</strong>{' '}
+								на этом танце. Нажми «Проверить себя», станцуй — а потом
+								«Отправить на дуэль» на экране результата.
+							</span>
+						</div>
+					)}
+
 					{isFullDance ? (
-						<Button size="s" className={styles.fullDanceButton} onClick={onReturnFromFull}>
+						<Button
+							size="s"
+							className={styles.fullDanceButton}
+							onClick={onReturnFromFull}
+						>
 							← Вернуться к шагу {lastStep !== null ? lastStep + 1 : 1}
 						</Button>
 					) : (
-						<Button size="s" className={styles.fullDanceButton} onClick={onFullDance}>
+						<Button
+							size="s"
+							className={styles.fullDanceButton}
+							onClick={onFullDance}
+						>
 							<Icon name="play" size="1em" alt="" /> Полный танец
 						</Button>
 					)}
@@ -663,6 +856,7 @@ const LessonLayout: React.FC<LessonLayoutProps> = ({
 	);
 };
 
+// eslint-disable-next-line sonarjs/cognitive-complexity
 const LessonPage: React.FC = () => {
 	const dispatch = useDispatch<AppDispatch>();
 	const navigate = useNavigate();
@@ -676,6 +870,7 @@ const LessonPage: React.FC = () => {
 	const segments = useSelector(selectSegments);
 	const segmentsLoading = useSelector(selectSegmentsLoading);
 	const isAuthenticated = useSelector(selectIsUserAuthenticated);
+	const user = useSelector(selectUser);
 	const uploadState = useSelector(selectUploadState);
 
 	const segment = searchParams.get('segment');
@@ -683,8 +878,6 @@ const LessonPage: React.FC = () => {
 	const [showCheckYourself, setShowCheckYourself] = useState(false);
 	const [isCompareFlight, setIsCompareFlight] = useState(false);
 	const lastStepRef = useRef<number | null>(null);
-	// Статус танца с бэка — нужен, чтобы при lessonError показывать понятный
-	// экран (processing/pending/rejected) вместо общего «упс».
 	const [danceStatus, setDanceStatus] = useState<{
 		status: string;
 		moderation_reason: string;
@@ -695,8 +888,12 @@ const LessonPage: React.FC = () => {
 		startTime: number,
 		endTime: number,
 	) => {
-		if (!id) return;
+		if (!id) {
+			return;
+		}
+
 		setIsCompareFlight(true);
+
 		try {
 			await dispatch(uploadAndCompare(blob, id, startTime, endTime) as any);
 		} finally {
@@ -709,10 +906,45 @@ const LessonPage: React.FC = () => {
 	const isNumericSegment = segment !== null && /^\d+$/.test(segment);
 	const segmentIndex = isNumericSegment ? Number(segment) : -1;
 
-	const { description, loading: descriptionLoading } = useSegmentDescription(
-		id,
-		isNumericSegment ? segmentIndex : null,
-	);
+	const { description: llmDescription, loading: llmDescriptionLoading } =
+		useSegmentDescription(id, isNumericSegment ? segmentIndex : null);
+
+	const [choreographerDescs, setChoreographerDescs] = useState<
+		Record<number, string>
+	>({});
+
+	useEffect(() => {
+		if (!id) {
+			return;
+		}
+
+		getDanceSegmentDescriptions(id)
+			.then((descs) => setChoreographerDescs(descs))
+			.catch(() => {});
+	}, [id]);
+
+	const choreographerDesc =
+		isNumericSegment && choreographerDescs[segmentIndex]
+			? choreographerDescs[segmentIndex]
+			: null;
+
+	const description = choreographerDesc ?? llmDescription;
+	const descriptionLoading =
+		choreographerDesc !== null ? false : llmDescriptionLoading;
+
+	const isOwner = !!(user && lesson?.author && user.id === lesson.author.id);
+
+	const handleDescriptionUpdate = async (text: string): Promise<void> => {
+		if (!id || segmentIndex < 0) {
+			return;
+		}
+
+		await updateSegmentDescription(id, segmentIndex, text);
+		setChoreographerDescs((prev) => ({
+			...prev,
+			[segmentIndex]: text,
+		}));
+	};
 
 	useEffect(() => {
 		if (id && (!lesson || lesson.dance_id !== id)) {
@@ -723,25 +955,20 @@ const LessonPage: React.FC = () => {
 				}
 			});
 		}
+
 		return () => {
 			if (id) {
 				dispatch(lessonActions.clearLessonAction());
 			}
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- `lesson` intentionally omitted: adding it causes an infinite loop because the cleanup dispatches clearLessonAction which resets lesson to null, re-triggering this effect.
 	}, [dispatch, id, isAuthenticated]);
 
-	// Если пользователь открыл /lesson/{id} ещё до того, как пайплайн дописал
-	// результат в S3, первый запрос вернёт 404. Как только активная задача с
-	// этим dance_id завершится — перезапрашиваем урок, чтобы вместо
-	// processing-экрана появился реальный разбор.
-	// ВАЖНО: только для taskType === 'upload'. Для compare таска тоже имеет
-	// danceId === id (referenceDanceId совпадает с уроком), но сам урок при
-	// compare не меняется — лишний refetch перемонтировал бы LessonLayout и
-	// сбрасывал воспроизведение видео.
 	useEffect(() => {
 		if (
 			uploadState.resultReady &&
 			uploadState.taskType === 'upload' &&
+			// eslint-disable-next-line sonarjs/different-types-comparison
 			uploadState.danceId === id &&
 			id
 		) {
@@ -755,14 +982,21 @@ const LessonPage: React.FC = () => {
 		uploadState.taskType,
 	]);
 
-	// Когда compare для ЭТОГО же танца завершился — точечно обновляем
-	// last_attempt_id на уроке, чтобы кнопка «Моя последняя попытка» сразу
-	// указывала на свежую попытку (полный refetch уронил бы плеер).
 	useEffect(() => {
 		const cr = uploadState.compareResult;
-		if (!cr || !id) return;
-		if (cr.dance_id !== id) return;
-		if (!cr.user_dance_id) return;
+
+		if (!cr || !id) {
+			return;
+		}
+
+		if (cr.dance_id !== id) {
+			return;
+		}
+
+		if (!cr.user_dance_id) {
+			return;
+		}
+
 		dispatch(
 			lessonActions.patchLessonLastAttemptAction(
 				id,
@@ -772,9 +1006,6 @@ const LessonPage: React.FC = () => {
 		);
 	}, [dispatch, id, uploadState.compareResult]);
 
-	// Анонимные попытки в БД не пишутся → бэк не вернёт last_attempt_id.
-	// Зеркалим последнюю попытку анонима через localStorage и показываем
-	// ту же кнопку «Моя последняя попытка».
 	const [anonLastAttempt, setAnonLastAttempt] = useState<{
 		attempt_id: string;
 		score?: number;
@@ -785,6 +1016,7 @@ const LessonPage: React.FC = () => {
 			setAnonLastAttempt(null);
 			return;
 		}
+
 		try {
 			const raw = localStorage.getItem(`anon_last_attempt_${id}`);
 			setAnonLastAttempt(raw ? JSON.parse(raw) : null);
@@ -793,38 +1025,42 @@ const LessonPage: React.FC = () => {
 		}
 	}, [id, isAuthenticated, uploadState.compareResult]);
 
-	// Когда урок не загрузился, тянем статус танца — чтобы понять, это «ещё
-	// не готов» (processing/pending), «отклонён» или вообще не существует.
-	// Используется в рендере ниже для подбора понятного экрана.
 	useEffect(() => {
 		if (!lessonError || !id) {
 			setDanceStatus(null);
 			return;
 		}
+
 		let cancelled = false;
 		getDanceModerationStatus(id)
 			.then((res) => {
-				if (!cancelled) setDanceStatus(res);
+				if (!cancelled) {
+					setDanceStatus(res);
+				}
 			})
 			.catch(() => {
-				if (!cancelled) setDanceStatus(null);
+				if (!cancelled) {
+					setDanceStatus(null);
+				}
 			});
+
 		return () => {
 			cancelled = true;
 		};
 	}, [lessonError, id]);
 
-	// Просмотр урока — отдельный эффект, чтобы дёргался ровно один раз
-	// при смене dance_id. Дебаунс по sessionStorage защищает от F5-накрутки;
-	// бэк всё равно дедуплицирует по (dance_id, viewer_id).
 	useEffect(() => {
-		if (!id) return;
-		if (!shouldSendView(id)) return;
+		if (!id) {
+			return;
+		}
+
+		if (!shouldSendView(id)) {
+			return;
+		}
+
 		recordDanceView(id)
 			.then(() => markViewSent(id))
-			.catch(() => {
-				/* просмотры — не критичный сигнал, тихо проглатываем */
-			});
+			.catch(() => {});
 	}, [id]);
 
 	useEffect(() => {
@@ -906,24 +1142,23 @@ const LessonPage: React.FC = () => {
 				<div className={styles.page}>
 					<div className={styles.moderationScreen}>
 						<p className={styles.moderationTitle}>
-							{isAuthenticated
-								? 'Видео отправлено на модерацию'
-								: 'Видео отправлено на модерацию'}
+							{'Видео отправлено на модерацию'}
 						</p>
 						<p className={styles.moderationText}>
 							{isAuthenticated ? (
 								<>
 									Мы получили ваше видео и скоро его проверим. Уведомление о
-									результате придёт в колокольчик в шапке. Пожалуйста, учтите, что
-									в кадре должен быть один человек — без животных и посторонних.
+									результате придёт в колокольчик в шапке. Пожалуйста, учтите,
+									что в кадре должен быть один человек — без животных и
+									посторонних.
 								</>
 							) : (
 								<>
 									Мы получили ваше видео и скоро его проверим. Без регистрации
-									мы не сможем сообщить вам о результате — зарегистрируйтесь,
-									и уведомление придёт в колокольчик в шапке. Пожалуйста,
-									учтите, что в кадре должен быть один человек — без животных
-									и посторонних.
+									мы не сможем сообщить вам о результате — зарегистрируйтесь, и
+									уведомление придёт в колокольчик в шапке. Пожалуйста, учтите,
+									что в кадре должен быть один человек — без животных и
+									посторонних.
 								</>
 							)}
 						</p>
@@ -955,12 +1190,8 @@ const LessonPage: React.FC = () => {
 		);
 	}
 
-	// Танец сейчас обрабатывается этим же таб-сеансом — вместо общего
-	// ErrorScreen показываем дружелюбный «обрабатывается» с подсказкой про
-	// прогресс-бар внизу. Когда задача завершится, верхний useEffect перезапросит
-	// урок, и эта ветка сменится готовым разбором.
 	const isProcessingThisDance =
-		uploadState.isProcessing && uploadState.danceId === id;
+		uploadState.isProcessing && (uploadState.danceId ?? undefined) === id;
 
 	if (lessonError && isProcessingThisDance) {
 		return (
@@ -969,8 +1200,8 @@ const LessonPage: React.FC = () => {
 					<div className={styles.moderationScreen}>
 						<p className={styles.moderationTitle}>Видео ещё обрабатывается</p>
 						<p className={styles.moderationText}>
-							Прогресс показан в нижней панели. Как только обработка
-							завершится, разбор откроется здесь автоматически.
+							Прогресс показан в нижней панели. Как только обработка завершится,
+							разбор откроется здесь автоматически.
 						</p>
 					</div>
 				</div>
@@ -979,10 +1210,6 @@ const LessonPage: React.FC = () => {
 		);
 	}
 
-	// Урок не загрузился, in-flight таски тут нет — спрашиваем у бэка, в
-	// каком состоянии танец (видим в логе «failed to get segments.json: NoSuchKey»
-	// при заходе на свежеопубликованный танец, у которого ML-пайплайн ещё не
-	// дописал артефакты в S3). Показываем понятный экран вместо «упс».
 	if (lessonError && danceStatus) {
 		const status = danceStatus.status;
 		let title = 'Видео пока недоступно';
@@ -999,10 +1226,9 @@ const LessonPage: React.FC = () => {
 				'Мы проверяем содержимое. Когда модерация завершится, разбор станет доступен.';
 		} else if (status === 'rejected') {
 			title = 'Видео отклонено модерацией';
-			text =
-				danceStatus.moderation_reason
-					? `Причина: ${danceStatus.moderation_reason}. Удалите этот танец и загрузите другой.`
-					: 'Удалите этот танец и загрузите другой.';
+			text = danceStatus.moderation_reason
+				? `Причина: ${danceStatus.moderation_reason}. Удалите этот танец и загрузите другой.`
+				: 'Удалите этот танец и загрузите другой.';
 		}
 
 		return (
@@ -1033,7 +1259,10 @@ const LessonPage: React.FC = () => {
 	}
 
 	if (!id) {
-		if (!lesson?.dance_id) return <Navigate to="/" replace />;
+		if (!lesson?.dance_id) {
+			return <Navigate to="/" replace />;
+		}
+
 		return <Navigate to={`/lesson/${lesson.dance_id}`} replace />;
 	}
 
@@ -1060,15 +1289,32 @@ const LessonPage: React.FC = () => {
 	const handleReturnFromFull = () => {
 		const returnTo =
 			lastStepRef.current !== null ? String(lastStepRef.current) : '0';
+
 		navigateToSegment(returnTo);
 	};
 
 	const getCurrentVideoTimes = (
 		index: number,
 	): { start: number; end: number } | null => {
-		if (!segments || !lesson) return null;
+		if (!lesson) {
+			return null;
+		}
+
+		if (lesson.segments && lesson.segments[index]) {
+			const s = lesson.segments[index];
+			return { start: s.start_time, end: s.end_time };
+		}
+
+		if (!segments) {
+			return null;
+		}
+
 		const seg = segments.segments[index];
-		if (!seg) return null;
+
+		if (!seg) {
+			return null;
+		}
+
 		const fps = segments.meta.fps;
 		return {
 			start: seg.start_frame / fps,
@@ -1172,6 +1418,8 @@ const LessonPage: React.FC = () => {
 					lastStep={lastStepRef.current}
 					description={description}
 					descriptionLoading={descriptionLoading}
+					isOwner={isOwner}
+					onDescriptionUpdate={handleDescriptionUpdate}
 					onSpeedChange={setPlaybackSpeed}
 					onNavigate={navigateToSegment}
 					onFullDance={handleFullDance}

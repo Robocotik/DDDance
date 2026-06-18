@@ -18,38 +18,69 @@ type MixamoViewerProps = {
 	preloadPath?: string | null;
 	timeScale?: number;
 	onAnimationReady?: () => void;
+	jointHeatmap?: Record<string, number>;
+	autoPlay?: boolean;
 };
 
 export interface MixamoViewerHandle {
 	pause: () => void;
 	resume: () => void;
 	resetToStart: () => void;
+	setTime: (t: number) => void;
+	setJointErrors: (errors: number[]) => void;
 }
 
 THREE.Cache.enabled = true;
 const TARGET_HEIGHT = 1.7;
 const DEFAULT_CHARACTER_KEY = 'blender_data/character.glb';
 
+const JOINT_BONE_NAMES = [
+	'LeftArm',
+	'RightArm',
+	'LeftForeArm',
+	'RightForeArm',
+	'LeftUpLeg',
+	'RightUpLeg',
+	'LeftLeg',
+	'RightLeg',
+] as const;
+
 const resolveAssetPath = (
 	key: string | undefined,
 	s3Base?: string,
 ): string | null => {
-	if (!key) return null;
-	if (key.startsWith('http://') || key.startsWith('https://')) return key;
+	if (!key) {
+		return null;
+	}
+
+	if (key.startsWith('http://') || key.startsWith('https://')) {
+		return key;
+	}
+
 	const base = (s3Base || S3_ADDRESS || '').replace(/\/+$/, '');
 	const cleanKey = key.replace(/^\/+/, '');
 	return `${base}/${cleanKey}`;
 };
 
 const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
-	({ glbPath, preloadPath, timeScale = 1, onAnimationReady }, ref) => {
+	(
+		{
+			glbPath,
+			preloadPath,
+			timeScale = 1,
+			onAnimationReady,
+			jointHeatmap,
+			autoPlay = false,
+		},
+		ref,
+	) => {
 		const containerRef = useRef<HTMLDivElement | null>(null);
 		const sceneRef = useRef<THREE.Scene | null>(null);
 		const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
 		const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 		const controlsRef = useRef<OrbitControls | null>(null);
 
-		const lastTimeRef = useRef<number>(performance.now());
+		const lastTimeRef = useRef<number>(0);
 		const animFrameRef = useRef<number | null>(null);
 
 		const characterRef = useRef<THREE.Group | null>(null);
@@ -58,22 +89,83 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 		const currentActionRef = useRef<THREE.AnimationAction | null>(null);
 		const rootBoneRef = useRef<THREE.Object3D | null>(null);
 		const hipsInitWorldPosRef = useRef<THREE.Vector3 | null>(null);
+		const originalMaterialsRef = useRef<Map<string, THREE.Material>>(new Map());
 
 		const [loadingCharacter, setLoadingCharacter] = useState(true);
-		const [loadingAnimation, setLoadingAnimation] = useState(false);
+		const [, setLoadingAnimation] = useState(false);
 		const [characterLoadError, setCharacterLoadError] = useState<string | null>(
 			null,
 		);
+
 		const [error, setError] = useState<string | null>(null);
 
 		const timeScaleRef = useRef(timeScale);
 
 		useEffect(() => {
 			timeScaleRef.current = timeScale;
+
 			if (currentActionRef.current) {
 				currentActionRef.current.timeScale = timeScale;
 			}
 		}, [timeScale]);
+
+		const autoPlayRef = useRef(autoPlay);
+
+		useEffect(() => {
+			autoPlayRef.current = autoPlay;
+
+			if (currentActionRef.current) {
+				currentActionRef.current.paused = !autoPlay;
+			}
+		}, [autoPlay]);
+
+		useEffect(() => {
+			const character = characterRef.current;
+
+			if (!character) {
+				return;
+			}
+
+			character.traverse((obj) => {
+				if (!obj.isMesh) {
+					return;
+				}
+
+				const mesh = obj;
+				const matchedEntry = jointHeatmap
+					? Object.entries(jointHeatmap).find(([k]) =>
+							mesh.name.toLowerCase().includes(k.toLowerCase()),
+						)
+					: null;
+
+				if (!matchedEntry) {
+					const orig = originalMaterialsRef.current.get(mesh.uuid);
+
+					if (orig) {
+						mesh.material = orig;
+					}
+
+					return;
+				}
+
+				const [, error] = matchedEntry;
+
+				if (!originalMaterialsRef.current.has(mesh.uuid)) {
+					const mat = Array.isArray(mesh.material)
+						? mesh.material[0]
+						: mesh.material;
+
+					originalMaterialsRef.current.set(mesh.uuid, mat);
+					mesh.material = mat.clone();
+				}
+
+				const mat = Array.isArray(mesh.material)
+					? mesh.material[0]
+					: mesh.material;
+
+				mat.color.setHSL((1 - error) * 0.33, 1, 0.5);
+			});
+		}, [jointHeatmap]);
 
 		useImperativeHandle(ref, () => ({
 			pause: () => {
@@ -89,7 +181,10 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 			resetToStart: () => {
 				const action = currentActionRef.current;
 				const mixer = mixerRef.current;
-				if (!action || !mixer) return;
+
+				if (!action || !mixer) {
+					return;
+				}
 
 				action.stop();
 				action.reset();
@@ -102,12 +197,71 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					characterRef.current.position.z = 0;
 				}
 			},
+			setTime: (t: number) => {
+				const action = currentActionRef.current;
+				const mixer = mixerRef.current;
+
+				if (!action || !mixer) {
+					return;
+				}
+
+				action.time = t;
+				mixer.update(0);
+			},
+			setJointErrors: (errors: number[]) => {
+				const character = characterRef.current;
+
+				if (!character) {
+					return;
+				}
+
+				const heatmap: Record<string, number> = {};
+				JOINT_BONE_NAMES.forEach((name, i) => {
+					heatmap[name] = errors[i] ?? 0;
+				});
+
+				character.traverse((obj) => {
+					if (!obj.isMesh) {
+						return;
+					}
+
+					const mesh = obj;
+					// eslint-disable-next-line sonarjs/no-nested-functions
+					const entry = Object.entries(heatmap).find(([k]) =>
+						mesh.name.toLowerCase().includes(k.toLowerCase()),
+					);
+
+					if (!entry) {
+						return;
+					}
+
+					const [, error] = entry;
+
+					if (!originalMaterialsRef.current.has(mesh.uuid)) {
+						const mat = Array.isArray(mesh.material)
+							? mesh.material[0]
+							: mesh.material;
+
+						originalMaterialsRef.current.set(mesh.uuid, mat);
+						mesh.material = mat.clone();
+					}
+
+					const mat = Array.isArray(mesh.material)
+						? mesh.material[0]
+						: mesh.material;
+
+					mat.color.setHSL((1 - error) * 0.33, 1, 0.5);
+				});
+			},
 		}));
 
 		const fitCameraToObject = (object: THREE.Object3D) => {
 			const camera = cameraRef.current;
 			const controls = controlsRef.current;
-			if (!camera || !controls) return;
+
+			if (!camera || !controls) {
+				return;
+			}
 
 			const box = new THREE.Box3().setFromObject(object);
 			const center = box.getCenter(new THREE.Vector3());
@@ -124,9 +278,16 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 		};
 
 		useEffect(() => {
-			if (!preloadPath || loadingCharacter) return;
+			if (!preloadPath || loadingCharacter) {
+				return;
+			}
+
 			const url = resolveAssetPath(preloadPath);
-			if (!url) return;
+
+			if (!url) {
+				return;
+			}
+
 			const loader = new GLTFLoader();
 			loader.load(
 				url,
@@ -138,7 +299,10 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 
 		useEffect(() => {
 			const container = containerRef.current;
-			if (!container) return;
+
+			if (!container) {
+				return;
+			}
 
 			let cancelled = false;
 
@@ -153,6 +317,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 				0.1,
 				1000,
 			);
+
 			camera.position.set(0, 1.2, 3.5);
 			camera.lookAt(0, 1.0, 0);
 			cameraRef.current = camera;
@@ -179,16 +344,24 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 			scene.add(fillLight);
 
 			const handleResize = () => {
-				if (!containerRef.current || !cameraRef.current || !rendererRef.current)
+				if (
+					!containerRef.current ||
+					!cameraRef.current ||
+					!rendererRef.current
+				) {
 					return;
+				}
+
 				cameraRef.current.aspect =
 					containerRef.current.clientWidth / containerRef.current.clientHeight;
+
 				cameraRef.current.updateProjectionMatrix();
 				rendererRef.current.setSize(
 					containerRef.current.clientWidth,
 					containerRef.current.clientHeight,
 				);
 			};
+
 			window.addEventListener('resize', handleResize);
 
 			const animate = () => {
@@ -205,6 +378,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					characterRef.current.getWorldPosition(worldPos);
 					controlsRef.current.target.x +=
 						(worldPos.x - controlsRef.current.target.x) * 0.1;
+
 					controlsRef.current.target.z +=
 						(worldPos.z - controlsRef.current.target.z) * 0.1;
 				}
@@ -213,9 +387,11 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 				renderer.render(scene, camera);
 				animFrameRef.current = requestAnimationFrame(animate);
 			};
+
 			animate();
 
 			const characterUrl = resolveAssetPath(DEFAULT_CHARACTER_KEY);
+
 			if (!characterUrl) {
 				if (!cancelled) {
 					setCharacterLoadError('Не указан путь к персонажу');
@@ -226,13 +402,18 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 				loader.load(
 					characterUrl,
 					(gltf) => {
-						if (cancelled) return;
+						if (cancelled) {
+							return;
+						}
 
 						const model = gltf.scene;
 
 						const box = new THREE.Box3().setFromObject(model);
 						const height = box.max.y - box.min.y;
-						if (height > 0) model.scale.setScalar(TARGET_HEIGHT / height);
+
+						if (height > 0) {
+							model.scale.setScalar(TARGET_HEIGHT / height);
+						}
 
 						model.updateWorldMatrix(true, true);
 						const box2 = new THREE.Box3().setFromObject(model);
@@ -249,12 +430,18 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 									obj.parent ||
 									obj;
 							}
+
 							if (obj.type === 'Bone' && !foundArmature) {
 								let root = obj;
-								while (root.parent && root.parent !== model) root = root.parent;
+
+								while (root.parent && root.parent !== model) {
+									root = root.parent;
+								}
+
 								foundArmature = root;
 							}
 						});
+
 						armatureRef.current = foundArmature || model;
 
 						let hips: THREE.Object3D | null = null;
@@ -269,6 +456,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 								hips = obj;
 							}
 						});
+
 						rootBoneRef.current = hips || foundArmature || model;
 
 						mixerRef.current = new THREE.AnimationMixer(model);
@@ -287,12 +475,18 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 			return () => {
 				cancelled = true;
 				window.removeEventListener('resize', handleResize);
-				if (animFrameRef.current !== null)
+
+				if (animFrameRef.current !== null) {
 					cancelAnimationFrame(animFrameRef.current);
+				}
+
 				controls.dispose();
 				renderer.dispose();
-				if (container.contains(renderer.domElement))
+
+				if (container.contains(renderer.domElement)) {
 					container.removeChild(renderer.domElement);
+				}
+
 				sceneRef.current = null;
 				cameraRef.current = null;
 				rendererRef.current = null;
@@ -303,6 +497,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 				currentActionRef.current = null;
 				rootBoneRef.current = null;
 				hipsInitWorldPosRef.current = null;
+				originalMaterialsRef.current.clear();
 			};
 		}, []);
 
@@ -312,10 +507,12 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 				!mixerRef.current ||
 				!characterRef.current ||
 				!glbPath
-			)
+			) {
 				return;
+			}
 
 			const animationUrl = resolveAssetPath(glbPath);
+
 			if (!animationUrl) {
 				setError('Неверный путь к анимации');
 				return;
@@ -334,7 +531,9 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 			loader.load(
 				animationUrl,
 				(gltf) => {
-					if (cancelled) return;
+					if (cancelled) {
+						return;
+					}
 
 					if (!gltf.animations?.length) {
 						setLoadingAnimation(false);
@@ -345,6 +544,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					const clip = gltf.animations[0];
 					const mixer = mixerRef.current;
 					const target = armatureRef.current || characterRef.current;
+
 					if (!mixer || !target) {
 						setLoadingAnimation(false);
 						return;
@@ -363,7 +563,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 
 					mixer.update(0);
 
-					action.paused = true;
+					action.paused = !autoPlayRef.current;
 					currentActionRef.current = action;
 
 					setLoadingAnimation(false);
@@ -371,7 +571,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					onAnimationReady?.();
 				},
 				undefined,
-				(err) => {
+				(_err) => {
 					if (!cancelled) {
 						setLoadingAnimation(false);
 						setError('Не удалось загрузить glb анимацию');
@@ -382,7 +582,7 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 			return () => {
 				cancelled = true;
 			};
-		}, [loadingCharacter, glbPath]);
+		}, [loadingCharacter, glbPath, onAnimationReady]);
 
 		return (
 			<div className={styles.viewerContainer}>
@@ -398,7 +598,9 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 								</>
 							) : (
 								<>
-									<div className={styles.errorText}>Не удалось загрузить персонажа</div>
+									<div className={styles.errorText}>
+										Не удалось загрузить персонажа
+									</div>
 									<button
 										onClick={() => window.location.reload()}
 										className={styles.retryButton}
@@ -411,7 +613,9 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 					</div>
 				)}
 				<div className={styles.statusIndicator}>
-					{error && <span className={styles.statusError}>Ошибка воспроизведения</span>}
+					{error && (
+						<span className={styles.statusError}>Ошибка воспроизведения</span>
+					)}
 				</div>
 				<div ref={containerRef} className={styles.canvasContainer} />
 			</div>
@@ -420,4 +624,5 @@ const MixamoViewer = forwardRef<MixamoViewerHandle, MixamoViewerProps>(
 );
 
 MixamoViewer.displayName = 'MixamoViewer';
+
 export default MixamoViewer;

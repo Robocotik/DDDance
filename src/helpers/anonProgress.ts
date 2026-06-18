@@ -1,11 +1,6 @@
-// Хранилище прогресса анонимного пользователя: один «последний танец» и одна
-// «последняя попытка». Нужно, чтобы данные не терялись до регистрации.
-// После входа в аккаунт очищается (clearAnonProgress).
-
 const LAST_DANCE_KEY = 'dddance_last_dance';
 const LAST_ATTEMPT_KEY = 'dddance_last_attempt';
 
-// Событие, по которому панель в шапке перечитывает localStorage.
 export const ANON_PROGRESS_EVENT = 'dddance:anonprogress';
 
 export interface LastAnonDance {
@@ -32,17 +27,13 @@ const writeJSON = (key: string, value: unknown): void => {
 	try {
 		localStorage.setItem(key, JSON.stringify(value));
 		window.dispatchEvent(new Event(ANON_PROGRESS_EVENT));
-	} catch {
-		/* localStorage недоступен (приватный режим, квота) — игнор */
-	}
+	} catch {}
 };
 
 const remove = (key: string): void => {
 	try {
 		localStorage.removeItem(key);
-	} catch {
-		/* игнор */
-	}
+	} catch {}
 };
 
 export const saveLastAnonDance = (danceId: string): void =>
@@ -64,7 +55,6 @@ export const saveLastAnonAttempt = (
 export const getLastAnonAttempt = (): LastAnonAttempt | null =>
 	readJSON<LastAnonAttempt>(LAST_ATTEMPT_KEY);
 
-// Вызывается после входа в аккаунт — анонимный прогресс больше не нужен.
 export const clearAnonProgress = (): void => {
 	remove(LAST_DANCE_KEY);
 	remove(LAST_ATTEMPT_KEY);

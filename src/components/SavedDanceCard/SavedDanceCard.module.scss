@@ -6,10 +6,11 @@
 	cursor: pointer;
 	background: #000;
 	border: 1px solid rgb(255 255 255 / 8%);
-	transition: transform 0.15s, border-color 0.2s;
+	transition:
+		transform 0.15s,
+		border-color 0.2s;
 
 	&:hover {
-		transform: translateY(-2px);
 		border-color: rgb(148 34 142 / 60%);
 	}
 }
@@ -66,9 +67,13 @@
 	font: inherit;
 	transition: transform 0.12s ease;
 
-	&:hover { transform: scale(1.08); }
-	&:active { transform: scale(0.95); }
-	&:disabled { cursor: default; }
+	&:active {
+		transform: scale(0.95);
+	}
+
+	&:disabled {
+		cursor: default;
+	}
 }
 
 .lockBadgeLocked {
@@ -100,7 +105,9 @@
 	align-items: center;
 	justify-content: center;
 	padding: 0;
-	transition: background 0.2s, color 0.2s;
+	transition:
+		background 0.2s,
+		color 0.2s;
 
 	&:hover {
 		background: rgb(255 107 107 / 25%);
@@ -121,11 +128,99 @@
 	color: #fff;
 }
 
+.nameRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
 .name {
-	font-size: 13px;
+	font-size: 18px;
+	font-weight: 700;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.danceTitle {
+	font-size: 12px;
+	font-weight: 600;
+	color: rgb(255 255 255 / 70%);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.renameBtn {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border: none;
+	border-radius: 6px;
+	background: rgb(255 255 255 / 12%);
+	color: #fff;
+	cursor: pointer;
+	transition: background 0.15s;
+
+	&:hover {
+		background: rgb(255 255 255 / 25%);
+	}
+}
+
+.renameRow {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.renameInput {
+	flex: 1;
+	min-width: 0;
+	padding: 5px 8px;
+	font-size: 14px;
+	font-family: inherit;
+	color: #fff;
+	background: rgb(0 0 0 / 45%);
+	border: 1px solid rgb(255 255 255 / 35%);
+	border-radius: 6px;
+	outline: none;
+
+	&:focus {
+		border-color: #94228e;
+	}
+}
+
+.renameSave,
+.renameCancel {
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border: none;
+	border-radius: 6px;
+	font-size: 15px;
+	line-height: 1;
+	cursor: pointer;
+	color: #fff;
+}
+
+.renameSave {
+	background: rgb(91 224 160 / 35%);
+
+	&:hover {
+		background: rgb(91 224 160 / 55%);
+	}
+}
+
+.renameCancel {
+	background: rgb(255 255 255 / 12%);
+
+	&:hover {
+		background: rgb(255 255 255 / 25%);
+	}
 }
 
 .date {

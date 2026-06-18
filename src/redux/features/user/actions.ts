@@ -12,11 +12,7 @@ export const checkAuthStatus = () => async (dispatch: AppDispatch) => {
 	try {
 		const user = await checkAuth();
 		dispatch(setUser(user));
-	} catch (error) {
-		// /auth/check упал → реальной сессии нет. Раньше тут подставлялся
-		// закэшированный VK-user из localStorage, и юзер «отображался
-		// зарегистрированным», хотя cookie была мертва — все запросы
-		// возвращали 401. Чистим всё.
+	} catch {
 		clearVkAuthUser();
 		dispatch(clearUser());
 	}
@@ -51,7 +47,16 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 
 export const updateUserProfile =
 	(payload: UpdateProfilePayload) => async (dispatch: AppDispatch) => {
-		const updated = await updateProfile(payload);
-		dispatch(setUser(updated));
-		return updated;
+		dispatch(setLoading(true));
+
+		try {
+			const updated = await updateProfile(payload);
+			dispatch(setUser(updated));
+			return updated;
+		} catch (error) {
+			const errorMessage = getAuthErrorMessage(error);
+			dispatch(setError(errorMessage));
+		} finally {
+			dispatch(setLoading(false));
+		}
 	};

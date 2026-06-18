@@ -1,10 +1,6 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-// Hardcoded until ML delivers automatic difficulty detection.
-// Key = dance id from the backend.
-export const DANCE_DIFFICULTY: Record<string, Difficulty> = {
-	// example: 'abc123': 'easy',
-};
+export const DANCE_DIFFICULTY: Record<string, Difficulty> = {};
 
 export const getDifficulty = (danceId: string): Difficulty | null =>
 	DANCE_DIFFICULTY[danceId] ?? null;

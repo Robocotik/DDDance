@@ -56,7 +56,9 @@ const HistoryItemCard: React.FC<HistoryItemProps> = ({ item }) => {
 				<button
 					className={`${styles.actionBtn} ${isLiked ? styles.liked : ''}`}
 					onClick={handleToggleLike}
-					title={isLiked ? 'Убрать из понравившихся' : 'Добавить в понравившиеся'}
+					title={
+						isLiked ? 'Убрать из понравившихся' : 'Добавить в понравившиеся'
+					}
 				>
 					<Icon
 						name={isLiked ? 'heart-filled' : 'heart-outline'}

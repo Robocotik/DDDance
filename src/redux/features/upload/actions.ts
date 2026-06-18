@@ -20,8 +20,6 @@ import {
 	type TaskType,
 } from './uploadSlice';
 
-// Ответ бэкенда на загрузку: либо постановка задачи (task_id),
-// либо непройденная премодерация (error_code = MODERATION_PENDING).
 interface UploadEnqueueResponse {
 	task_id?: string;
 	dance_id?: string;
@@ -31,11 +29,8 @@ interface UploadEnqueueResponse {
 
 const PENDING_UPLOADS_KEY = 'pending_anonymous_uploads';
 
-// Сохраняем активную задачу в localStorage, чтобы прогресс-бар и попап
-// «готово» переживали F5 / навигацию между вкладками. Чистится в трёх
-// терминальных состояниях: done, failed, moderation rejected.
 const IN_FLIGHT_TASK_KEY = 'in_flight_task';
-const IN_FLIGHT_MAX_AGE_MS = 30 * 60 * 1000; // 30 мин — больше серверного таймаута
+const IN_FLIGHT_MAX_AGE_MS = 30 * 60 * 1000;
 
 interface PersistedTask {
 	taskId: string;
@@ -47,9 +42,7 @@ interface PersistedTask {
 	startedAt: number;
 }
 
-function persistInFlightTask(
-	payload: Omit<PersistedTask, 'startedAt'>,
-): void {
+function persistInFlightTask(payload: Omit<PersistedTask, 'startedAt'>): void {
 	if (!payload.taskId) {
 		return;
 	}
@@ -59,19 +52,19 @@ function persistInFlightTask(
 			IN_FLIGHT_TASK_KEY,
 			JSON.stringify({ ...payload, startedAt: Date.now() }),
 		);
-	} catch {
-		/* localStorage недоступен — переживём, просто без resume после F5 */
-	}
+	} catch {}
 }
 
 function loadInFlightTask(): PersistedTask | null {
 	try {
 		const raw = localStorage.getItem(IN_FLIGHT_TASK_KEY);
+
 		if (!raw) {
 			return null;
 		}
 
 		const parsed = JSON.parse(raw) as PersistedTask;
+
 		if (!parsed?.taskId || !parsed?.taskType) {
 			return null;
 		}
@@ -90,27 +83,28 @@ function loadInFlightTask(): PersistedTask | null {
 function clearInFlightTask(): void {
 	try {
 		localStorage.removeItem(IN_FLIGHT_TASK_KEY);
-	} catch {
-		/* ignore */
-	}
+	} catch {}
 }
 
 function savePendingUpload(danceId: string | undefined): void {
-	if (!danceId) return;
+	if (!danceId) {
+		return;
+	}
+
 	try {
 		const raw = localStorage.getItem(PENDING_UPLOADS_KEY);
 		const list: string[] = raw ? JSON.parse(raw) : [];
+
 		if (!list.includes(danceId)) {
 			list.push(danceId);
 			localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify(list));
 		}
-	} catch {
-		/* localStorage may be unavailable */
-	}
+	} catch {}
 }
 
 const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 15 * 60 * 1000; // 15 минут
+const POLL_TIMEOUT_MS = 15 * 60 * 1000;
+const MAX_CONSECUTIVE_POLL_ERRORS = 5;
 
 let _pollTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -121,16 +115,18 @@ function _clearPoll() {
 	}
 }
 
-// Запускает поллинг после получения task_id.
-// Вызывается из uploadAndCompare и uploadDanceFile.
 export const startPolling =
 	() => (dispatch: AppDispatch, getState: () => RootState) => {
 		_clearPoll();
 		const startedAt = Date.now();
+		let consecutiveErrors = 0;
 
 		const tick = async () => {
 			const state = getState().upload;
-			if (!state.taskId || !state.taskType) return;
+
+			if (!state.taskId || !state.taskType) {
+				return;
+			}
 
 			if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
 				clearInFlightTask();
@@ -145,25 +141,24 @@ export const startPolling =
 					video_key: state.videoKey ?? undefined,
 				});
 
+				consecutiveErrors = 0;
+
 				if (status.status === 'done') {
 					clearInFlightTask();
+
 					if (state.taskType === 'compare') {
 						const result = status.result as CompareResponse;
 						sessionStorage.setItem(
 							`compare_result_${result.user_dance_id}`,
 							JSON.stringify(result),
 						);
-						// Флаг готовности для анон-панели в шапке. GET /result —
-						// protected, анон по нему не сможет проверить готовность,
-						// поэтому пишем локальный маркер прямо здесь.
+
 						try {
 							localStorage.setItem(
 								`anon_attempt_ready_${result.user_dance_id}`,
 								'1',
 							);
-							// Зеркалим по dance_id — чтобы LessonPage показал
-							// кнопку «Моя последняя попытка» анониму без обращения
-							// к protected-эндпоинту.
+
 							if (result.dance_id && result.user_dance_id) {
 								localStorage.setItem(
 									`anon_last_attempt_${result.dance_id}`,
@@ -173,27 +168,26 @@ export const startPolling =
 									}),
 								);
 							}
-						} catch {
-							/* localStorage недоступен — переживём */
-						}
+						} catch {}
+
 						dispatch(taskCompleted({ compareResult: result }));
 					} else {
-						dispatch(taskCompleted({ uploadResult: status.result as LoadDanceResult }));
+						dispatch(
+							taskCompleted({ uploadResult: status.result as LoadDanceResult }),
+						);
 					}
+
 					return;
 				}
 
 				if (status.status === 'failed') {
 					clearInFlightTask();
-					// Сначала проверяем модерационный отказ: воркер закончил,
-					// но танец забракован. Раньше попадал в обычный taskFailed
-					// и на фронте показывался либо «Что-то пошло не так», либо
-					// (хуже) ProcessingDonePopup с предложением «опубликовать»
-					// несуществующего танца.
+
 					if (status.moderation_failed) {
 						dispatch(moderationRejected(status.moderation_reason ?? ''));
 						return;
 					}
+
 					dispatch(taskFailed(status.error ?? 'Ошибка обработки'));
 					return;
 				}
@@ -208,7 +202,19 @@ export const startPolling =
 
 				_pollTimer = setTimeout(tick, POLL_INTERVAL_MS);
 			} catch {
-				// Временная сетевая ошибка — повторим через интервал
+				consecutiveErrors += 1;
+
+				if (consecutiveErrors >= MAX_CONSECUTIVE_POLL_ERRORS) {
+					clearInFlightTask();
+					dispatch(
+						taskFailed(
+							'Сервис обработки временно недоступен. Попробуй ещё раз позже.',
+						),
+					);
+
+					return;
+				}
+
 				_pollTimer = setTimeout(tick, POLL_INTERVAL_MS);
 			}
 		};
@@ -216,31 +222,35 @@ export const startPolling =
 		_pollTimer = setTimeout(tick, POLL_INTERVAL_MS);
 	};
 
-// Загрузить видео для создания танца (асинхронно).
 export const uploadDanceFile =
 	(file: File) => async (dispatch: AppDispatch, getState: () => RootState) => {
 		dispatch(videoUploading({ taskType: 'upload' }));
+
 		try {
 			const formData = new FormData();
 			formData.append('dance', file);
 			const response = await http.post<UploadEnqueueResponse>(
 				'/users/load',
 				formData,
-				{ headers: { 'Content-Type': 'multipart/form-data' } },
+				{
+					headers: { 'Content-Type': 'multipart/form-data' },
+					timeout: 300_000,
+				},
 			);
+
 			const data = response.data;
-			// Только анонимная загрузка попадает в pending-claim и панель шапки:
-			// у авторизованного связь с танцем уже создана на бэкенде при загрузке.
+
 			if (!getState().user.user && data.dance_id) {
 				savePendingUpload(data.dance_id);
 				saveLastAnonDance(data.dance_id);
 			}
-			// Видео не прошло премодерацию — показываем причину, не запускаем поллинг.
+
 			if (data.error_code === 'MODERATION_PENDING') {
 				clearInFlightTask();
 				dispatch(moderationRejected(data.reason ?? ''));
 				return;
 			}
+
 			dispatch(
 				taskEnqueued({
 					taskId: data.task_id ?? '',
@@ -248,18 +258,19 @@ export const uploadDanceFile =
 					danceId: data.dance_id,
 				}),
 			);
+
 			persistInFlightTask({
 				taskId: data.task_id ?? '',
 				taskType: 'upload',
 				danceId: data.dance_id,
 			});
+
 			dispatch(startPolling());
 		} catch {
 			dispatch(taskFailed('Не удалось загрузить видео. Попробуйте ещё раз.'));
 		}
 	};
 
-// Загрузить танец по ссылке (асинхронно).
 export const uploadDanceByUrl =
 	(url: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
 		try {
@@ -267,19 +278,20 @@ export const uploadDanceByUrl =
 				'/users/loadByURL',
 				{ url },
 			);
+
 			const data = response.data;
-			// Только анонимная загрузка попадает в pending-claim и панель шапки:
-			// у авторизованного связь с танцем уже создана на бэкенде при загрузке.
+
 			if (!getState().user.user && data.dance_id) {
 				savePendingUpload(data.dance_id);
 				saveLastAnonDance(data.dance_id);
 			}
-			// Видео не прошло премодерацию — показываем причину, не запускаем поллинг.
+
 			if (data.error_code === 'MODERATION_PENDING') {
 				clearInFlightTask();
 				dispatch(moderationRejected(data.reason ?? ''));
 				return;
 			}
+
 			dispatch(
 				taskEnqueued({
 					taskId: data.task_id ?? '',
@@ -287,11 +299,13 @@ export const uploadDanceByUrl =
 					danceId: data.dance_id,
 				}),
 			);
+
 			persistInFlightTask({
 				taskId: data.task_id ?? '',
 				taskType: 'upload',
 				danceId: data.dance_id,
 			});
+
 			dispatch(startPolling());
 		} catch {
 			dispatch(
@@ -302,9 +316,6 @@ export const uploadDanceByUrl =
 		}
 	};
 
-// Отправить видео на сравнение с эталоном (асинхронно). startSec/endSec —
-// опциональная обрезка из VideoEditor: бэкенд режет видео ffmpeg'ом до
-// отправки на ML, чтобы выкинуть «подход к камере» и «отход от неё».
 export const uploadAndCompare =
 	(
 		videoBlob: Blob,
@@ -314,13 +325,13 @@ export const uploadAndCompare =
 	) =>
 	async (dispatch: AppDispatch, getState: () => RootState) => {
 		dispatch(videoUploading({ taskType: 'compare' }));
+
 		try {
 			const enqueued = await compareDance(videoBlob, referenceDanceId, {
 				startSec,
 				endSec,
 			});
 
-			// compareDance теперь возвращает AsyncEnqueueResult (202)
 			const enqueueResult = enqueued as unknown as {
 				task_id: string;
 				user_dance_id: string;
@@ -332,10 +343,12 @@ export const uploadAndCompare =
 					taskId: enqueueResult.task_id,
 					taskType: 'compare',
 					userDanceId: enqueueResult.user_dance_id,
-					referenceDanceId: enqueueResult.reference_dance_id ?? referenceDanceId,
+					referenceDanceId:
+						enqueueResult.reference_dance_id ?? referenceDanceId,
 					danceId: enqueueResult.reference_dance_id ?? referenceDanceId,
 				}),
 			);
+
 			persistInFlightTask({
 				taskId: enqueueResult.task_id,
 				taskType: 'compare',
@@ -361,16 +374,14 @@ export const uploadAndCompare =
 		}
 	};
 
-// Восстановить поллинг активной задачи после F5 / открытия новой вкладки.
-// Вызывается из App при монтировании.
 export const resumeInFlightTask =
 	() => (dispatch: AppDispatch, getState: () => RootState) => {
-		// Уже что-то поллится в этом таб-сеансе — не дублируем.
 		if (getState().upload.taskId) {
 			return;
 		}
 
 		const persisted = loadInFlightTask();
+
 		if (!persisted) {
 			return;
 		}
@@ -385,5 +396,6 @@ export const resumeInFlightTask =
 				videoKey: persisted.videoKey,
 			}),
 		);
+
 		dispatch(startPolling());
 	};

@@ -5,7 +5,11 @@ import InstaLogo from '../../assets/svg/insta-logo.svg';
 import tiktokLogo from '../../assets/svg/tiktok-logo.svg';
 import VkClipsLogo from '../../assets/svg/vkclips-logo.svg';
 import Title from '../../components/Title/Title';
-import { uploadDanceByUrl, uploadDanceFile } from '../../redux/features/upload/actions';
+import { TELEGRAM_BOT_URL } from '../../consts/urls';
+import {
+	uploadDanceByUrl,
+	uploadDanceFile,
+} from '../../redux/features/upload/actions';
 import { selectIsProcessing } from '../../redux/features/upload/selectors';
 import Button from '../Button/Button';
 import Paragraph from '../Paragraph/Paragraph';
@@ -31,13 +35,16 @@ const VideoUploader: React.FC = () => {
 		}
 
 		if (file.size > MAX_FILE_SIZE) {
-			// Раньше пользователь молча оставался без feedback — теперь
-			// видит причину и может пережать видео.
 			setFileError(
 				`Файл слишком большой (${(file.size / 1024 / 1024).toFixed(1)} МБ). Максимум — 60 МБ.`,
 			);
+
 			setSelectedFile(null);
-			if (inputRef.current) inputRef.current.value = '';
+
+			if (inputRef.current) {
+				inputRef.current.value = '';
+			}
+
 			return;
 		}
 
@@ -55,9 +62,13 @@ const VideoUploader: React.FC = () => {
 
 	const handleStartAnalysis = async () => {
 		const trimmedLink = videoLink.trim();
-		if (!selectedFile && !trimmedLink) return;
+
+		if (!selectedFile && !trimmedLink) {
+			return;
+		}
 
 		setIsUploading(true);
+
 		try {
 			if (selectedFile) {
 				await dispatch(uploadDanceFile(selectedFile) as any);
@@ -68,7 +79,10 @@ const VideoUploader: React.FC = () => {
 			setIsUploading(false);
 			setSelectedFile(null);
 			setVideoLink('');
-			if (inputRef.current) inputRef.current.value = '';
+
+			if (inputRef.current) {
+				inputRef.current.value = '';
+			}
 		}
 	};
 
@@ -77,7 +91,18 @@ const VideoUploader: React.FC = () => {
 		handleStartAnalysis();
 	};
 
-	const isStartDisabled = (!selectedFile && !videoLink.trim()) || isUploading || isTaskProcessing;
+	const isStartDisabled =
+		(!selectedFile && !videoLink.trim()) || isUploading || isTaskProcessing;
+
+	let startButtonLabel: string;
+
+	if (isUploading) {
+		startButtonLabel = 'Загрузка...';
+	} else if (isTaskProcessing) {
+		startButtonLabel = 'Дождитесь анализа предыдущего танца';
+	} else {
+		startButtonLabel = 'Начать разбор';
+	}
 
 	return (
 		<div id="video-uploader" className={styles.container}>
@@ -146,15 +171,31 @@ const VideoUploader: React.FC = () => {
 					onClick={handleStartAnalysis}
 					disabled={isStartDisabled}
 				>
-					<span className={styles.buttonText}>
-						{isUploading
-							? 'Загрузка...'
-							: isTaskProcessing
-								? 'Дождитесь анализа предыдущего танца'
-								: 'Начать разбор'}
-					</span>
+					<span className={styles.buttonText}>{startButtonLabel}</span>
 				</Button>
+			</div>
 
+			<div className={styles.tgBlock}>
+				<div className={styles.tgDivider} />
+				<a
+					className={styles.tgButton}
+					href={TELEGRAM_BOT_URL}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<svg
+						className={styles.tgIcon}
+						viewBox="0 0 24 24"
+						fill="currentColor"
+						aria-hidden="true"
+					>
+						<path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
+					</svg>
+					<span className={styles.buttonText}>Загрузить через Telegram</span>
+				</a>
+				<Paragraph opacity="80" className={styles.tgHint}>
+					Снимаете на телефон? Загрузите видео прямо из Telegram
+				</Paragraph>
 			</div>
 		</div>
 	);

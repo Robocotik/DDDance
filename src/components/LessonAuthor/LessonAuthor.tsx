@@ -29,7 +29,10 @@ interface LessonAuthorProps {
 }
 
 const LessonAuthor: React.FC<LessonAuthorProps> = ({ author, className }) => (
-	<Link to={`/profile/${author.id}`} className={`${styles.author}${className ? ` ${className}` : ''}`}>
+	<Link
+		to={`/profile/${author.id}`}
+		className={`${styles.author}${className ? ` ${className}` : ''}`}
+	>
 		<img
 			src={resolveAvatar(author.avatar)}
 			alt={author.login}

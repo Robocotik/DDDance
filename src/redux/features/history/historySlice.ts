@@ -31,6 +31,7 @@ const historySlice = createSlice({
 		},
 		updateItem: (state, action: PayloadAction<HistoryItem>) => {
 			const index = state.items.findIndex((i) => i.id === action.payload.id);
+
 			if (index !== -1) {
 				state.items[index] = action.payload;
 			}

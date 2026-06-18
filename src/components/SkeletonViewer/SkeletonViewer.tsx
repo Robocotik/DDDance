@@ -241,7 +241,6 @@ const SkeletonViewer: React.FC = () => {
 					? fileUrl.trim()
 					: `/${fileUrl.replace(/^\/+/, '')}`;
 
-				console.log('Загрузка данных по URL:', url);
 				const response = await fetch(url);
 
 				if (!response.ok) {
@@ -268,8 +267,6 @@ const SkeletonViewer: React.FC = () => {
 				setStatus(
 					`Ошибка: ${err instanceof Error ? err.message : String(err)}`,
 				);
-
-				console.error(err);
 			}
 		};
 

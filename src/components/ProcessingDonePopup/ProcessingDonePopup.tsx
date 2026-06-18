@@ -1,10 +1,8 @@
 import { setDanceName } from '@/api/users/uploadedDances';
-import { hasBannedWords, MAX_TITLE_LENGTH } from '@/helpers/censorTitle';
 import type { Difficulty } from '@/consts/danceDifficulty';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { hasBannedWords, MAX_TITLE_LENGTH } from '@/helpers/censorTitle';
+import { moderationReasonLabel } from '@/helpers/moderationReason';
 import {
-	selectCompareResult,
 	selectModerationFailed,
 	selectModerationReason,
 	selectResultReady,
@@ -12,11 +10,12 @@ import {
 	selectTaskType,
 	selectUploadDanceResult,
 } from '@/redux/features/upload/selectors';
-import { moderationReasonLabel } from '@/helpers/moderationReason';
 import { resultAcknowledged } from '@/redux/features/upload/uploadSlice';
 import { selectUser } from '@/redux/features/user/selectors';
 import type { AppDispatch } from '@/redux/store';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import styles from './ProcessingDonePopup.module.scss';
 
 const DIFFICULTY_OPTIONS: { value: Difficulty; label: string }[] = [
@@ -33,7 +32,6 @@ const ProcessingDonePopup: React.FC = () => {
 	const moderationFailed = useSelector(selectModerationFailed);
 	const moderationReason = useSelector(selectModerationReason);
 	const taskType = useSelector(selectTaskType);
-	const compareResult = useSelector(selectCompareResult);
 	const uploadResult = useSelector(selectUploadDanceResult);
 	const taskDanceId = useSelector(selectTaskDanceId);
 	const user = useSelector(selectUser);
@@ -43,7 +41,15 @@ const ProcessingDonePopup: React.FC = () => {
 	const [difficulty, setDifficulty] = useState<Difficulty>('medium');
 	const [saving, setSaving] = useState(false);
 
-	if (!resultReady && !moderationFailed) return null;
+	useEffect(() => {
+		if (resultReady && taskType === 'compare') {
+			dispatch(resultAcknowledged());
+		}
+	}, [resultReady, taskType, dispatch]);
+
+	if (!resultReady && !moderationFailed) {
+		return null;
+	}
 
 	const handleDismiss = () => {
 		dispatch(resultAcknowledged());
@@ -83,39 +89,12 @@ const ProcessingDonePopup: React.FC = () => {
 		);
 	}
 
-	// ── Для compare — старое поведение ───────────────────────────────────────
 	if (taskType === 'compare') {
-		const handleView = () => {
-			dispatch(resultAcknowledged());
-			if (compareResult?.user_dance_id) {
-				navigate(`/compare/${compareResult.user_dance_id}`);
-			}
-		};
-		return (
-			<div className={styles.overlay}>
-				<div className={styles.card} role="dialog" aria-modal="true">
-					<p className={styles.title}>Результат готов!</p>
-					<p className={styles.subtitle}>
-						Посмотри разбор своей попытки и советы по улучшению.
-					</p>
-					<div className={styles.actions}>
-						<button className={styles.btnPrimary} onClick={handleView}>
-							Смотреть результат
-						</button>
-						<button className={styles.btnSecondary} onClick={handleDismiss}>
-							Позже
-						</button>
-					</div>
-				</div>
-			</div>
-		);
+		return null;
 	}
 
-	// ── Для upload — шаг с названием танца ───────────────────────────────────
 	const danceId = uploadResult?.dance_id ?? taskDanceId;
 
-	// Аноним не может публиковать и именовать танец — предлагаем регистрацию.
-	// Сам разбор доступен; dance_id уже сохранён как «последний танец».
 	if (!user) {
 		return (
 			<div className={styles.overlay}>
@@ -139,7 +118,10 @@ const ProcessingDonePopup: React.FC = () => {
 							className={styles.btnSecondary}
 							onClick={() => {
 								dispatch(resultAcknowledged());
-								if (danceId) navigate(`/lesson/${danceId}`);
+
+								if (danceId) {
+									navigate(`/lesson/${danceId}`);
+								}
 							}}
 						>
 							Открыть танец
@@ -153,6 +135,7 @@ const ProcessingDonePopup: React.FC = () => {
 	const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.value;
 		setTitle(val);
+
 		if (hasBannedWords(val)) {
 			setTitleError('Название содержит недопустимые слова');
 		} else {
@@ -162,23 +145,30 @@ const ProcessingDonePopup: React.FC = () => {
 
 	const handleSave = async (publish: boolean) => {
 		const trimmed = title.trim();
+
 		if (!trimmed) {
 			setTitleError('Введи название танца');
 			return;
 		}
+
 		if (hasBannedWords(trimmed)) {
 			setTitleError('Название содержит недопустимые слова');
 			return;
 		}
-		if (!danceId) return;
+
+		if (!danceId) {
+			return;
+		}
+
 		setSaving(true);
+
 		try {
 			await setDanceName(danceId, trimmed, publish, difficulty);
 		} catch {
-			// Не блокируем переход — название можно задать позже из профиля
 		} finally {
 			setSaving(false);
 		}
+
 		dispatch(resultAcknowledged());
 		navigate(`/lesson/${danceId}`);
 	};
@@ -190,7 +180,8 @@ const ProcessingDonePopup: React.FC = () => {
 			<div className={styles.card} role="dialog" aria-modal="true">
 				<p className={styles.title}>Танец обработан!</p>
 				<p className={styles.subtitle}>
-					По умолчанию танец доступен только вам. Дайте ему название и выберите видимость.
+					По умолчанию танец доступен только вам. Дайте ему название и выберите
+					видимость.
 				</p>
 
 				<div className={styles.nameField}>
@@ -249,10 +240,16 @@ const ProcessingDonePopup: React.FC = () => {
 					</button>
 				</div>
 
-				<button className={styles.skipBtn} onClick={() => {
-					dispatch(resultAcknowledged());
-					if (danceId) navigate(`/lesson/${danceId}`);
-				}}>
+				<button
+					className={styles.skipBtn}
+					onClick={() => {
+						dispatch(resultAcknowledged());
+
+						if (danceId) {
+							navigate(`/lesson/${danceId}`);
+						}
+					}}
+				>
 					Пропустить, открыть танец
 				</button>
 			</div>

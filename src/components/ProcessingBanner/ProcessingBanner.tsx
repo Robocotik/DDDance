@@ -21,14 +21,15 @@ const ProcessingBanner: React.FC = () => {
 	const error = useSelector(selectUploadError);
 	const moderationFailed = useSelector(selectModerationFailed);
 
-	// Ошибку модерации показывает отдельный попап — здесь её не дублируем.
 	const showError = status === 'failed' && !moderationFailed && !!error;
 	const visible =
 		isUploading ||
 		(isProcessing && status !== 'done' && status !== 'failed') ||
 		showError;
 
-	if (!visible) return null;
+	if (!visible) {
+		return null;
+	}
 
 	if (showError) {
 		return (
@@ -57,7 +58,9 @@ const ProcessingBanner: React.FC = () => {
 				<div className={styles.track}>
 					<div className={styles.fillIndeterminate} />
 				</div>
-				<span className={styles.hint}>Не закрывайте страницу до завершения</span>
+				<span className={styles.hint}>
+					Не закрывайте страницу до завершения
+				</span>
 			</div>
 		);
 	}

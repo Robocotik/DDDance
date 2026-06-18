@@ -36,12 +36,14 @@
 	border: 1px solid rgb(148 34 142 / 25%);
 	background: rgb(47 47 138 / 25%);
 	cursor: pointer;
-	transition: background 0.2s, border-color 0.2s, transform 0.15s;
+	transition:
+		background 0.2s,
+		border-color 0.2s,
+		transform 0.15s;
 
 	&:hover {
 		background: rgb(47 47 138 / 40%);
 		border-color: rgb(148 34 142 / 50%);
-		transform: translateX(4px);
 	}
 }
 
@@ -117,7 +119,16 @@
 }
 
 @media (max-width: 768px) {
-	.row { padding: 0 16px; }
-	.title { padding-left: 16px; }
-	.rank { width: 28px; font-size: 18px; }
+	.row {
+		padding: 0 16px;
+	}
+
+	.title {
+		padding-left: 16px;
+	}
+
+	.rank {
+		width: 28px;
+		font-size: 18px;
+	}
 }

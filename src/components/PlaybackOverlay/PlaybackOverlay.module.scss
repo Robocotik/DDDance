@@ -5,8 +5,6 @@
 	width: 100%;
 }
 
-// ── Панели (плееры) ─────────────────────────────────────────────────────────
-
 .panels {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -80,8 +78,6 @@
 	font-family: var(--font-main);
 }
 
-// ── Контролы (общие на обе панели) ──────────────────────────────────────────
-
 .controls {
 	display: flex;
 	align-items: center;
@@ -107,11 +103,19 @@
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	transition: opacity 0.2s, transform 0.15s;
+	transition:
+		opacity 0.2s,
+		transform 0.15s;
 	font-family: var(--font-main);
 
-	&:hover { opacity: 0.85; }
-	&:active { transform: scale(0.96); }
+	&:hover {
+		opacity: 0.85;
+	}
+
+	&:active {
+		transform: scale(0.96);
+	}
+
 	&:disabled {
 		cursor: not-allowed;
 		opacity: 0.4;
@@ -131,17 +135,27 @@
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	transition: background 0.2s, transform 0.15s, border-color 0.2s;
+	transition:
+		background 0.2s,
+		transform 0.15s,
+		border-color 0.2s;
 
-	&:hover { background: rgb(255 255 255 / 14%); }
-	&:active { transform: scale(0.96); }
+	&:hover {
+		background: rgb(255 255 255 / 14%);
+	}
+
+	&:active {
+		transform: scale(0.96);
+	}
 }
 
 .toggleActive {
 	background: rgb(255 60 120 / 18%);
 	border-color: rgb(255 60 120 / 50%);
 
-	&:hover { background: rgb(255 60 120 / 26%); }
+	&:hover {
+		background: rgb(255 60 120 / 26%);
+	}
 }
 
 .seekTrack {
@@ -198,7 +212,43 @@
 	opacity: 0.85;
 	pointer-events: none;
 	box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
-	transition: opacity 0.15s, transform 0.1s;
+	transition:
+		opacity 0.15s,
+		transform 0.1s;
+}
+
+.keyframeMarker {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 7px;
+	line-height: 1;
+	color: rgb(255 220 0 / 80%);
+	pointer-events: all;
+	cursor: default;
+	z-index: 1;
+
+	&::after {
+		content: attr(data-time);
+		position: absolute;
+		bottom: calc(100% + 4px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgb(0 0 0 / 85%);
+		color: #fff;
+		font-size: 11px;
+		font-family: var(--font-main);
+		padding: 2px 6px;
+		border-radius: 4px;
+		white-space: nowrap;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s;
+	}
+
+	&:hover::after {
+		opacity: 1;
+	}
 }
 
 .bufferHint {
@@ -211,7 +261,9 @@
 	font-size: 12px;
 	text-align: center;
 
-	p { margin: 0; }
+	p {
+		margin: 0;
+	}
 }
 
 .timeReadout {
@@ -240,18 +292,20 @@
 	padding: 5px 12px;
 	border-radius: 14px;
 	cursor: pointer;
-	transition: background 0.2s, color 0.2s;
+	transition:
+		background 0.2s,
+		color 0.2s;
 	font-variant-numeric: tabular-nums;
 
-	&:hover { color: #fff; }
+	&:hover {
+		color: #fff;
+	}
 }
 
 .speedBtnActive {
 	background: rgb(255 255 255 / 12%);
 	color: #fff;
 }
-
-// ── Loading/error ───────────────────────────────────────────────────────────
 
 .loading,
 .error {

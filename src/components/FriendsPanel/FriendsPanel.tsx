@@ -1,19 +1,23 @@
 import { getFriends, type Friend } from '@/api/users/friends';
+import { S3_ADDRESS } from '@/consts/urls';
 import { selectUser } from '@/redux/features/user/selectors';
 import { useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { S3_ADDRESS } from '@/consts/urls';
 import styles from './FriendsPanel.module.scss';
 
 const DEFAULT_AVATAR =
 	'https://99906fd4-fe10-44d1-80b4-83c6117045ce.selstorage.ru/assets/default_avatar.jpg';
 
 const avatarUrl = (avatar: string): string => {
-	if (!avatar) return DEFAULT_AVATAR;
+	if (!avatar) {
+		return DEFAULT_AVATAR;
+	}
+
 	if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
 		return avatar;
 	}
+
 	const base = (S3_ADDRESS || '').replace(/\/+$/, '');
 	return `${base}/${avatar}`;
 };
@@ -49,6 +53,7 @@ const FriendsPanel: FC = () => {
 
 	const loadFriends = useCallback(async () => {
 		setLoading(true);
+
 		try {
 			const data = await getFriends();
 			setFriends(data ?? []);
@@ -61,7 +66,10 @@ const FriendsPanel: FC = () => {
 	}, []);
 
 	useEffect(() => {
-		if (!open) return;
+		if (!open) {
+			return;
+		}
+
 		const handler = (e: MouseEvent) => {
 			if (
 				wrapperRef.current &&
@@ -70,6 +78,7 @@ const FriendsPanel: FC = () => {
 				setOpen(false);
 			}
 		};
+
 		document.addEventListener('mousedown', handler);
 		return () => document.removeEventListener('mousedown', handler);
 	}, [open]);
@@ -77,9 +86,11 @@ const FriendsPanel: FC = () => {
 	const handleToggle = useCallback(() => {
 		setOpen((v) => {
 			const next = !v;
+
 			if (next && !loaded) {
 				loadFriends();
 			}
+
 			return next;
 		});
 	}, [loaded, loadFriends]);
@@ -92,7 +103,9 @@ const FriendsPanel: FC = () => {
 		[navigate],
 	);
 
-	if (!user) return null;
+	if (!user) {
+		return null;
+	}
 
 	return (
 		<div className={styles.wrapper} ref={wrapperRef}>

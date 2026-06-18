@@ -77,12 +77,10 @@ const videoReducer: Reducer<LessonState, AnyAction> = (
 			};
 
 		case LessonActionTypes.LESSON_PATCH_LAST_ATTEMPT:
-			// Точечный апдейт last_attempt_id без перезагрузки урока — нужен,
-			// чтобы кнопка «Моя последняя попытка» обновилась после compare
-			// без перемонтирования LessonLayout (которое сбросило бы видео).
 			if (!state.result || state.result.dance_id !== payload.danceId) {
 				return state;
 			}
+
 			return {
 				...state,
 				result: {

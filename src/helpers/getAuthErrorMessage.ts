@@ -1,3 +1,4 @@
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export const getAuthErrorMessage = (error: any): string => {
 	if (typeof error === 'object' && error !== null && 'response' in error) {
 		const status = error.response?.status;
@@ -22,10 +23,12 @@ export const getAuthErrorMessage = (error: any): string => {
 				return 'Ошибка сервера. Попробуйте позже';
 			case 503:
 				return 'Сервер временно недоступен';
+
 			default:
 				if (status && status >= 500) {
 					return 'Ошибка сервера. Попробуйте позже';
 				}
+
 				if (status && status >= 400) {
 					return 'Ошибка при обработке запроса';
 				}
@@ -39,6 +42,7 @@ export const getAuthErrorMessage = (error: any): string => {
 		) {
 			return 'Проблема с подключением. Проверьте интернет';
 		}
+
 		if (error.message.includes('timeout')) {
 			return 'Время ожидания истекло. Попробуйте ещё раз';
 		}
@@ -48,6 +52,7 @@ export const getAuthErrorMessage = (error: any): string => {
 		if (error.includes('Network') || error.includes('ERR_NETWORK')) {
 			return 'Проблема с подключением. Проверьте интернет';
 		}
+
 		return error;
 	}
 

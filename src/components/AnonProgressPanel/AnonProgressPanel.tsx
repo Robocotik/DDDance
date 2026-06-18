@@ -15,7 +15,6 @@ import styles from './AnonProgressPanel.module.scss';
 const ATTEMPT_READY_KEY = (userDanceId: string): string =>
 	`anon_attempt_ready_${userDanceId}`;
 
-// Человекочитаемые подписи статусов модерации.
 const STATUS_LABEL: Record<string, string> = {
 	processing: 'обрабатывается',
 	pending: 'на проверке',
@@ -24,10 +23,7 @@ const STATUS_LABEL: Record<string, string> = {
 	rejected: 'отклонён',
 };
 
-// Терминальные статусы — поллинг останавливается.
 const TERMINAL = new Set(['private', 'published', 'rejected']);
-// На этих статусах танец ещё не готов: открыть в урок не получится,
-// и любая новая загрузка перетрёт ссылку в localStorage — предупреждаем.
 const NON_READY = new Set(['processing', 'pending']);
 const POLL_MS = 20000;
 
@@ -50,22 +46,17 @@ const TERMINAL_NOTIFICATION: Record<
 	},
 };
 
-const NOTIFIED_KEY = (danceId: string): string =>
-	`anon_notified_${danceId}`;
+const NOTIFIED_KEY = (danceId: string): string => `anon_notified_${danceId}`;
 
-// Панель для неавторизованного пользователя: быстрый доступ к последнему
-// загруженному танцу и последней попытке + статус модерации танца
-// (локальное «уведомление» — данные не теряются до регистрации).
 const AnonProgressPanel: React.FC = () => {
 	const navigate = useNavigate();
 	const [dance, setDance] = useState<LastAnonDance | null>(getLastAnonDance);
 	const [attempt, setAttempt] = useState<LastAnonAttempt | null>(
 		getLastAnonAttempt,
 	);
+
 	const [danceStatus, setDanceStatus] = useState<string | null>(null);
 	const [notifiedStatus, setNotifiedStatus] = useState<string | null>(null);
-	// Готовность последней попытки сравнения. true — compare-результат уже
-	// доступен по API (бар на ComparePage уйдёт и откроется разбор).
 	const [attemptReady, setAttemptReady] = useState(false);
 
 	useEffect(() => {
@@ -73,12 +64,12 @@ const AnonProgressPanel: React.FC = () => {
 			setDance(getLastAnonDance());
 			setAttempt(getLastAnonAttempt());
 		};
+
 		window.addEventListener(ANON_PROGRESS_EVENT, refresh);
 
 		return () => window.removeEventListener(ANON_PROGRESS_EVENT, refresh);
 	}, []);
 
-	// Поллинг статуса модерации последнего танца + квитирование уведомления.
 	useEffect(() => {
 		if (!dance) {
 			setDanceStatus(null);
@@ -86,8 +77,6 @@ const AnonProgressPanel: React.FC = () => {
 			return;
 		}
 
-		// Подхватываем уже виденное уведомление, чтобы на свежем монтировании
-		// не показывать баннер по уже квитированному статусу.
 		try {
 			setNotifiedStatus(localStorage.getItem(NOTIFIED_KEY(dance.danceId)));
 		} catch {
@@ -100,6 +89,7 @@ const AnonProgressPanel: React.FC = () => {
 		const poll = async (): Promise<void> => {
 			try {
 				const res = await getDanceModerationStatus(dance.danceId);
+
 				if (cancelled) {
 					return;
 				}
@@ -127,11 +117,6 @@ const AnonProgressPanel: React.FC = () => {
 		};
 	}, [dance]);
 
-	// Готовность последней попытки. GET /dance/{id}/result у бэкенда сидит на
-	// protectedUserRouter — анону вернёт 401, поэтому опрашивать его нельзя.
-	// Вместо этого: при завершении compare-таски startPolling пишет флаг в
-	// localStorage; здесь его читаем + параллельно слушаем Redux на случай
-	// «таска только что завершилась, и мы хотим обновиться без F5».
 	const uploadState = useSelector(selectUploadState);
 	const compareResultUserDanceId =
 		uploadState.compareResult?.user_dance_id ?? null;
@@ -150,7 +135,6 @@ const AnonProgressPanel: React.FC = () => {
 		}
 	}, [attempt]);
 
-	// Live-апдейт, когда compare-поллинг кладёт результат в state.upload.
 	useEffect(() => {
 		if (!attempt || !compareResultUserDanceId) {
 			return;
@@ -158,11 +142,10 @@ const AnonProgressPanel: React.FC = () => {
 
 		if (compareResultUserDanceId === attempt.userDanceId) {
 			setAttemptReady(true);
+
 			try {
 				localStorage.setItem(ATTEMPT_READY_KEY(attempt.userDanceId), '1');
-			} catch {
-				/* ignore */
-			}
+			} catch {}
 		}
 	}, [attempt, compareResultUserDanceId]);
 
@@ -176,6 +159,7 @@ const AnonProgressPanel: React.FC = () => {
 		danceStatus !== null &&
 		TERMINAL.has(danceStatus) &&
 		notifiedStatus !== danceStatus &&
+		// eslint-disable-next-line sonarjs/different-types-comparison
 		TERMINAL_NOTIFICATION[danceStatus] !== undefined;
 
 	const handleDismissNotification = (): void => {
@@ -185,9 +169,8 @@ const AnonProgressPanel: React.FC = () => {
 
 		try {
 			localStorage.setItem(NOTIFIED_KEY(dance.danceId), danceStatus);
-		} catch {
-			/* localStorage unavailable — лишний показ переживём */
-		}
+		} catch {}
+
 		setNotifiedStatus(danceStatus);
 	};
 
@@ -199,12 +182,13 @@ const AnonProgressPanel: React.FC = () => {
 		navigate(`/lesson/${dance.danceId}?segment=full`);
 	};
 
-	const statusClass =
-		danceStatus === 'rejected'
-			? styles.statusBad
-			: danceStatus === 'published' || danceStatus === 'private'
-				? styles.statusGood
-				: '';
+	let statusClass = '';
+
+	if (danceStatus === 'rejected') {
+		statusClass = styles.statusBad;
+	} else if (danceStatus === 'published' || danceStatus === 'private') {
+		statusClass = styles.statusGood;
+	}
 
 	const notification =
 		shouldShowNotification && danceStatus
@@ -239,9 +223,7 @@ const AnonProgressPanel: React.FC = () => {
 					<div className={styles.danceBlock}>
 						<button
 							type="button"
-							className={`${styles.chip} ${
-								isReady ? '' : styles.chipDisabled
-							}`}
+							className={`${styles.chip} ${isReady ? '' : styles.chipDisabled}`}
 							title={
 								isReady
 									? 'Открыть последний загруженный танец'

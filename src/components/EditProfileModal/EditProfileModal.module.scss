@@ -46,7 +46,9 @@
 	cursor: pointer;
 	padding: 0 4px;
 
-	&:hover { color: #fff; }
+	&:hover {
+		color: #fff;
+	}
 }
 
 .body {
@@ -107,7 +109,9 @@
 	cursor: pointer;
 	font-family: var(--font-main);
 
-	&:hover { background: rgb(255 255 255 / 14%); }
+	&:hover {
+		background: rgb(255 255 255 / 14%);
+	}
 }
 
 .fileClear {
@@ -120,7 +124,9 @@
 	text-align: left;
 	width: max-content;
 
-	&:hover { color: #ff6b6b; }
+	&:hover {
+		color: #ff6b6b;
+	}
 }
 
 .fileHint {
@@ -157,7 +163,9 @@
 	outline: none;
 	transition: border-color 0.2s;
 
-	&:focus { border-color: rgb(148 34 142 / 60%); }
+	&:focus {
+		border-color: rgb(148 34 142 / 60%);
+	}
 }
 
 .fieldHint {
@@ -189,8 +197,14 @@
 	cursor: pointer;
 	font-family: var(--font-main);
 
-	&:hover { background: rgb(255 255 255 / 6%); }
-	&:disabled { opacity: 0.5; cursor: progress; }
+	&:hover {
+		background: rgb(255 255 255 / 6%);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: progress;
+	}
 }
 
 .btnPrimary {
@@ -205,6 +219,12 @@
 	font-family: var(--font-main);
 	transition: opacity 0.2s;
 
-	&:hover:not(:disabled) { opacity: 0.88; }
-	&:disabled { opacity: 0.4; cursor: not-allowed; }
+	&:hover:not(:disabled) {
+		opacity: 0.88;
+	}
+
+	&:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
 }

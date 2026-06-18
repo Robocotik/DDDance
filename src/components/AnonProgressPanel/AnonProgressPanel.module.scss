@@ -7,10 +7,9 @@
 
 .chips {
 	display: flex;
-	flex-direction: row;
+	flex-flow: row wrap;
 	align-items: flex-start;
 	gap: 8px;
-	flex-wrap: wrap;
 }
 
 .danceBlock {
@@ -24,9 +23,9 @@
 	align-items: center;
 	gap: 6px;
 	padding: 6px 12px;
-	border: 1px solid rgba(255, 255, 255, 0.25);
+	border: 1px solid rgb(255 255 255 / 25%);
 	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.08);
+	background: rgb(255 255 255 / 8%);
 	color: inherit;
 	font-size: 13px;
 	white-space: nowrap;
@@ -34,7 +33,7 @@
 	transition: background 0.15s ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.18);
+		background: rgb(255 255 255 / 18%);
 	}
 }
 
@@ -43,7 +42,7 @@
 	opacity: 0.55;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.08);
+		background: rgb(255 255 255 / 8%);
 	}
 }
 

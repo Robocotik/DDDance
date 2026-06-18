@@ -15,8 +15,14 @@ const MEDAL_ICONS = ['medal-gold', 'medal-silver', 'medal-bronze'];
 const MEDAL_STYLES = [styles.cardGold, styles.cardSilver, styles.cardBronze];
 
 const scoreColor = (score: number): string => {
-	if (score >= 75) return '#6fff9e';
-	if (score >= 50) return '#ffd166';
+	if (score >= 75) {
+		return '#6fff9e';
+	}
+
+	if (score >= 50) {
+		return '#ffd166';
+	}
+
 	return '#ff6b6b';
 };
 
@@ -86,7 +92,9 @@ const BestAttempts: React.FC = () => {
 		.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
 		.slice(0, 3);
 
-	if (loading) return null;
+	if (loading) {
+		return null;
+	}
 
 	return (
 		<section className={styles.section}>

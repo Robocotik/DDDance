@@ -1,6 +1,6 @@
+import { selectIsProcessing } from '@/redux/features/upload/selectors';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectIsProcessing } from '@/redux/features/upload/selectors';
 import CameraRecorder from '../CameraRecorder/CameraRecorder';
 import Icon from '../Icon/Icon';
 import VideoEditor from '../VideoEditor/VideoEditor';
@@ -39,7 +39,11 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (!file) return;
+
+		if (!file) {
+			return;
+		}
+
 		setVideoBlob(file);
 		setScreen('editor');
 		e.target.value = '';
@@ -57,7 +61,9 @@ const CheckYourself: React.FC<CheckYourselfProps> = ({
 		<div
 			className={styles.overlay}
 			onClick={(e) => {
-				if (e.target === e.currentTarget) onClose();
+				if (e.target === e.currentTarget) {
+					onClose();
+				}
 			}}
 		>
 			<div className={styles.modal}>

@@ -25,24 +25,32 @@ const LessonFinish: React.FC<LessonFinishProps> = ({ lesson: _lesson }) => {
 
 	return (
 		<div className={styles.wrapper}>
-		<div className={styles.lesson}>
-			<div className={styles.container}>
-				<Title className={styles.title}>Поздравляем</Title>
-				<Paragraph className={styles.paragraph}>
-					Вы успешно изучили танец
-					<br />
-					Продолжайте в том же ритме
-				</Paragraph>
-				<div className={styles.buttons}>
-					<Button size="s" className={styles.button} onClick={handleRepeatLesson}>
-						Пройти еще раз
-					</Button>
-					<Button size="s" className={styles.button} onClick={handleAllDances}>
-						Все танцы
-					</Button>
+			<div className={styles.lesson}>
+				<div className={styles.container}>
+					<Title className={styles.title}>Поздравляем</Title>
+					<Paragraph className={styles.paragraph}>
+						Вы успешно изучили танец
+						<br />
+						Продолжайте в том же ритме
+					</Paragraph>
+					<div className={styles.buttons}>
+						<Button
+							size="s"
+							className={styles.button}
+							onClick={handleRepeatLesson}
+						>
+							Пройти еще раз
+						</Button>
+						<Button
+							size="s"
+							className={styles.button}
+							onClick={handleAllDances}
+						>
+							Все танцы
+						</Button>
+					</div>
 				</div>
 			</div>
-		</div>
 		</div>
 	);
 };

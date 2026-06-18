@@ -1,9 +1,9 @@
-import { S3_ADDRESS } from '@/consts/urls';
 import {
 	DIFFICULTY_COLOR,
 	DIFFICULTY_LABEL,
 	getDifficulty,
 } from '@/consts/danceDifficulty';
+import { S3_ADDRESS } from '@/consts/urls';
 import type { VideoItem } from '@/redux/features/trends/actions';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,20 +29,24 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 	useEffect(() => {
 		const el = videoRef.current;
 		const wrapper = wrapperRef.current;
-		if (!el || !wrapper) return;
+
+		if (!el || !wrapper) {
+			return;
+		}
 
 		const observer = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
 						el.muted = true;
+						// eslint-disable-next-line sonarjs/no-nested-functions
 						el.play().catch(() => {});
 					} else {
 						el.pause();
 					}
 				});
 			},
-			{ threshold: 0.25 }, // видео начинает играть когда 25% видно
+			{ threshold: 0.25 },
 		);
 
 		observer.observe(wrapper);
@@ -66,7 +70,7 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 				muted
 				loop
 				playsInline
-				preload="none" // <-- не грузим пока не нужно
+				preload="none"
 				disablePictureInPicture
 				disableRemotePlayback
 				controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
@@ -91,17 +95,20 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 						<div className={styles.stats}>
 							{video.like_count !== undefined && (
 								<span className={styles.stat}>
-									<Icon name="heart-filled" size="2em" alt="Лайков" /> {video.like_count}
+									<Icon name="heart-filled" size="2em" alt="Лайков" />{' '}
+									{video.like_count}
 								</span>
 							)}
 							{video.view_count !== undefined && (
 								<span className={styles.stat}>
-									<Icon name="eye" size="2em" alt="Просмотров" /> {video.view_count}
+									<Icon name="eye" size="2em" alt="Просмотров" />{' '}
+									{video.view_count}
 								</span>
 							)}
 							{video.attempt_count !== undefined && (
 								<span className={styles.stat}>
-									<Icon name="star" size="2em" alt="Прошли через ML" /> {video.attempt_count}
+									<Icon name="star" size="2em" alt="Прошли через ML" />{' '}
+									{video.attempt_count}
 								</span>
 							)}
 						</div>

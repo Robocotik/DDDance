@@ -16,9 +16,11 @@ const fmt = (sec: number) => {
 	const m = Math.floor(sec / 60)
 		.toString()
 		.padStart(2, '0');
+
 	const s = Math.floor(sec % 60)
 		.toString()
 		.padStart(2, '0');
+
 	return `${m}:${s}`;
 };
 
@@ -47,20 +49,26 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 	useEffect(() => {
 		startRef.current = startTime;
 	}, [startTime]);
+
 	useEffect(() => {
 		endRef.current = endTime;
 	}, [endTime]);
 
 	useEffect(() => {
 		return () => {
-			if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
+			if (loopRafRef.current) {
+				cancelAnimationFrame(loopRafRef.current);
+			}
 		};
 	}, []);
 
 	useEffect(() => {
 		const url = URL.createObjectURL(videoBlob);
 		const video = videoRef.current;
-		if (!video) return;
+
+		if (!video) {
+			return;
+		}
 
 		durationHackActiveRef.current = false;
 		video.src = url;
@@ -74,6 +82,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 
 		const handleLoadedMetadata = () => {
 			const dur = video.duration;
+
 			if (isFinite(dur) && dur > 0) {
 				applyDuration(dur);
 			} else {
@@ -83,8 +92,12 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 		};
 
 		const handleSeeked = () => {
-			if (!durationHackActiveRef.current) return;
+			if (!durationHackActiveRef.current) {
+				return;
+			}
+
 			const dur = video.duration;
+
 			if (isFinite(dur) && dur > 0) {
 				durationHackActiveRef.current = false;
 				applyDuration(dur);
@@ -94,6 +107,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 
 		const handleDurationChange = () => {
 			const dur = video.duration;
+
 			if (isFinite(dur) && dur > 0 && !durationHackActiveRef.current) {
 				applyDuration(dur);
 			}
@@ -113,41 +127,61 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 
 	useEffect(() => {
 		const video = videoRef.current;
-		if (!video || duration === 0) return;
+
+		if (!video || duration === 0) {
+			return;
+		}
 
 		const checkLoop = () => {
 			if (!durationHackActiveRef.current && !video.paused) {
-				if (video.currentTime < startRef.current) {
-					video.currentTime = startRef.current;
-				} else if (video.currentTime >= endRef.current) {
+				if (
+					video.currentTime < startRef.current ||
+					video.currentTime >= endRef.current
+				) {
 					video.currentTime = startRef.current;
 				}
 			}
+
 			loopRafRef.current = requestAnimationFrame(checkLoop);
 		};
 
 		loopRafRef.current = requestAnimationFrame(checkLoop);
+
 		return () => {
-			if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
+			if (loopRafRef.current) {
+				cancelAnimationFrame(loopRafRef.current);
+			}
 		};
 	}, [duration]);
 
 	const seekAndPlay = useCallback((time: number) => {
 		const video = videoRef.current;
-		if (!video) return;
+
+		if (!video) {
+			return;
+		}
+
 		video.currentTime = time;
-		if (video.paused) video.play().catch(() => {});
+
+		if (video.paused) {
+			video.play().catch(() => {});
+		}
 	}, []);
 
 	const getTimeFromPointer = useCallback(
 		(clientX: number): number => {
 			const track = trackRef.current;
-			if (!track || duration === 0) return 0;
+
+			if (!track || duration === 0) {
+				return 0;
+			}
+
 			const rect = track.getBoundingClientRect();
 			const ratio = Math.max(
 				0,
 				Math.min(1, (clientX - rect.left) / rect.width),
 			);
+
 			return ratio * duration;
 		},
 		[duration],
@@ -155,8 +189,12 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 
 	const handleMouseMove = useCallback(
 		(e: MouseEvent | Touch) => {
-			if (!dragging) return;
+			if (!dragging) {
+				return;
+			}
+
 			const t = getTimeFromPointer((e as MouseEvent).clientX);
+
 			if (dragging === 'start') {
 				const newStart = Math.max(0, Math.min(t, endRef.current - 0.5));
 				setStartTime(newStart);
@@ -165,6 +203,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 				const newEnd = Math.min(duration, Math.max(t, startRef.current + 0.5));
 				setEndTime(newEnd);
 			}
+
 			setDurationWarning(false);
 		},
 		[dragging, getTimeFromPointer, duration, seekAndPlay],
@@ -173,13 +212,17 @@ const VideoEditor: React.FC<VideoEditorProps> = ({
 	const handleMouseUp = useCallback(() => setDragging(null), []);
 
 	useEffect(() => {
-		if (!dragging) return;
+		if (!dragging) {
+			return;
+		}
+
 		const onMove = (e: MouseEvent) => handleMouseMove(e);
 		const onTouchMove = (e: TouchEvent) => handleMouseMove(e.touches[0] as any);
 		window.addEventListener('mousemove', onMove);
 		window.addEventListener('mouseup', handleMouseUp);
 		window.addEventListener('touchmove', onTouchMove);
 		window.addEventListener('touchend', handleMouseUp);
+
 		return () => {
 			window.removeEventListener('mousemove', onMove);
 			window.removeEventListener('mouseup', handleMouseUp);

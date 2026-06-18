@@ -22,8 +22,6 @@
 	padding: 0 24px;
 }
 
-// ── Podium card ───────────────────────────────────────────────────────────────
-
 .card {
 	display: flex;
 	align-items: center;
@@ -41,7 +39,6 @@
 	&:hover {
 		background: rgb(47 47 138 / 40%);
 		border-color: rgb(148 34 142 / 50%);
-		transform: translateX(4px);
 	}
 }
 

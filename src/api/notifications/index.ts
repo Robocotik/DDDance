@@ -6,12 +6,20 @@ export type NotificationType =
 	| 'friend_request'
 	| 'friend_accepted'
 	| 'friend_declined'
-	| 'friend_removed';
+	| 'friend_removed'
+	| 'duel_challenge_received'
+	| 'duel_accepted'
+	| 'duel_declined'
+	| 'duel_challenger_done'
+	| 'duel_opponent_done'
+	| 'duel_completed'
+	| 'duel_expired';
 
 export interface AppNotification {
 	id: number;
 	type: NotificationType;
-	dance_id: string;
+	dance_id?: string;
+	duel_id?: string;
 	reason?: string;
 	is_read: boolean;
 	created_at: string;
@@ -43,6 +51,9 @@ export const clearAllNotifications = async (): Promise<void> => {
 };
 
 export const claimUploads = async (danceIds: string[]): Promise<void> => {
-	if (danceIds.length === 0) return;
+	if (danceIds.length === 0) {
+		return;
+	}
+
 	await http.post('/uploads/claim', { dance_ids: danceIds });
 };

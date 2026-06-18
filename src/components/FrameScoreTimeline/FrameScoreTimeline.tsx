@@ -4,20 +4,19 @@ import styles from './FrameScoreTimeline.module.scss';
 
 interface FrameScoreTimelineProps {
 	frameScores: FrameScore[];
-	/** Текущее время воспроизведения видео в секундах (для подсветки). null — нет привязки. */
 	currentTime?: number | null;
-	/** Колбэк при клике/перетаскивании, ms-точное seek в видео. */
 	onSeek?: (timeSec: number) => void;
 }
 
-/**
- * Цветной таймлайн: каждый кадр — вертикальная полоска.
- * error 0..1 → цвет: 0–0.2 зелёный, 0.2–0.5 жёлтый, >0.5 красный.
- * Над полосой — подвижный маркер currentTime.
- */
 const errorColor = (e: number): string => {
-	if (e <= 0.2) return '#5be0a0';
-	if (e <= 0.5) return '#f5c542';
+	if (e <= 0.2) {
+		return '#5be0a0';
+	}
+
+	if (e <= 0.5) {
+		return '#f5c542';
+	}
+
 	return '#ff6b6b';
 };
 
@@ -31,15 +30,17 @@ const FrameScoreTimeline: React.FC<FrameScoreTimelineProps> = ({
 	const durationRef = useRef(0);
 
 	const duration =
-		frameScores.length > 0
-			? frameScores[frameScores.length - 1].time_sec
-			: 0;
+		frameScores.length > 0 ? frameScores[frameScores.length - 1].time_sec : 0;
+
 	durationRef.current = duration;
 
 	useEffect(() => {
 		const wrapper = wrapperRef.current;
 		const canvas = canvasRef.current;
-		if (!wrapper || !canvas || frameScores.length === 0) return;
+
+		if (!wrapper || !canvas || frameScores.length === 0) {
+			return;
+		}
 
 		const ro = new ResizeObserver(() => draw());
 		ro.observe(wrapper);
@@ -55,15 +56,21 @@ const FrameScoreTimeline: React.FC<FrameScoreTimelineProps> = ({
 			canvas!.style.height = `${h}px`;
 
 			const ctx = canvas!.getContext('2d');
-			if (!ctx) return;
+
+			if (!ctx) {
+				return;
+			}
+
 			ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 			ctx.clearRect(0, 0, w, h);
 
-			if (duration <= 0) return;
+			if (duration <= 0) {
+				return;
+			}
 
-			// Группируем кадры в столбцы пикселя — для длинных видео.
 			const N = frameScores.length;
 			const stepPx = Math.max(1, Math.floor(w / N));
+
 			for (let i = 0; i < N; i++) {
 				const fs = frameScores[i];
 				const x = Math.floor((fs.time_sec / duration) * w);
@@ -74,11 +81,22 @@ const FrameScoreTimeline: React.FC<FrameScoreTimelineProps> = ({
 	}, [frameScores, duration]);
 
 	const handlePointer = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (!onSeek || duration <= 0) return;
+		if (!onSeek || duration <= 0) {
+			return;
+		}
+
 		const wrapper = wrapperRef.current;
-		if (!wrapper) return;
+
+		if (!wrapper) {
+			return;
+		}
+
 		const rect = wrapper.getBoundingClientRect();
-		const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+		const ratio = Math.max(
+			0,
+			Math.min(1, (e.clientX - rect.left) / rect.width),
+		);
+
 		onSeek(ratio * duration);
 	};
 
@@ -105,24 +123,15 @@ const FrameScoreTimeline: React.FC<FrameScoreTimelineProps> = ({
 			</div>
 			<div className={styles.legend}>
 				<span>
-					<span
-						className={styles.swatch}
-						style={{ background: '#5be0a0' }}
-					/>
+					<span className={styles.swatch} style={{ background: '#5be0a0' }} />
 					точно ({hits})
 				</span>
 				<span>
-					<span
-						className={styles.swatch}
-						style={{ background: '#f5c542' }}
-					/>
+					<span className={styles.swatch} style={{ background: '#f5c542' }} />
 					средне ({mid})
 				</span>
 				<span>
-					<span
-						className={styles.swatch}
-						style={{ background: '#ff6b6b' }}
-					/>
+					<span className={styles.swatch} style={{ background: '#ff6b6b' }} />
 					промах ({miss})
 				</span>
 			</div>

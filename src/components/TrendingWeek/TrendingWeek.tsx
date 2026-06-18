@@ -1,13 +1,19 @@
 import type { TrendingItem } from '@/api/dances/trending';
 import { getTrendingWeek } from '@/api/dances/trending';
+import { S3_ADDRESS } from '@/consts/urls';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../Icon/Icon';
 import Title from '../Title/Title';
 import styles from './TrendingWeek.module.scss';
-import { S3_ADDRESS } from '@/consts/urls';
 
-const RANK_ICONS = ['medal-gold', 'medal-silver', 'medal-bronze', 'rank-4', 'rank-5'];
+const RANK_ICONS = [
+	'medal-gold',
+	'medal-silver',
+	'medal-bronze',
+	'rank-4',
+	'rank-5',
+];
 
 interface TrendCardProps {
 	item: TrendingItem;
@@ -15,92 +21,100 @@ interface TrendCardProps {
 }
 
 const TrendCard: React.FC<TrendCardProps> = ({ item, rank }) => {
-  const navigate = useNavigate();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+	const navigate = useNavigate();
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const el = videoRef.current;
-    const wrapper = wrapperRef.current;
-    if (!el || !wrapper) return;
+	useEffect(() => {
+		const el = videoRef.current;
+		const wrapper = wrapperRef.current;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            el.muted = true;
-            el.play().catch(() => {});
-          } else {
-            el.pause();
-          }
-        });
-      },
-      { threshold: 0.25 },
-    );
+		if (!el || !wrapper) {
+			return;
+		}
 
-    observer.observe(wrapper);
-    return () => {
-      observer.disconnect();
-      el.pause();
-    };
-  }, []);
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						el.muted = true;
+						// eslint-disable-next-line sonarjs/no-nested-functions
+						el.play().catch(() => {});
+					} else {
+						el.pause();
+					}
+				});
+			},
+			{ threshold: 0.25 },
+		);
 
-  const hasStats =
-    item.like_count !== undefined ||
-    item.view_count !== undefined ||
-    item.attempt_count !== undefined;
+		observer.observe(wrapper);
 
-  return (
-    <div
-      ref={wrapperRef}
-      className={styles.card}
-      onClick={() => navigate(`/lesson/${item.id}?segment=full`)}
-    >
-      <video
-        ref={videoRef}
-        className={styles.cardVideo}
-        src={S3_ADDRESS + item.url}
-        muted
-        loop
-        playsInline
-        preload="none"
-        disablePictureInPicture
-        disableRemotePlayback
-        controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
-      />
-      <span className={styles.rank}>
-        {RANK_ICONS[rank] ? (
-          <Icon name={RANK_ICONS[rank]} size="1em" alt={`Место ${rank + 1}`} />
-        ) : (
-          `${rank + 1}`
-        )}
-      </span>
-      {(item.title || hasStats) && (
-        <div className={styles.cardOverlay}>
-          {item.title && <span className={styles.cardTitle}>{item.title}</span>}
-          {hasStats && (
-            <div className={styles.cardStats}>
-              {item.like_count !== undefined && (
-                <span className={styles.cardStat}>
-                  <Icon name="heart-filled" size="2em" alt="Лайков" /> {item.like_count}
-                </span>
-              )}
-              {item.view_count !== undefined && (
-                <span className={styles.cardStat}>
-                  <Icon name="eye" size="2em" alt="Просмотров" /> {item.view_count}
-                </span>
-              )}
-              {item.attempt_count !== undefined && (
-                <span className={styles.cardStat}>
-                  <Icon name="star" size="2em" alt="Попыток" /> {item.attempt_count}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+		return () => {
+			observer.disconnect();
+			el.pause();
+		};
+	}, []);
+
+	const hasStats =
+		item.like_count !== undefined ||
+		item.view_count !== undefined ||
+		item.attempt_count !== undefined;
+
+	return (
+		<div
+			ref={wrapperRef}
+			className={styles.card}
+			onClick={() => navigate(`/lesson/${item.id}?segment=full`)}
+		>
+			<video
+				ref={videoRef}
+				className={styles.cardVideo}
+				src={S3_ADDRESS + item.url}
+				muted
+				loop
+				playsInline
+				preload="none"
+				disablePictureInPicture
+				disableRemotePlayback
+				controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+			/>
+			<span className={styles.rank}>
+				{RANK_ICONS[rank] ? (
+					<Icon name={RANK_ICONS[rank]} size="1em" alt={`Место ${rank + 1}`} />
+				) : (
+					`${rank + 1}`
+				)}
+			</span>
+			{(item.title || hasStats) && (
+				<div className={styles.cardOverlay}>
+					{item.title && <span className={styles.cardTitle}>{item.title}</span>}
+					{hasStats && (
+						<div className={styles.cardStats}>
+							{item.like_count !== undefined && (
+								<span className={styles.cardStat}>
+									<Icon name="heart-filled" size="2em" alt="Лайков" />{' '}
+									{item.like_count}
+								</span>
+							)}
+							{item.view_count !== undefined && (
+								<span className={styles.cardStat}>
+									<Icon name="eye" size="2em" alt="Просмотров" />{' '}
+									{item.view_count}
+								</span>
+							)}
+							{item.attempt_count !== undefined && (
+								<span className={styles.cardStat}>
+									<Icon name="star" size="2em" alt="Попыток" />{' '}
+									{item.attempt_count}
+								</span>
+							)}
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	);
 };
 
 const TrendingWeek: React.FC = () => {
@@ -114,7 +128,9 @@ const TrendingWeek: React.FC = () => {
 			.finally(() => setLoading(false));
 	}, []);
 
-	if (loading || items.length === 0) return null;
+	if (loading || items.length === 0) {
+		return null;
+	}
 
 	return (
 		<div className={styles.container}>

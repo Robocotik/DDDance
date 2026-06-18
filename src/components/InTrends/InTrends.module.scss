@@ -14,8 +14,7 @@
 	width: 100%;
 	display: flex;
 	gap: 20px;
-	overflow-x: auto;
-	overflow-y: hidden;
+	overflow: auto hidden;
 	-webkit-overflow-scrolling: touch;
 	padding: 8px 24px 16px;
 	box-sizing: border-box;
