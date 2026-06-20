@@ -3,7 +3,7 @@ import {
 	DIFFICULTY_LABEL,
 	getDifficulty,
 } from '@/consts/danceDifficulty';
-import { S3_ADDRESS } from '@/consts/urls';
+import { resolveS3Url } from '@/consts/urls';
 import type { VideoItem } from '@/redux/features/trends/actions';
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -66,7 +66,7 @@ const VerticalVideo: React.FC<VerticalVideoProps> = ({ video }) => {
 			<video
 				ref={videoRef}
 				className={styles.video}
-				src={S3_ADDRESS + video.url}
+				src={resolveS3Url(video.url)}
 				muted
 				loop
 				playsInline
