@@ -119,6 +119,7 @@ function setCachedDescription(
 }
 
 const PENDING_SEGMENT_DESCRIPTION = /скоро будет описание сегмента/i;
+const LEGACY_GPU_PLACEHOLDER = /^GPU сервер недоступен!/i;
 
 function formatSegmentDescriptionForDisplay(
 	text: string | null,
@@ -129,7 +130,11 @@ function formatSegmentDescriptionForDisplay(
 
 	const trimmed = text.trim();
 
-	if (trimmed && PENDING_SEGMENT_DESCRIPTION.test(trimmed)) {
+	if (
+		trimmed &&
+		(PENDING_SEGMENT_DESCRIPTION.test(trimmed) ||
+			LEGACY_GPU_PLACEHOLDER.test(trimmed))
+	) {
 		return 'Готовим описание сегмента';
 	}
 

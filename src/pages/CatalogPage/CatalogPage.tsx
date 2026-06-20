@@ -7,38 +7,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CatalogPage.module.scss';
 
-type DurationFilter = 'all' | '<1' | '1-3' | '3+';
-
-const DURATION_FILTER_OPTIONS: { value: DurationFilter; label: string }[] = [
-	{ value: 'all', label: 'Любая' },
-	{ value: '<1', label: '< 1 мин' },
-	{ value: '1-3', label: '1–3 мин' },
-	{ value: '3+', label: '3+ мин' },
-];
-
 function formatDuration(sec: number): string {
 	const m = Math.floor(sec / 60);
 	const s = sec % 60;
 	return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function matchesDurationFilter(
-	sec: number | undefined,
-	filter: DurationFilter,
-): boolean {
-	if (filter === 'all' || sec === undefined || sec === 0) {
-		return true;
-	}
-
-	if (filter === '<1') {
-		return sec < 60;
-	}
-
-	if (filter === '1-3') {
-		return sec >= 60 && sec <= 180;
-	}
-
-	return sec > 180;
 }
 
 const SORT_OPTIONS: { value: CatalogSort; label: string; icon: string }[] = [
@@ -191,7 +163,7 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 	);
 };
 
-const PAGE_LIMIT = 12;
+const PAGE_LIMIT = 10;
 
 const CatalogPage: React.FC = () => {
 	const [dances, setDances] = useState<DanceItem[]>([]);
@@ -200,7 +172,6 @@ const CatalogPage: React.FC = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState('');
 	const [sort, setSort] = useState<CatalogSort>('popular');
-	const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,17 +270,6 @@ const CatalogPage: React.FC = () => {
 							</button>
 						))}
 					</div>
-					<div className={styles.sortGroup}>
-						{DURATION_FILTER_OPTIONS.map((opt) => (
-							<button
-								key={opt.value}
-								className={`${styles.sortBtn} ${durationFilter === opt.value ? styles.sortBtnActive : ''}`}
-								onClick={() => setDurationFilter(opt.value)}
-							>
-								{opt.label}
-							</button>
-						))}
-					</div>
 				</div>
 
 				{loading && (
@@ -345,13 +305,9 @@ const CatalogPage: React.FC = () => {
 				{!loading && !error && dances.length > 0 && (
 					<>
 						<div className={styles.grid}>
-							{dances
-								.filter((d) =>
-									matchesDurationFilter(d.duration_sec, durationFilter),
-								)
-								.map((dance) => (
-									<DanceCard key={dance.id} dance={dance} />
-								))}
+							{dances.map((dance) => (
+								<DanceCard key={dance.id} dance={dance} />
+							))}
 						</div>
 
 						{hasMore && (
