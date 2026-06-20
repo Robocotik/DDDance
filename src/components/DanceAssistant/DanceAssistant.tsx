@@ -75,7 +75,11 @@ const DanceAssistant: React.FC = () => {
 
 			setMessages((prev) => [
 				...prev,
-				{ role: 'bot', reasoning: resp.reasoning, dances: resp.dances },
+				{
+					role: 'bot',
+					reasoning: resp.reasoning,
+					dances: resp.dances.slice(0, 1),
+				},
 			]);
 		} catch {
 			setMessages((prev) => [

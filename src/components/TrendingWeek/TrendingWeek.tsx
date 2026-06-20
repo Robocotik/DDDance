@@ -1,6 +1,6 @@
 import type { TrendingItem } from '@/api/dances/trending';
 import { getTrendingWeek } from '@/api/dances/trending';
-import { S3_ADDRESS } from '@/consts/urls';
+import { resolveS3Url } from '@/consts/urls';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../Icon/Icon';
@@ -70,7 +70,7 @@ const TrendCard: React.FC<TrendCardProps> = ({ item, rank }) => {
 			<video
 				ref={videoRef}
 				className={styles.cardVideo}
-				src={S3_ADDRESS + item.url}
+				src={resolveS3Url(item.url)}
 				muted
 				loop
 				playsInline

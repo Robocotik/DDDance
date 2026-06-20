@@ -196,6 +196,61 @@ const ReelsPage: React.FC = () => {
 		setShowOnboarding(false);
 	};
 
+	const total = activeTab === 'dances' ? items.length : attempts.length;
+	const currentIdx =
+		activeTab === 'dances' ? visibleIndex : visibleAttemptIndex;
+
+	const goTo = useCallback(
+		(dir: 1 | -1) => {
+			const refs =
+				activeTab === 'dances' ? itemRefs.current : attemptRefs.current;
+
+			const count = activeTab === 'dances' ? items.length : attempts.length;
+			const cur =
+				activeTab === 'dances' ? visibleIndex : visibleAttemptIndex;
+
+			if (count === 0) {
+				return;
+			}
+
+			const next = Math.min(Math.max(cur + dir, 0), count - 1);
+
+			if (next === cur) {
+				return;
+			}
+
+			refs[next]?.scrollIntoView({ behavior: 'smooth' });
+		},
+		[
+			activeTab,
+			items.length,
+			attempts.length,
+			visibleIndex,
+			visibleAttemptIndex,
+		],
+	);
+
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			const tag = (e.target as HTMLElement | null)?.tagName;
+
+			if (tag === 'INPUT' || tag === 'TEXTAREA') {
+				return;
+			}
+
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				goTo(1);
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				goTo(-1);
+			}
+		};
+
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, [goTo]);
+
 	return (
 		<div className={styles.outer}>
 			{}
@@ -298,6 +353,50 @@ const ReelsPage: React.FC = () => {
 					</div>
 				))}
 			</div>
+
+			{total > 1 && (
+				<div className={styles.navArrows}>
+					<button
+						type="button"
+						className={styles.navBtn}
+						onClick={() => goTo(-1)}
+						disabled={currentIdx === 0}
+						aria-label="Предыдущий ролик"
+						title="Предыдущий (стрелка вверх)"
+					>
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+							<path
+								d="M6 15l6-6 6 6"
+								stroke="currentColor"
+								strokeWidth="2.4"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+					</button>
+					<span className={styles.navCounter}>
+						{currentIdx + 1}/{total}
+					</span>
+					<button
+						type="button"
+						className={styles.navBtn}
+						onClick={() => goTo(1)}
+						disabled={currentIdx === total - 1}
+						aria-label="Следующий ролик"
+						title="Следующий (стрелка вниз)"
+					>
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+							<path
+								d="M6 9l6 6 6-6"
+								stroke="currentColor"
+								strokeWidth="2.4"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+					</button>
+				</div>
+			)}
 
 			{showOnboarding && activeTab === 'dances' && (
 				<ReelsOnboarding onDismiss={handleOnboardingDismiss} />

@@ -62,7 +62,7 @@ import {
 	selectIsAuthChecked,
 	selectUser,
 } from '@/redux/features/user/selectors';
-import type { AppDispatch } from '@/redux/store';
+import type { AppDispatch, RootState } from '@/redux/store';
 import React, {
 	useCallback,
 	useEffect,
@@ -154,6 +154,9 @@ const UserPage: React.FC = () => {
 	const historyLoading = useSelector(selectHistoryLoading);
 	const likedItems = useSelector(selectLikesItems) ?? [];
 	const likesLoading = useSelector(selectLikesLoading);
+	const unlockedCount = useSelector(
+		(s: RootState) => s.achievements.unlockedCount,
+	);
 
 	const [profile, setProfile] = useState<PublicProfileResponse | null>(null);
 	const [profileLoading, setProfileLoading] = useState(true);
@@ -204,6 +207,7 @@ const UserPage: React.FC = () => {
 	);
 
 	const toastShownRef = useRef(false);
+	const prevUnlockedRef = useRef(unlockedCount);
 	const achievementToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
@@ -533,6 +537,15 @@ const UserPage: React.FC = () => {
 			loadAchievements();
 		}
 	}, [activeTab, loadAchievements]);
+
+	useEffect(() => {
+		if (unlockedCount > prevUnlockedRef.current && isOwn) {
+			loadProfile();
+			loadAchievements();
+		}
+
+		prevUnlockedRef.current = unlockedCount;
+	}, [unlockedCount, isOwn, loadProfile, loadAchievements]);
 
 	useEffect(() => {
 		if (activeTab !== 'analytics' || !isOwn || creatorAnalytics) {
