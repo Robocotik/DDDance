@@ -73,12 +73,14 @@ const DanceAssistant: React.FC = () => {
 				history: history.length > 0 ? history : undefined,
 			});
 
+			const picked = resp.dances.slice(0, 1);
 			setMessages((prev) => [
 				...prev,
 				{
 					role: 'bot',
-					reasoning: resp.reasoning,
-					dances: resp.dances.slice(0, 1),
+					reasoning:
+						picked.length > 0 ? 'Нашёл для тебя танец:' : resp.reasoning,
+					dances: picked,
 				},
 			]);
 		} catch {

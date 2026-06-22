@@ -41,7 +41,6 @@ import ErrorScreen from '@/components/Error/Error';
 import HistoryItemCard from '@/components/HistoryItem/HistoryItem';
 import LikedItemCard from '@/components/LikedItem/LikedItem';
 import Loading from '@/components/Loading/Loading';
-import PersonalTopSection from '@/components/PersonalTopSection/PersonalTopSection';
 import ProfileStatsBanner from '@/components/ProfileStatsBanner/ProfileStatsBanner';
 import SavedDanceCard from '@/components/SavedDanceCard/SavedDanceCard';
 import UploadedDanceCard from '@/components/UploadedDanceCard/UploadedDanceCard';
@@ -1163,8 +1162,6 @@ const UserPage: React.FC = () => {
 						)}
 					</div>
 				</header>
-
-				<PersonalTopSection items={profile.personal_top} isOwn={isOwn} />
 
 				<ActivityHeatmap userId={profile.user.id} />
 
