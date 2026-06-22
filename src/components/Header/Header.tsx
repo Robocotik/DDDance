@@ -107,14 +107,6 @@ const Header: React.FC = () => {
 				<Paragraph
 					level="2"
 					opacity="100"
-					className={navLinkClass('/top')}
-					onClick={() => navigate('/top')}
-				>
-					Топ
-				</Paragraph>
-				<Paragraph
-					level="2"
-					opacity="100"
 					className={navLinkClass('/reels')}
 					onClick={() => navigate('/reels')}
 				>

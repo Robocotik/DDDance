@@ -35,9 +35,10 @@ const DIFFICULTY_COLOR: Record<Difficulty, string> = {
 
 interface DanceCardProps {
 	dance: DanceItem;
+	autoplay: boolean;
 }
 
-const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
+const DanceCard: React.FC<DanceCardProps> = ({ dance, autoplay }) => {
 	const navigate = useNavigate();
 	const diff = dance.difficulty;
 	const videoRef = useRef<HTMLVideoElement>(null);
@@ -52,8 +53,14 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 	}
 
 	useEffect(() => {
-		const wrapper = wrapperRef.current;
 		const video = videoRef.current;
+
+		if (!autoplay) {
+			video?.pause();
+			return;
+		}
+
+		const wrapper = wrapperRef.current;
 
 		if (!wrapper || !video) {
 			return;
@@ -72,12 +79,27 @@ const DanceCard: React.FC<DanceCardProps> = ({ dance }) => {
 
 		observer.observe(wrapper);
 		return () => observer.disconnect();
-	}, []);
+	}, [autoplay]);
+
+	const handleMouseEnter = () => {
+		if (!autoplay) {
+			videoRef.current?.play().catch(() => {});
+		}
+	};
+
+	const handleMouseLeave = () => {
+		if (!autoplay && videoRef.current) {
+			videoRef.current.pause();
+			videoRef.current.currentTime = 0;
+		}
+	};
 
 	return (
 		<div
 			ref={wrapperRef}
 			className={styles.card}
+			onMouseEnter={handleMouseEnter}
+			onMouseLeave={handleMouseLeave}
 			onClick={() => navigate(`/lesson/${dance.id}?segment=full`)}
 		>
 			{videoSrc && (
@@ -172,6 +194,7 @@ const CatalogPage: React.FC = () => {
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState('');
 	const [sort, setSort] = useState<CatalogSort>('popular');
+	const [autoplay, setAutoplay] = useState(true);
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -270,6 +293,18 @@ const CatalogPage: React.FC = () => {
 							</button>
 						))}
 					</div>
+					<button
+						type="button"
+						className={`${styles.sortBtn} ${styles.autoplayBtn} ${autoplay ? styles.sortBtnActive : ''}`}
+						onClick={() => setAutoplay((v) => !v)}
+						title={
+							autoplay
+								? 'Видео проигрываются автоматически'
+								: 'Видео проигрываются при наведении'
+						}
+					>
+						{autoplay ? '▶ Автовоспроизведение' : '⏸ По наведению'}
+					</button>
 				</div>
 
 				{loading && (
@@ -306,7 +341,7 @@ const CatalogPage: React.FC = () => {
 					<>
 						<div className={styles.grid}>
 							{dances.map((dance) => (
-								<DanceCard key={dance.id} dance={dance} />
+								<DanceCard key={dance.id} dance={dance} autoplay={autoplay} />
 							))}
 						</div>
 

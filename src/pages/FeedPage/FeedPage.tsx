@@ -302,7 +302,7 @@ const FeedPage: React.FC = () => {
 						<li key={item.id} className={styles.item}>
 							<button
 								className={styles.avatar}
-								onClick={() => navigate(`/profile/${item.actor_login}`)}
+								onClick={() => navigate(`/profile/${item.actor_id}`)}
 								aria-label={item.actor_login}
 							>
 								{item.actor_avatar ? (

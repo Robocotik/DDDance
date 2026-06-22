@@ -7,6 +7,7 @@ export interface FeedItem {
 	created_at: string;
 	actor_login: string;
 	actor_avatar: string;
+	actor_id: string;
 	dance_title?: string;
 }
 
