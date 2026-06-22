@@ -1,3 +1,4 @@
+import RotateHint from '@/components/RotateHint/RotateHint';
 import { S3_ADDRESS } from '@/consts/urls';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -600,6 +601,7 @@ const CompareViewer: React.FC<CompareViewerProps> = ({
 				</>
 			)}
 			<div ref={containerRef} className={styles.canvas} />
+			{!loading && !error && <RotateHint />}
 			{!loading && !error && effectiveDuration > 0 && (
 				<div className={styles.controls}>
 					<button className={styles.pauseBtn} onClick={handleTogglePause}>
